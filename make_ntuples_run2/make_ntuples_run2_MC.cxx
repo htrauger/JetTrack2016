@@ -113,14 +113,14 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
   std::vector<Float_t> *v_calo_refphi = new std::vector<Float_t>();   v_calo_refphi->clear();
   std::vector<Float_t> *v_calo_refdrjt = new std::vector<Float_t>();   v_calo_refdrjt->clear();
   std::vector<Float_t> *v_calo_refparton_pt = new std::vector<Float_t>();   v_calo_refparton_pt->clear();
-  std::vector<Float_t> *v_calo_refparton_flavor = new std::vector<Float_t>();   v_calo_refparton_flavor->clear();
+  std::vector<Int_t> *v_calo_refparton_flavor = new std::vector<Int_t>();   v_calo_refparton_flavor->clear();
 
   std::vector<Float_t> *v_pf_refpt = new std::vector<Float_t>();   v_pf_refpt->clear();
   std::vector<Float_t> *v_pf_refeta = new std::vector<Float_t>();   v_pf_refeta->clear();
   std::vector<Float_t> *v_pf_refphi = new std::vector<Float_t>();   v_pf_refphi->clear();
   std::vector<Float_t> *v_pf_refdrjt = new std::vector<Float_t>();   v_pf_refdrjt->clear();
   std::vector<Float_t> *v_pf_refparton_pt = new std::vector<Float_t>();   v_pf_refparton_pt->clear();
-  std::vector<Float_t> *v_pf_refparton_flavor = new std::vector<Float_t>();   v_pf_refparton_flavor->clear();
+  std::vector<Int_t> *v_pf_refparton_flavor = new std::vector<Int_t>();   v_pf_refparton_flavor->clear();
   
   TTree *calo_jet_tree;
   TTree *pf_jet_tree;
@@ -146,7 +146,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
   
     if(is_data&&!do_PbPb){
 
-      in_file_name = "root://cms-xrd-global.cern.ch///store/group/phys_heavyions/kjung/pp5TeV_Jet80PD_AOD_cmssw758_24Feb2016/HighPtJet80/crab_pp5Tev_Jet80PD_24Feb16/160224_163329/0000/HiForestAOD_1.root";
+      in_file_name = Form( "root://cms-xrd-global.cern.ch///store/group/phys_heavyions/kjung/pp5TeV_Jet80PD_AOD_cmssw758_24Feb2016/HighPtJet80/crab_pp5Tev_Jet80PD_24Feb16/160224_163329/0000/HiForestAOD_%d.root",jobID);
     }else if(is_data&&do_PbPb){
       in_file_name = "root://cms-xrd-global.cern.ch///store/user/velicanu/HIHardProbes/HIHardProbes-HIRun2015-PromptReco-v1-FOREST-1-v22/160126_202951/0000/HiForestAOD_1.root";
     }else if(!is_data&&!do_PbPb){
@@ -175,7 +175,6 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
     cout<<"File name is "<< filename <<endl;
     ifile++;
  
-   
     int pos = filename.find_first_of('s');
     string reducedfn = filename.substr(pos);
     string xrdPrefix = "root://xrootd.unl.edu//";
@@ -359,7 +358,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
     }else{
       output_file_base= "/afs/cern.ch/work/h/htrauger/public/JetShapes2016Skims/";
     }
-    output_file_base = dataset_type_strs[dataset_type_code];
+    output_file_base += dataset_type_strs[dataset_type_code];
 
     output_file = new TFile((TString) (output_file_base + ".root"), "RECREATE");
 
@@ -379,35 +378,17 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
  
 
     mixing_tree->Branch("ana_step", &ana_step, "anastep/I");
-    mixing_tree->Branch("pHBHENoiseFilterResultProducer", &pHBHENoiseFilterResultProducer, "pHBHENoiseFilterResultProducer/I");
+  
     mixing_tree->Branch("HBHENoiseFilterResult",&HBHENoiseFilterResult, "HBHENoiseFilterResult/I");
-    mixing_tree->Branch("HBHENoiseFilterResultRun1", &HBHENoiseFilterResultRun1, "HBHENoiseFilterResultRun1/I");
-    mixing_tree->Branch("HBHENoiseFilterResultRun2Loose", &HBHENoiseFilterResultRun2Loose, "HBHENoiseFilterResultRun2Loose/I");
-    mixing_tree->Branch("HBHENoiseFilterResultRun2Tight",&HBHENoiseFilterResultRun2Tight, "HBHENoiseFilterResultRun2Tight/I");
-    mixing_tree->Branch("HBHEIsoNoiseFilterResult", &HBHEIsoNoiseFilterResult, "HBHEIsoNoiseFilterResult/I");
-
-
+  
     if(do_PbPb){
 
       mixing_tree->Branch("pcollisionEventSelection",&pcollisionEventSelection,"pcollisionEventSelection/I");
       mixing_tree->Branch("pprimaryVertexFilter",&pprimaryVertexFilter,"pprimaryVertexFilter/I");
-      mixing_tree->Branch("pclusterCompatibilityFilter",&pclusterCompatibilityFilter,"pclusterCompatibilityFilter/I");
-      mixing_tree->Branch("superFilterPath",&superFilterPath,"superFilterPath/I");
-      mixing_tree->Branch("phfCoincFilter1",&phfCoincFilter1,"phfCoincFilter1/I");
-      mixing_tree->Branch("phfCoincFilter2",&phfCoincFilter2,"phfCoincFilter2/I");
-      mixing_tree->Branch("phfCoincFilter3",&phfCoincFilter3,"phfCoincFilter3/I");
-      mixing_tree->Branch("phfCoincFilter4",&phfCoincFilter4,"phfCoincFilter4/I");
-      mixing_tree->Branch("phfCoincFilter5",&phfCoincFilter5,"phfCoincFilter5/I");
-
+  
     }else{
       mixing_tree->Branch("pPAprimaryVertexFilter",&pPAprimaryVertexFilter, "pPAprimaryVertexFilter/I");
       mixing_tree->Branch("pBeamScrapingFilter",&pBeamScrapingFilter, "pBeamScrapingFilter/I");
-      mixing_tree->Branch("pVertexFilterCutG",&pVertexFilterCutG, "pVertexFilterCutG/I");
-      mixing_tree->Branch("pVertexFilterCutGloose",&pVertexFilterCutGloose, "pVertexFilterCutGloose/I");
-      mixing_tree->Branch("pVertexFilterCutGtight",&pVertexFilterCutGtight, "pVertexFilterCutGtight/I");
-      mixing_tree->Branch("pVertexFilterCutGplus", &pVertexFilterCutGplus, "pVertexFilterCutGplus/I");
-      mixing_tree->Branch("pVertexFilterCutE",&pVertexFilterCutE, "pVertexFilterCutE/I");
-      mixing_tree->Branch("pVertexFilterCutEandG", &pVertexFilterCutEandG, "VertexFilterCutEandG/I");
     }
     mixing_tree->Branch("hiBin", &hiBin, "hiBin/I");
     
@@ -458,14 +439,14 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
       mixing_tree->Branch("calo_refphi", "vector<Float_t>", &v_calo_refphi);
       mixing_tree->Branch("calo_refdrjt", "vector<Float_t>", &v_calo_refdrjt);
       mixing_tree->Branch("calo_refparton_pt", "vector<Float_t>", &v_calo_refparton_pt);
-      mixing_tree->Branch("calo_refparton_flavor", "vector<Float_t>", &v_calo_refparton_flavor);
+      mixing_tree->Branch("calo_refparton_flavor", "vector<Int_t>", &v_calo_refparton_flavor);
 
       mixing_tree->Branch("pf_refpt", "vector<Float_t>", &v_pf_refpt);
       mixing_tree->Branch("pf_refeta", "vector<Float_t>", &v_pf_refeta);
       mixing_tree->Branch("pf_refphi", "vector<Float_t>", &v_pf_refphi);
       mixing_tree->Branch("pf_refdrjt", "vector<Float_t>", &v_pf_refdrjt);
       mixing_tree->Branch("pf_refparton_pt", "vector<Float_t>", &v_pf_refparton_pt);
-      mixing_tree->Branch("pf_refparton_flavor", "vector<Float_t>", &v_pf_refparton_flavor);
+      mixing_tree->Branch("pf_refparton_flavor", "vector<Int_t>", &v_pf_refparton_flavor);
 
 
 
@@ -492,16 +473,13 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	  continue;
 	}     
       }
-
-   
    
       evt_tree->GetEntry(evi);
-   
+      
       hlt_tree->GetEntry(evi);
-  
+      
       track_tree->GetEntry(evi);
-  
-     
+
       calo_jet_tree->GetEntry(evi);
 
       for(int j4i = 0; j4i < nref ; j4i++) {
@@ -726,13 +704,17 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	v_genphi->clear();
 	v_genpt->clear();
       }
+      //      std::cout << "Filled successfully" << evi << std::endl;
 
-      if( evi % 1000 == 0 ) std::cout << "Filled successfully" << std::endl;
+         if( evi % 1000 == 0 ) std::cout << "Filled successfully" << std::endl;
 
     }  ///event loop
-   
+  
+    my_file->Close();
   
     cout<<"writing"<<endl;
+
+    output_file->cd();
 
     output_file->Write();
 
@@ -740,7 +722,6 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 
   }
   
-
 
   return 0;
   

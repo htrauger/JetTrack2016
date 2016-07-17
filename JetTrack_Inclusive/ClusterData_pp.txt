@@ -1,0 +1,4 @@
+/data/htrauger/JetShapes2016Skims/pp_June22/Data_pp_p0.root
+/data/htrauger/JetShapes2016Skims/pp_June22/Data_pp_p1.root
+/data/htrauger/JetShapes2016Skims/pp_June22/Data_pp_p2.root
+/data/htrauger/JetShapes2016Skims/pp_June22/Data_pp_p3.root

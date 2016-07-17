@@ -1,0 +1,23 @@
+export wdir=/home/htrauger/JetShapes2016/JetShapes_Analyer_2016/
+
+cd $wdir
+source ./clustercompile.sh && echo "Compiled."
+
+echo "cd $wdir; ./JetShapes_Analyzer.out 0 0" | qsub -q all.1.q -o $wdir/tmp00.log -e $wdir/tmp00.err
+
+echo "cd $wdir; ./JetShapes_Analyzer.out 0 1" | qsub -q all.1.q -o $wdir/tmp01.log -e $wdir/tmp01.err
+
+echo "cd $wdir; ./JetShapes_Analyzer.out 0 2" | qsub -q all.1.q -o $wdir/tmp02.log -e $wdir/tmp02.err
+
+echo "cd $wdir; ./JetShapes_Analyzer.out 0 3" | qsub -q all.1.q -o $wdir/tmp03.log -e $wdir/tmp03.err
+
+echo "cd $wdir; ./JetShapes_Analyzer.out 0 4" | qsub -q all.1.q -o $wdir/tmp04.log -e $wdir/tmp04.err
+
+echo "cd $wdir; ./JetShapes_Analyzer.out 0 5" | qsub -q all.1.q -o $wdir/tmp05.log -e $wdir/tmp05.err
+
+echo "cd $wdir; ./JetShapes_Analyzer.out 0 6" | qsub -q all.1.q -o $wdir/tmp06.log -e $wdir/tmp06.err
+
+echo "cd $wdir; ./JetShapes_Analyzer.out 0 7" | qsub -q all.1.q -o $wdir/tmp07.log -e $wdir/tmp07.err
+
+
+

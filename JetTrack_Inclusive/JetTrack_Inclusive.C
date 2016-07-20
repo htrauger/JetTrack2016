@@ -687,7 +687,7 @@ int main(int argc, char *argv[]){
 
     
 	//----------------------------------------------------------------------------
-	// Have dijet information.  Time to start filling bins.
+	// Time to start filling bins.
 	//----------------------------------------------------------------------------
 
 	//Loop over cent bins, but we pick only the right one to fill for PbPb.  We fill all cent bins (properly weighted each time) for pp.

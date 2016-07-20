@@ -52,6 +52,7 @@ class mixing_tree {
   Int_t           pBeamScrapingFilter;
  
   Int_t           hiBin;
+
   vector<float>   *calo_jteta;
   vector<float>   *calo_jtphi;
   vector<float>   *calo_jtpt;
@@ -62,6 +63,11 @@ class mixing_tree {
   vector<float>   *pf_jtpt;
   vector<float>   *pf_trackMax;
   vector<float>   *pf_rawpt;
+  vector<float>   *jteta;
+  vector<float>   *jtphi;
+  vector<float>   *jtpt;
+  vector<float>   *trackMax;
+  vector<float>   *rawpt;
 
 
   vector<float>   *corrpt;
@@ -78,7 +84,7 @@ class mixing_tree {
  
   vector<Int_t> *pfId;
   vector<float> *pfPt;
-  vector<float> *pfVsPt;
+  vector<float> *pfPuPt;
   vector<float> *pfEta;
   vector<float> *pfPhi;
   vector<float> *sumpt;
@@ -122,6 +128,12 @@ class mixing_tree {
   TBranch        *b_pf_trackMax;   //!
   TBranch        *b_pf_rawpt;   //!
 
+TBranch        *b_jteta;   //!
+  TBranch        *b_jtphi;   //!
+  TBranch        *b_jtpt;   //!
+  TBranch        *b_trackMax;   //!
+  TBranch        *b_rawpt;   //!
+
   TBranch        *b_corrpt;   //!
  
  TBranch        *b_pthat;   //!
@@ -138,7 +150,7 @@ class mixing_tree {
 
   TBranch        *b_pfId;   //!
   TBranch        *b_pfPt;   //!
-  TBranch        *b_pfVsPt;   //!
+  TBranch        *b_pfPuPt;   //!
   TBranch        *b_pfEta;   //!
   TBranch        *b_pfPhi;   //!
   TBranch        *b_sumpt;   //!
@@ -226,6 +238,9 @@ void mixing_tree::Init(TTree *tree)
   calo_jteta = 0;
   calo_jtphi = 0;
   calo_jtpt = 0;
+ jteta = 0;
+  jtphi = 0;
+  jtpt = 0;
  pf_jteta = 0;
   pf_jtphi = 0;
   pf_jtpt = 0;
@@ -235,6 +250,8 @@ void mixing_tree::Init(TTree *tree)
   calo_rawpt = 0;
   pf_trackMax = 0;
   pf_rawpt= 0;
+ trackMax = 0;
+  rawpt = 0;
   trkDxy1 = 0;
   trkDxyError1 = 0;
   trkDz1 = 0;
@@ -246,7 +263,7 @@ void mixing_tree::Init(TTree *tree)
  
   pfId = 0;
   pfPt = 0;
-  pfVsPt = 0;
+  pfPuPt = 0;
   pfEta = 0;
   pfPhi = 0;
   sumpt = 0;
@@ -295,6 +312,13 @@ void mixing_tree::Init(TTree *tree)
  fChain->SetBranchAddress("pf_trackMax", &pf_trackMax, &b_pf_trackMax);
  fChain->SetBranchAddress("pf_rawpt", &pf_rawpt, &b_pf_rawpt);
 
+  fChain->SetBranchAddress("jteta", &jteta, &b_jteta);
+  fChain->SetBranchAddress("jtphi", &jtphi, &b_jtphi);
+  fChain->SetBranchAddress("jtpt", &jtpt, &b_jtpt);
+ fChain->SetBranchAddress("trackMax", &trackMax, &b_trackMax);
+ fChain->SetBranchAddress("rawpt", &rawpt, &b_rawpt);
+
+
   fChain->SetBranchAddress("corrpt", &corrpt, &b_corrpt);
  
  fChain->SetBranchAddress("pthat", &pthat, &b_pthat);
@@ -310,7 +334,7 @@ void mixing_tree::Init(TTree *tree)
  
   fChain->SetBranchAddress("pfId", &pfId, &b_pfId);
   fChain->SetBranchAddress("pfPt", &pfPt, &b_pfPt);
-  fChain->SetBranchAddress("pfVsPt", &pfVsPt, &b_pfVsPt);
+  fChain->SetBranchAddress("pfPuPt", &pfPuPt, &b_pfPuPt);
   fChain->SetBranchAddress("pfEta", &pfEta, &b_pfEta);
   fChain->SetBranchAddress("pfPhi", &pfPhi, &b_pfPhi);
   fChain->SetBranchAddress("sumpt", &sumpt, &b_sumpt);

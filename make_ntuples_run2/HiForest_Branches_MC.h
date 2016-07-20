@@ -22,7 +22,9 @@
 
 
 Int_t HLT_HIPuAK4CaloJet80_Eta5p1_v1;
+Int_t HLT_AK4CaloJet80_Eta5p1ForPPRef_v1;
 TBranch *b_HLT_HIPuAK4CaloJet80_Eta5p1_v1;
+TBranch *b_HLT_AK4CaloJet80_Eta5p1ForPPRef_v1;
 
 
 
@@ -217,17 +219,17 @@ TBranch *b_phfCoincFilter5;
 
 std::vector<Int_t> *pfId;
 std::vector<Float_t> *pfPt;
-std::vector<Float_t> *pfVsPt;
+std::vector<Float_t> *pfPuPt;
 std::vector<Float_t> *pfEta;
 std::vector<Float_t> *pfPhi;
-Float_t sumpt;
+Float_t sumpt[30];
 
 
    // List of branches
    TBranch        *b_nPFpart;   //!
    TBranch        *b_pfId;   //!
    TBranch        *b_pfPt;   //!
-   TBranch        *b_pfVsPt;   //!
+   TBranch        *b_pfPuPt;   //!
    TBranch        *b_pfEta;   //!
    TBranch        *b_pfPhi;   //!
    TBranch        *b_sumpt;   //!

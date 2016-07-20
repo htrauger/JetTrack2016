@@ -87,7 +87,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 
   std::vector<Int_t> *v_pfId = new std::vector<Int_t>(); v_pfId->clear();
   std::vector<Float_t> *v_pfPt = new std::vector<Float_t>(); v_pfPt->clear();
-  std::vector<Float_t> *v_pfVsPt = new std::vector<Float_t>(); v_pfVsPt->clear();
+  std::vector<Float_t> *v_pfPuPt = new std::vector<Float_t>(); v_pfPuPt->clear();
   std::vector<Float_t> *v_pfEta = new std::vector<Float_t>(); v_pfEta->clear();
   std::vector<Float_t> *v_pfPhi = new std::vector<Float_t>(); v_pfPhi->clear();
   std::vector<Float_t> *v_sumpt = new std::vector<Float_t>(); v_sumpt->clear();
@@ -189,15 +189,18 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	
     cout<<"opened file"<<endl;
 
+    hlt_tree2 = (TTree*)my_file->Get("hltanalysis/HltTree");
     if(do_PbPb){
-      hlt_tree2 = (TTree*)my_file->Get("hltanalysis/HltTree");
+   
       hlt_tree2->SetBranchAddress("HLT_HIPuAK4CaloJet80_Eta5p1_v1", &HLT_HIPuAK4CaloJet80_Eta5p1_v1, &b_HLT_HIPuAK4CaloJet80_Eta5p1_v1);
+    }else{
+      hlt_tree2->SetBranchAddress("HLT_AK4CaloJet80_Eta5p1ForPPRef_v1", &HLT_AK4CaloJet80_Eta5p1ForPPRef_v1, &b_HLT_AK4CaloJet80_Eta5p1ForPPRef_v1);
     }
   
   
     if(do_PbPb){
-      calo_jet_tree = (TTree*)  my_file->Get("akVs4CaloJetAnalyzer/t");
-      pf_jet_tree = (TTree*)  my_file->Get("akVs4PFJetAnalyzer/t");
+      calo_jet_tree = (TTree*)  my_file->Get("akPu4CaloJetAnalyzer/t");
+      pf_jet_tree = (TTree*)  my_file->Get("akPu4PFJetAnalyzer/t");
     }else{
       calo_jet_tree = (TTree*)  my_file->Get("ak4CaloJetAnalyzer/t");
       pf_jet_tree = (TTree*)  my_file->Get("ak4PFJetAnalyzer/t");
@@ -330,7 +333,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
     pf_tree->SetBranchAddress("nPFpart", &nPFpart, &b_nPFpart);
     pf_tree->SetBranchAddress("pfId", &pfId, &b_pfId);
     pf_tree->SetBranchAddress("pfPt", &pfPt, &b_pfPt);
-    if(do_PbPb)  pf_tree->SetBranchAddress("pfPuPt", &pfVsPt, &b_pfVsPt);
+    if(do_PbPb)  pf_tree->SetBranchAddress("pfPuPt", &pfPuPt, &b_pfPuPt);
     pf_tree->SetBranchAddress("pfEta", &pfEta, &b_pfEta);
     pf_tree->SetBranchAddress("pfPhi", &pfPhi, &b_pfPhi);
     pf_tree->SetBranchAddress("sumpt", &sumpt, &b_sumpt);
@@ -414,7 +417,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
     mixing_tree->Branch("nPFpart", &nPFpart, "nPFpart/I");
     mixing_tree->Branch("pfId", "vector<Int_t>", &v_pfId);
     mixing_tree->Branch("pfPt", "vector<Float_t>", &v_pfPt);
-    mixing_tree->Branch("pfVsPt", "vector<Float_t>", &v_pfVsPt);
+    mixing_tree->Branch("pfPuPt", "vector<Float_t>", &v_pfPuPt);
     mixing_tree->Branch("pfEta", "vector<Float_t>", &v_pfEta);
     mixing_tree->Branch("pfPhi", "vector<Float_t>", &v_pfPhi);
   
@@ -472,13 +475,18 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	if(HLT_HIPuAK4CaloJet80_Eta5p1_v1==0){
 	  continue;
 	}     
+      }else{
+	hlt_tree2->GetEntry(evi);
+	if(HLT_AK4CaloJet80_Eta5p1ForPPRef_v1==0){
+	  continue;
+	}     
+
+
       }
    
       evt_tree->GetEntry(evi);
-      
+
       hlt_tree->GetEntry(evi);
-      
-      track_tree->GetEntry(evi);
 
       calo_jet_tree->GetEntry(evi);
 
@@ -505,7 +513,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	}
 
       } /// jet loop
-     
+
       if(!is_data){
 
 	for(int j4i_gen = 0; j4i_gen < ngen ; j4i_gen++) {
@@ -547,9 +555,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	}
 
       } /// jet loop
-      
-      // cout<<"ran jet loop"<<endl;
-   
+         
       pf_tree->GetEntry(evi);
 
       if(is_data){
@@ -557,13 +563,16 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
     
 	  v_pfId->push_back(pfId->at(pfi));
 	  v_pfPt->push_back(pfPt->at(pfi));
-	  if(do_PbPb) v_pfVsPt->push_back(pfVsPt->at(pfi));
+	  if(do_PbPb) v_pfPuPt->push_back(pfPuPt->at(pfi));
 	  v_pfEta->push_back(pfEta->at(pfi));
 	  v_pfPhi->push_back(pfPhi->at(pfi));
-	  v_sumpt->push_back(sumpt);
+	  v_sumpt->push_back(sumpt[pfi]);
      
 	} /// particle flow candidate loop
       }
+
+
+      track_tree->GetEntry(evi);
   
       //// reco track loop
       for(int itrk=0;itrk<nTrk;itrk++){
@@ -598,7 +607,6 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	
       }    
 
-      //  cout<<"ran track loop"<<endl;
 
       if(!is_data){
 
@@ -606,14 +614,6 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	gen_tree->GetEvent(evi);
 	//// gen track loop
 	for(int itrk=0;itrk<mult;itrk++){
-
-	
-	  v_trkEta->push_back(trkEta[itrk]);
-	  v_trkPhi->push_back(trkPhi[itrk]);
-	  v_trkPt->push_back(trkPt[itrk]);
-	  v_highPurity->push_back(highPurity[itrk]);
-	  v_trkMVALoose->push_back(trkMVALoose[itrk]);
-	  v_trkMVATight->push_back(trkMVATight[itrk]);
 
 	  v_pt->push_back(pt->at(itrk));
 	  v_eta->push_back(eta->at(itrk));
@@ -624,9 +624,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	  
   	}   
       } // !is_data
-      //  cout<<"ran track loop"<<endl;
-
-
+      
       v_vz->push_back(vz);
    
 
@@ -681,7 +679,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 
       v_pfId->clear();
       v_pfPt->clear();
-      v_pfVsPt->clear();
+      v_pfPuPt->clear();
       v_pfEta->clear();
       v_pfPhi->clear();
       v_sumpt->clear();

@@ -49,19 +49,29 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
   cout<<dataset_type_code<<endl;
   if(dataset_type_code==1 ||dataset_type_code > 10){do_PbPb = 0;}
   
-  if(is_data){
-    cout<<"This version is only for Monte Carlo"<<endl;
-    return -1;
-    
-  }
-
-
+  
   std::vector<Float_t> *v_trkEta = new std::vector<Float_t>();   v_trkEta->clear();
   std::vector<Float_t> *v_trkPhi = new std::vector<Float_t>();   v_trkPhi->clear();
   std::vector<Float_t> *v_trkPt = new std::vector<Float_t>();   v_trkPt->clear();
+
   std::vector<Float_t> *v_trkMVALoose = new std::vector<Float_t>();   v_trkMVALoose->clear();
   std::vector<Float_t> *v_trkMVATight = new std::vector<Float_t>();   v_trkMVATight->clear();
   std::vector<Float_t> *v_highPurity = new std::vector<Float_t>();   v_highPurity->clear();
+
+  std::vector<Float_t> *v_trkDxy1 = new std::vector<Float_t>();   v_trkDxy1->clear();
+  std::vector<Float_t> *v_trkDxyError1 = new std::vector<Float_t>();   v_trkDxyError1->clear();
+  std::vector<Float_t> *v_trkDz1 = new std::vector<Float_t>();   v_trkDz1->clear();
+  std::vector<Float_t> *v_trkDzError1 = new std::vector<Float_t>();   v_trkDzError1->clear();
+  std::vector<Float_t> *v_trkPtError = new std::vector<Float_t>();   v_trkPtError->clear();
+
+
+  std::vector<Int_t> *v_trkNHit = new std::vector<Int_t>();   v_trkNHit->clear();
+  std::vector<Int_t> *v_trkNlayer = new std::vector<Int_t>();   v_trkNlayer->clear();
+  std::vector<Int_t> *v_trkNdof = new std::vector<Int_t>();   v_trkNdof->clear();
+  std::vector<Float_t> *v_trkChi2 = new std::vector<Float_t>();   v_trkChi2->clear();
+  std::vector<Float_t> *v_pfEcal = new std::vector<Float_t>();   v_pfEcal->clear();
+  std::vector<Float_t> *v_pfHcal = new std::vector<Float_t>();   v_pfHcal->clear();
+
  
   std::vector<Float_t> *v_vz = new std::vector<Float_t>();   v_vz->clear();
 
@@ -78,12 +88,6 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
   std::vector<Float_t> *v_pf_rawpt = new std::vector<Float_t>();   v_pf_rawpt->clear();
   std::vector<Float_t> *v_pf_trackMax = new std::vector<Float_t>();   v_pf_trackMax->clear();  
    
-  std::vector<Float_t> *v_trkDxy1 = new std::vector<Float_t>();   v_trkDxy1->clear();
-  std::vector<Float_t> *v_trkDxyError1 = new std::vector<Float_t>();   v_trkDxyError1->clear();
-  std::vector<Float_t> *v_trkDz1 = new std::vector<Float_t>();   v_trkDz1->clear();
-  std::vector<Float_t> *v_trkDzError1 = new std::vector<Float_t>();   v_trkDzError1->clear();
-  std::vector<Float_t> *v_trkPtError = new std::vector<Float_t>();   v_trkPtError->clear();
-
 
   std::vector<Int_t> *v_pfId = new std::vector<Int_t>(); v_pfId->clear();
   std::vector<Float_t> *v_pfPt = new std::vector<Float_t>(); v_pfPt->clear();
@@ -92,7 +96,6 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
   std::vector<Float_t> *v_pfPhi = new std::vector<Float_t>(); v_pfPhi->clear();
   std::vector<Float_t> *v_sumpt = new std::vector<Float_t>(); v_sumpt->clear();
   std::vector<Float_t> *v_nPFpart = new std::vector<Float_t>(); v_nPFpart->clear();
-
 
 
   std::vector<Int_t> *v_sube= new std::vector<Int_t>();  v_sube->clear();
@@ -146,7 +149,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
   
     if(is_data&&!do_PbPb){
 
-      in_file_name = Form( "root://cms-xrd-global.cern.ch///store/group/phys_heavyions/kjung/pp5TeV_Jet80PD_AOD_cmssw758_24Feb2016/HighPtJet80/crab_pp5Tev_Jet80PD_24Feb16/160224_163329/0000/HiForestAOD_%d.root",jobID);
+      in_file_name = "Data_pp_HiForest.txt";
     }else if(is_data&&do_PbPb){
       in_file_name = "root://cms-xrd-global.cern.ch///store/user/velicanu/HIHardProbes/HIHardProbes-HIRun2015-PromptReco-v1-FOREST-1-v22/160126_202951/0000/HiForestAOD_1.root";
     }else if(!is_data&&!do_PbPb){
@@ -191,8 +194,8 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 
     hlt_tree2 = (TTree*)my_file->Get("hltanalysis/HltTree");
     if(do_PbPb){
-   
       hlt_tree2->SetBranchAddress("HLT_HIPuAK4CaloJet80_Eta5p1_v1", &HLT_HIPuAK4CaloJet80_Eta5p1_v1, &b_HLT_HIPuAK4CaloJet80_Eta5p1_v1);
+      hlt_tree2->SetBranchAddress("HLT_HIPuAK4CaloJet100_Eta5p1_v1", &HLT_HIPuAK4CaloJet100_Eta5p1_v1, &b_HLT_HIPuAK4CaloJet100_Eta5p1_v1);
     }else{
       hlt_tree2->SetBranchAddress("HLT_AK4CaloJet80_Eta5p1ForPPRef_v1", &HLT_AK4CaloJet80_Eta5p1ForPPRef_v1, &b_HLT_AK4CaloJet80_Eta5p1ForPPRef_v1);
     }
@@ -315,11 +318,22 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
     track_tree->SetBranchAddress("nTrk", &nTrk, &b_nTrk);
     track_tree->SetBranchAddress("trkPt", trkPt, &b_trkPt);
     track_tree->SetBranchAddress("trkPtError", trkPtError, &b_trkPtError);
+    track_tree->SetBranchAddress("trkDxy1", trkDxy1, &b_trkDxy1);
+    track_tree->SetBranchAddress("trkDxyError1", trkDxyError1, &b_trkDxyError1);
+    track_tree->SetBranchAddress("trkDz1", trkDz1, &b_trkDz1);
+    track_tree->SetBranchAddress("trkDzError1", trkDzError1, &b_trkDzError1);
+  
+    track_tree->SetBranchAddress("trkNHit", trkNHit, &b_trkNHit);
+    track_tree->SetBranchAddress("trkNlayer", trkNlayer, &b_trkNlayer);
+    track_tree->SetBranchAddress("trkNdof", trkNdof, &b_trkNdof);
+    track_tree->SetBranchAddress("trkChi2", trkChi2, &b_trkChi2);
+
     track_tree->SetBranchAddress("trkEta", trkEta, &b_trkEta);
     track_tree->SetBranchAddress("trkPhi", trkPhi, &b_trkPhi);
     track_tree->SetBranchAddress("pfHcal", pfHcal, &b_pfHcal);
     track_tree->SetBranchAddress("pfEcal", pfEcal, &b_pfEcal);
-    track_tree->SetBranchAddress("highPurity", highPurity, &b_highPurity);
+ 
+   track_tree->SetBranchAddress("highPurity", highPurity, &b_highPurity);
     track_tree->SetBranchAddress("trkMVALoose", trkMVALoose, &b_trkMVALoose);
     track_tree->SetBranchAddress("trkMVATight", trkMVATight, &b_trkMVATight);
     track_tree->SetBranchAddress("highPurity", highPurity, &b_highPurity);
@@ -383,11 +397,30 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
     mixing_tree->Branch("ana_step", &ana_step, "anastep/I");
   
     mixing_tree->Branch("HBHENoiseFilterResult",&HBHENoiseFilterResult, "HBHENoiseFilterResult/I");
-  
+    mixing_tree->Branch("pHBHENoiseFilterResultProducer",&pHBHENoiseFilterResultProducer, "pHBHENoiseFilterResultProducer/I");
+    mixing_tree->Branch("HBHENoiseFilterResultRun2Loose",&HBHENoiseFilterResultRun2Loose, "HBHENoiseFilterResultRun2Loose/I");
+    mixing_tree->Branch("HBHENoiseFilterResultRun2Tight",&HBHENoiseFilterResultRun2Tight, "HBHENoiseFilterResultRun2Tight/I");
+    mixing_tree->Branch("HBHEIsoNoiseFilterResult",&HBHEIsoNoiseFilterResult, "HBHEIsoNoiseFilterResult/I");
+     
+    mixing_tree->Branch("pVertexFilterCutG",&pVertexFilterCutG,"pVertexFilterCutG/I");
+    mixing_tree->Branch("pVertexFilterCutGloose",&pVertexFilterCutGloose,"pVertexFilterCutGloose/I");
+    mixing_tree->Branch("pVertexFilterCutGtight",&pVertexFilterCutGtight,"pVertexFilterCutGtight/I");
+    mixing_tree->Branch("pVertexFilterCutGplus",&pVertexFilterCutGplus,"pVertexFilterCutGplus/I");
+    mixing_tree->Branch("pVertexFilterCutE",&pVertexFilterCutE,"pVertexFilterCutE/I");
+    mixing_tree->Branch("pVertexFilterCutEandG",&pVertexFilterCutEandG,"pVertexFilterCutEandG/I");
+    
     if(do_PbPb){
 
       mixing_tree->Branch("pcollisionEventSelection",&pcollisionEventSelection,"pcollisionEventSelection/I");
       mixing_tree->Branch("pprimaryVertexFilter",&pprimaryVertexFilter,"pprimaryVertexFilter/I");
+      mixing_tree->Branch("pclusterCompatibilityFilter",&pclusterCompatibilityFilter,"pclusterCompatibilityFilter/I");
+   
+      mixing_tree->Branch("superFilterPath",&superFilterPath,"superFilterPath/I");
+      mixing_tree->Branch("phfCoincFilter1",&phfCoincFilter1,"phfCoincFilter1/I");
+      mixing_tree->Branch("phfCoincFilter2",&phfCoincFilter2,"phfCoincFilter2/I");
+      mixing_tree->Branch("phfCoincFilter3",&phfCoincFilter3,"phfCoincFilter3/I");
+      mixing_tree->Branch("phfCoincFilter4",&phfCoincFilter4,"phfCoincFilter4/I");
+      mixing_tree->Branch("phfCoincFilter5",&phfCoincFilter5,"phfCoincFilter5/I");
   
     }else{
       mixing_tree->Branch("pPAprimaryVertexFilter",&pPAprimaryVertexFilter, "pPAprimaryVertexFilter/I");
@@ -472,7 +505,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 
       if(do_PbPb){
 	hlt_tree2->GetEntry(evi);
-	if(HLT_HIPuAK4CaloJet80_Eta5p1_v1==0){
+	if(HLT_HIPuAK4CaloJet80_Eta5p1_v1==0&&HLT_HIPuAK4CaloJet100_Eta5p1_v1==0){
 	  continue;
 	}     
       }else{
@@ -571,7 +604,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	} /// particle flow candidate loop
       }
 
-
+    
       track_tree->GetEntry(evi);
   
       //// reco track loop
@@ -586,13 +619,10 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	float Et = (pfHcal[itrk]+pfEcal[itrk])/TMath::CosH(trkEta[itrk]);
 	if(!(trkPt[itrk]<20 || (Et>0.2*trkPt[itrk] && Et>trkPt[itrk]-80))) continue;
 
+	if(fabs(trkEta[itrk])>=2.4) continue; //acceptance of the tracker   
 
-	float eta=trkEta[itrk];
-	if(fabs(eta)>=2.4) continue; //acceptance of the tracker   
-
-	float pt=trkPt[itrk];
-	if(pt <= 0.5) continue; //pt min
-	if(pt >= 300 ) continue; //pt max
+	if(trkPt[itrk] <= 0.5) continue; //pt min
+	if(trkPt[itrk] >= 300 ) continue; //pt max
 
 	// reco track quantities
 
@@ -603,6 +633,19 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 	v_highPurity->push_back(highPurity[itrk]);
 	v_trkMVALoose->push_back(trkMVALoose[itrk]);
 	v_trkMVATight->push_back(trkMVATight[itrk]);
+
+	v_trkDxy1->push_back(trkDxy1[itrk]);
+	v_trkDxyError1->push_back(trkDxyError1[itrk]);
+	v_trkDz1->push_back(trkDz1[itrk]);
+	v_trkDzError1->push_back(trkDzError1[itrk]);
+	v_trkPtError->push_back(trkPtError[itrk]);
+
+	v_trkNHit->push_back(trkNHit[itrk]);
+	v_trkNlayer->push_back(trkNlayer[itrk]);
+	v_trkNdof->push_back(trkNdof[itrk]);
+	v_trkChi2->push_back(trkChi2[itrk]);
+	v_pfEcal->push_back(pfEcal[itrk]);
+	v_pfHcal->push_back(pfHcal[itrk]);
 
 	
       }    
@@ -676,6 +719,13 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
       v_trkDz1->clear();
       v_trkDzError1->clear();
       v_trkPtError->clear();
+
+      v_trkNHit->clear();
+      v_trkNlayer->clear();
+      v_trkNdof->clear();
+      v_trkChi2->clear();
+      v_pfEcal->clear();
+      v_pfHcal->clear();
 
       v_pfId->clear();
       v_pfPt->clear();

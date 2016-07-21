@@ -22,8 +22,12 @@
 
 
 Int_t HLT_HIPuAK4CaloJet80_Eta5p1_v1;
+Int_t HLT_HIPuAK4CaloJet100_Eta5p1_v1;
 Int_t HLT_AK4CaloJet80_Eta5p1ForPPRef_v1;
+
+
 TBranch *b_HLT_HIPuAK4CaloJet80_Eta5p1_v1;
+TBranch *b_HLT_HIPuAK4CaloJet100_Eta5p1_v1;
 TBranch *b_HLT_AK4CaloJet80_Eta5p1ForPPRef_v1;
 
 
@@ -87,8 +91,14 @@ TBranch        *b_jtphi;   //!
 Int_t           nTrk;
 Float_t         trkPt[12739];   //[nTrk]
 Float_t         trkPtError[12739];   //[nTrk]
-Int_t           trkNHit[12739];   //[nTrk]
-Int_t           trkNlayer[12739];   //[nTrk]
+Float_t         trkDxy1[12739];   //[nTrk]
+Float_t         trkDxyError1[12739];   //[nTrk]
+Float_t         trkDz1[12739];   //[nTrk]
+Float_t         trkDzError1[12739];   //[nTrk]
+UChar_t           trkNHit[12739];   //[nTrk]
+UChar_t           trkNlayer[12739];   //[nTrk]
+Float_t         trkChi2[12739];   //[nTrk]
+UChar_t         trkNdof[12739];   //[nTrk]
 Float_t         trkEta[12739];   //[nTrk]
 Float_t         trkPhi[12739];   //[nTrk]
 Float_t         pfEcal[12739];   //[nTrk]
@@ -97,29 +107,28 @@ Float_t         pfHcal[12739];   //[nTrk]
 Bool_t         trkMVALoose[12739];   //[nTrk]
 Bool_t         trkMVATight[12739];   //[nTrk]
 Bool_t          highPurity[12739];   //[nTrk]
-Float_t         trkDxy1[12739];   //[nTrk]
-Float_t         trkDxyError1[12739];   //[nTrk]
-Float_t         trkDz1[12739];   //[nTrk]
-Float_t         trkDzError1[12739];   //[nTrk]
- 
+
+
 
 
 TBranch        *b_nTrk;   //!
 TBranch        *b_trkPt;   //!
 TBranch        *b_trkPtError;   //!
+TBranch        *b_trkDxy1;   //!
+TBranch        *b_trkDxyError1;   //!
+TBranch        *b_trkDz1;   //!
+TBranch        *b_trkDzError1;   //!
 TBranch        *b_trkNHit;   //!
 TBranch        *b_trkNlayer;   //!
+TBranch        *b_trkChi2;   //!
+TBranch        *b_trkNdof;   //!
 TBranch        *b_trkEta;   //!
 TBranch        *b_trkPhi;   //!
 TBranch        *b_pfHcal;   //!
 TBranch        *b_pfEcal;   //!
 TBranch       *b_trkMVALoose;
 TBranch         *b_trkMVATight;
-TBranch *b_highPurity;
-TBranch        *b_trkDxy1;   //!
-TBranch        *b_trkDxyError1;   //!
-TBranch        *b_trkDz1;   //!
-TBranch        *b_trkDzError1;   //!
+TBranch        *b_highPurity;
 
 
 //GEN PARTICLES//

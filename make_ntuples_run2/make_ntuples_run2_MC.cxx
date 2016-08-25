@@ -159,7 +159,9 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
       in_file_name = "Pythia8_HiForest.txt";
 
     }else{
-      cerr<<"need to set up to run on that sample..."<<endl;
+
+      in_file_name = "Pythia8_Pthat80_Hydjet_HiForest.txt";
+  
     }
   
     cout<<"File name is "<<in_file_name<<endl;
@@ -180,7 +182,7 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
  
     int pos = filename.find_first_of('s');
     string reducedfn = filename.substr(pos);
-    string xrdPrefix = "root://xrootd.unl.edu//";
+    string xrdPrefix = "root://cms-xrd-global.cern.ch//";
     TFile *my_file = TFile::Open((xrdPrefix+reducedfn).c_str());
   
     
@@ -389,6 +391,29 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
     mixing_tree->Branch("trkPhi", "vector<Float_t>", &v_trkPhi);
     mixing_tree->Branch("trkPt", "vector<Float_t>", &v_trkPt);
     mixing_tree->Branch("highPurity", "vector<Float_t>", &v_highPurity);
+  
+
+    mixing_tree->Branch("trkDxy1", "vector<Float_t>", &v_trkDxy1);
+    mixing_tree->Branch("trkDxyError1", "vector<Float_t>", &v_trkDxyError1);
+    mixing_tree->Branch("trkDz1", "vector<Float_t>", &v_trkDz1);
+    mixing_tree->Branch("trkDzError1", "vector<Float_t>", &v_trkDzError1);
+    mixing_tree->Branch("trkPtError", "vector<Float_t>", &v_trkPtError);
+
+    mixing_tree->Branch("trkNHit", "vector<Int_t>", &v_trkNHit);
+    mixing_tree->Branch("trkNlayer", "vector<Int_t>", &v_trkNlayer);
+    mixing_tree->Branch("trkNdof", "vector<Int_t>", &v_trkNdof);
+    mixing_tree->Branch("trkChi2", "vector<Float_t>", &v_trkChi2);
+    mixing_tree->Branch("pfEcal", "vector<Float_t>", &v_pfEcal);
+    mixing_tree->Branch("pfHcal", "vector<Float_t>", &v_pfHcal);
+
+    mixing_tree->Branch("pfId", "vector<Int_t>", &pfId);
+    mixing_tree->Branch("pfPt", "vector<Float_t>", &pfPt);
+    mixing_tree->Branch("pfPuPt", "vector<Float_t>", &pfPuPt);
+    mixing_tree->Branch("pfEta", "vector<Float_t>", &pfEta);
+    mixing_tree->Branch("pfPhi", "vector<Float_t>", &pfPhi);
+    mixing_tree->Branch("sumpt", "vector<Float_t>", &sumpt);
+    mixing_tree->Branch("nPFpart", "vector<Float_t>", &nPFpart);
+
     mixing_tree->Branch("trkMVALoose", "vector<Float_t>", &v_trkMVALoose);
     mixing_tree->Branch("trkMVATight", "vector<Float_t>", &v_trkMVATight);
     mixing_tree->Branch("vz", "vector<Float_t>", &v_vz);
@@ -502,21 +527,22 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
       if( evi % 1000 == 0 )  std::cout << "evi: " << evi <<  " of " << n_evt << "\n";
       //if( evi > 1000 ) break;
 
+      if(is_data){
 
-      if(do_PbPb){
-	hlt_tree2->GetEntry(evi);
-	if(HLT_HIPuAK4CaloJet80_Eta5p1_v1==0&&HLT_HIPuAK4CaloJet100_Eta5p1_v1==0){
-	  continue;
-	}     
-      }else{
-	hlt_tree2->GetEntry(evi);
-	if(HLT_AK4CaloJet80_Eta5p1ForPPRef_v1==0){
-	  continue;
-	}     
-
-
-      }
+	if(do_PbPb){
+	  hlt_tree2->GetEntry(evi);
+	  if(HLT_HIPuAK4CaloJet80_Eta5p1_v1==0&&HLT_HIPuAK4CaloJet100_Eta5p1_v1==0){
+	    continue;
+	  }     
+	}else{
+	  hlt_tree2->GetEntry(evi);
+	  if(HLT_AK4CaloJet80_Eta5p1ForPPRef_v1==0){
+	    continue;
+	  }     
+	}
    
+      }
+
       evt_tree->GetEntry(evi);
 
       hlt_tree->GetEntry(evi);
@@ -549,7 +575,10 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 
       if(!is_data){
 
-	for(int j4i_gen = 0; j4i_gen < ngen ; j4i_gen++) {
+	int n_gen = ngen;
+	if(ngen > 30) n_gen = 30;
+
+	for(int j4i_gen = 0; j4i_gen < n_gen ; j4i_gen++) {
 
 	  if( fabs(geneta[j4i_gen]) > 2 ) continue;
 	  if( genpt[j4i_gen] < 30 ) continue;
@@ -614,10 +643,18 @@ int make_ntuples_run2_MC(bool doCrab=0, int jobID=0, int endfile = 10, int datas
 
 	if(highPurity[itrk]!=1) continue;
      
-	if(trkPtError[itrk]/trkPt[itrk]>=0.3 || TMath::Abs(trkDz1[itrk]/trkDzError1[itrk])>=3.0 ||TMath::Abs(trkDxy1[itrk]/trkDxyError1[itrk])>=3.0) continue ;
+	if(do_PbPb){
+	  if(trkPtError[itrk]/trkPt[itrk]>=0.1|| TMath::Abs(trkDz1[itrk]/trkDzError1[itrk])>=3.0 ||TMath::Abs(trkDxy1[itrk]/trkDxyError1[itrk])>=3.0) continue ;
+	  if(trkChi2[itrk]/(float)trkNdof[itrk]/(float)trkNlayer[itrk]>0.15) continue;
+	  if(trkNHit[itrk]<11 && trkPt[itrk]>0.7) continue;
+ 
+	}else{
+	  if(trkPtError[itrk]/trkPt[itrk]>=0.3|| TMath::Abs(trkDz1[itrk]/trkDzError1[itrk])>=3.0 ||TMath::Abs(trkDxy1[itrk]/trkDxyError1[itrk])>=3.0) continue ;
 
+	}
+	 
 	float Et = (pfHcal[itrk]+pfEcal[itrk])/TMath::CosH(trkEta[itrk]);
-	if(!(trkPt[itrk]<20 || (Et>0.2*trkPt[itrk] && Et>trkPt[itrk]-80))) continue;
+	if(!(trkPt[itrk]<20 || (Et>0.5*trkPt[itrk]))) continue;
 
 	if(fabs(trkEta[itrk])>=2.4) continue; //acceptance of the tracker   
 

@@ -28,10 +28,9 @@ using namespace std;
 #define nCBins 4
 #define nPtBins 1 
 #define nTrkPtBins 9
+#define n_pthat_samples 5
 
-#define n_pthat_samples 6
-
-float trkPtCut=0.5;
+float trkPtCut=0.7;
 
 int parti = -999;
 bool is_data = false;
@@ -44,11 +43,12 @@ TString dataset_type_strs[e_n_dataset_types] = {"Data_PbPb","Data_pp","HydJet","
 TString dataset_type_file_names[e_n_dataset_types] = {"ClusterData_PbPb.txt","ClusterData_pp.txt","Hydjet.txt","Pythia.txt"};
 
 
-int pthat_cut[n_pthat_samples] = {50,80,120,170,220,280};
+float pthat_cut[n_pthat_samples] = {80.,120.,170.,220.,280.};
 
-float pthat_weight[n_pthat_samples] = {0.88403, 0.101112, 0.010379, 0.00422609, 0.000252783, 5.04625e-05};
+float pthat_weight_pythia[n_pthat_samples] = {0.853683, 0.116143, 0.0201012, 0.00806921, 0.00200349};
+float pthat_weight_hydjet[n_pthat_samples] =  {0.855155, 0.11635, 0.0186898, 0.00782335, 0.00198168};
 
-  int pthat_sample = 0;
+int pthat_sample = 0;
 
 enum enum_data_mc_types {Data, RecoReco, RecoGen, GenReco, GenGen, RightGen, SpilledUnderGen, UnmatchedGen, RightReco, SpilledReco, UnmatchedReco, RecoGenSube0,RecoGenNoSube0,GenGenSube0,GenGenNoSube0,MatchedRecoGenSube0,MatchedRecoGenNoSube0,SwappedRecoGenSube0,SwappedRecoGenNoSube0, UnMatchedRecoGenSube0,UnMatchedRecoGenNoSube0,n_data_mc_types};
 
@@ -63,8 +63,8 @@ TString PtBin_strs[nPtBins+1] = {"Pt100", "Pt300"};
 float CBins[nCBins+1] = {0, 20, 60, 100, 200};
 TString CBin_strs[nCBins+1] = {"Cent0", "Cent10", "Cent30","Cent50", "Cent100"};
 
-float TrkPtBins[nTrkPtBins+1] = {0.5, 1, 2, 3, 4, 8, 12, 16, 20, 300};
-TString TrkPtBin_strs[nTrkPtBins+1] = {"TrkPt05","TrkPt1", "TrkPt2", "TrkPt3", "TrkPt4", "TrkPt8","TrkPt12","TrkPt16","TrkPt20","TrkPt300" };
+float TrkPtBins[nTrkPtBins+1] = {0.7, 1, 2, 3, 4, 8, 12, 16, 20, 300};
+TString TrkPtBin_strs[nTrkPtBins+1] = {"TrkPt07","TrkPt1", "TrkPt2", "TrkPt3", "TrkPt4", "TrkPt8","TrkPt12","TrkPt16","TrkPt20","TrkPt300" };
 
 float track_pt, trk_corr;
 
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]){
     data_mc_type_code = 2;
   }
     
-  bool do_mixing = kTRUE;
+  bool do_mixing = kFALSE;
 
   std::cout<<"dataset_type_code is " <<dataset_type_code<<" "<<dataset_type_strs[dataset_type_code]<<endl;
   std::cout << "Running with trkPtCut " << trkPtCut << std::endl;
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]){
     
   if(dataset_type_code == e_Data_pp||dataset_type_code == e_Pythia){is_pp = kTRUE;}
 
-  int n_data_mc_types_used = 5;
+  int n_data_mc_types_used = n_data_mc_types;
 
   hist_class *my_hists[n_data_mc_types];
  
@@ -144,13 +144,14 @@ int main(int argc, char *argv[]){
   //****************************************
 
 
-  double cent, eta, pt, phi, rmin, r_reco, jeteta, jetphi, vz,deta, dphi, reco_eta, gen_eta, reco_phi, gen_phi, dr, closest_dr, jet_dir_eta, jet_dir_phi;
+  double cent, eta, pt, phi, rmin, vz,deta, dphi,  gen_eta,gen_phi, dr, closest_dr, jet_dir_eta, jet_dir_phi;
   bool foundjet;
   int closest_j4i;
 	
 
-  double wvz = 1.;  // NOTE:  wvz will include pthat weight as well for MC. 
+  double wvz = 1.; 
   double wcen = 1.;
+  double wpthat = 1.;
  
   TF1 *fit_cen, *fit_vz;
 
@@ -162,9 +163,9 @@ int main(int argc, char *argv[]){
 
     TFile *f_vertex_cent = new TFile("VertexCentReweightingFits.root","READ");
 
-    if(!is_pp)    fit_cen = (TF1*)f_vertex_cent->Get((TString)("Fit_Cent"))->Clone((TString)("Fit_Cent"));
+    if(!is_pp)    fit_cen = (TF1*)f_vertex_cent->Get((TString)("Fit_Cent_"+dataset_type_strs[dataset_type_code]))->Clone((TString)("Fit_Cent"));
 
-    fit_vz = (TF1*)f_vertex_cent->Get((TString)("Fit_Vz"))->Clone((TString)("Fit_Vz"));
+    fit_vz = (TF1*)f_vertex_cent->Get((TString)("Fit_Vz_"+dataset_type_strs[dataset_type_code]))->Clone((TString)("Fit_Vz"));
  
   }
 
@@ -278,7 +279,11 @@ int main(int argc, char *argv[]){
    
 
     }
-      
+
+    
+    //  if(is_pp)  n_evt = 100000;
+    // else   n_evt = 10000;
+    
     ///==========================   Event Loop starts ===================================
     ///==========================   Event Loop starts ===================================
  
@@ -287,96 +292,110 @@ int main(int argc, char *argv[]){
       my_primary->fChain->GetEntry(evi);
 
 
-         if (evi%1000==0) std::cout << " I am running on file " << fi+1 << " of " << ((int) file_names.size()) << ", evi: " << evi << " of " << n_evt << std::endl;
+      if (evi%1000==0) std::cout << " I am running on file " << fi+1 << " of " << ((int) file_names.size()) << ", evi: " << evi << " of " << n_evt << std::endl;
       //   std::cout << " I am running on file " << fi+1 << " of " << ((int) file_names.size()) << ", evi: " << evi << " of " << n_evt << std::endl;
       
-    
-      Int_t hiBin = 0;
-      if(is_data) hiBin = my_primary->hiBin;
+      cent = 0;
+      if(!is_pp) cent = my_primary->hiBin;
    
       vz = my_primary->vz;
 
       int ibin2 = 0;  int ibin3=0;
 
-      my_hists[data_mc_type_code]->NEvents->Fill(hiBin/2.0);
+      my_hists[data_mc_type_code]->NEvents->Fill(cent/2.0);
    
-      if(is_data) {
+  
+      int noise_event_selection = my_primary->HBHENoiseFilterResultRun2Loose;
+      if(noise_event_selection==0){ 
+	//cout<<"failed noise"<<endl;
+	continue;      
+      }
 
-     	int noise_event_selection = my_primary->HBHENoiseFilterResultRun2Loose;
-	if(noise_event_selection==0){ 
-	  //cout<<"failed noise"<<endl;
-	  continue;      
+      if(is_pp){
+	int event_selection = my_primary->pPAprimaryVertexFilter; 
+	if(event_selection==0) {
+	  //cout<<"failed vertex filter"<<endl;
+	  continue; 
 	}
 
-	if(is_pp){
-	  int event_selection = my_primary->pPAprimaryVertexFilter; 
-	  if(event_selection==0) {
-	    //cout<<"failed vertex filter"<<endl;
-	    continue; 
-	  }
-
-	  int beam_scraping_selection = my_primary->pBeamScrapingFilter;
-	  if(beam_scraping_selection==0){
-	    //cout<<"failed beam-scraping"<<endl;
-	    continue;
+	int beam_scraping_selection = my_primary->pBeamScrapingFilter;
+	if(beam_scraping_selection==0){
+	  cout<<"failed beam-scraping"<<endl;
+	  continue;
 	}
 
 	
-	}else{
-	
-	  int pbpb_event_selection = my_primary->pcollisionEventSelection;
-
-	  if(pbpb_event_selection==0){
-	    //cout<<"failed PbPb event selection "<<evi<<endl;
-	    continue;
-	  }
-
-	  int event_selection = my_primary->pprimaryVertexFilter;
-	  if(event_selection==0){
-	    cout<<"failed vertex filter "<<event_selection<<" "<<evi<<endl;
-	    continue;
-	  
-	  }
-	
-	}
       }else{
 	
-	double evt_pthat = my_primary->pthat;
+	int pbpb_event_selection = my_primary->pcollisionEventSelection;
+
+	if(pbpb_event_selection==0){
+	  //cout<<"failed PbPb event selection "<<evi<<endl;
+	  continue;
+	}
+
+	int event_selection = my_primary->pprimaryVertexFilter;
+	if(event_selection==0){
+	  cout<<"failed vertex filter "<<event_selection<<" "<<evi<<endl;
+	  continue;
+	  
+	}
+      }
+
+      if(fabs(vz) > 15.) continue;      
+      
+
+      if(!is_data){	
+
+	wvz=1;
+	wcen=1;
+	wpthat = 1.;
+
+
+	float evt_pthat = my_primary->pthat;
 	
 	if(evt_pthat < 50) continue;
 	
+	pthat_sample = n_pthat_samples -1;
+
 	for(int i = 0; i< n_pthat_samples; i++){
 
-	  if(evt_pthat >= pthat_cut[i] && evt_pthat > pthat_cut[i+1]) pthat_sample = i;
+	  if(evt_pthat >= pthat_cut[i] && evt_pthat < pthat_cut[i+1]){
+	    pthat_sample = i;
+	  
+	    //	    cout<<"this pthat "<<i<<endl;
+	  }
+	  //	  cout<<i<<" "<<evt_pthat<<" "<<pthat_cut[i]<<" "<<pthat_cut[i+1]<<" "<<pthat_sample<<endl;
 
 	}
-
-
+	if(is_pp)	wpthat = pthat_weight_pythia[pthat_sample];
+	else 	wpthat = pthat_weight_hydjet[pthat_sample];
       }
-      
-      if(fabs(vz) > 15.) continue;      
+
+
+      //   cout<<my_primary->pthat<<" "<<pthat_sample<<" "<<wpthat<<endl;
+
+    
 
     
       if(!is_data){data_mc_type_code = 4;}
 
-      my_hists[data_mc_type_code]->NEvents_after_noise->Fill(hiBin/2.0);
-      my_hists[data_mc_type_code]->Centrality->Fill(hiBin);
-      my_hists[data_mc_type_code]->Vz->Fill(vz);
+      my_hists[data_mc_type_code]->NEvents_after_noise->Fill(cent/2.0);
+      my_hists[data_mc_type_code]->Centrality->Fill(cent,wpthat);
+      my_hists[data_mc_type_code]->Vz->Fill(vz,wpthat);
  
-      wvz=1;
-      wcen=1;
-    
-
+  
       if(!is_data){
 	
      	wvz = fit_vz->Eval(vz);
-	my_hists[data_mc_type_code]->Vz_new->Fill(vz,wvz);
+	my_hists[data_mc_type_code]->Vz_new->Fill(vz,wvz*wpthat);
 	
 	if(!is_pp){
-	  wcen = fit_cen->Eval(1.*hiBin);
-	  my_hists[data_mc_type_code]->Centrality_new->Fill(hiBin, wcen);
+	  wcen = fit_cen->Eval(1.*cent);
+	  my_hists[data_mc_type_code]->Centrality_new->Fill(cent, wcen*wpthat);
 	}
-	wvz = fit_vz->Eval(vz)*pthat_weight[pthat_sample];
+
+	wvz = fit_vz->Eval(vz);
 		       
       }
        
@@ -385,7 +404,7 @@ int main(int argc, char *argv[]){
       for (int ibin=0;ibin<nCBins; ibin ++){
 
 
-	if (!is_pp&&(my_primary->hiBin<CBins[ibin] || my_primary->hiBin >=CBins[ibin+1])){ continue; }
+	if (!is_pp&&(cent<CBins[ibin] ||cent >=CBins[ibin+1])){ continue; }
         
 	if(is_pp&&ibin > 0)continue; // no pp reweighting
 
@@ -450,11 +469,10 @@ int main(int argc, char *argv[]){
 
 	  }//!is_data
 
-	  my_hists[data_mc_type_code]->all_jets_corrpT[ibin][ibin2]->Fill(my_primary->calo_jtpt->at(j4i), wvz*wcen); 
-	  my_hists[data_mc_type_code]->all_jets_phi[ibin][ibin2]->Fill(my_primary->calo_jtphi->at(j4i), wvz*wcen); 
-	  my_hists[data_mc_type_code]->all_jets_eta[ibin][ibin2]->Fill(my_primary->calo_jteta->at(j4i), wvz*wcen); 
+	  my_hists[data_mc_type_code]->all_jets_corrpT[ibin][ibin2]->Fill(my_primary->calo_jtpt->at(j4i), wvz*wcen*wpthat); 
+	  my_hists[data_mc_type_code]->all_jets_phi[ibin][ibin2]->Fill(my_primary->calo_jtphi->at(j4i), wvz*wcen*wpthat); 
+	  my_hists[data_mc_type_code]->all_jets_eta[ibin][ibin2]->Fill(my_primary->calo_jteta->at(j4i), wvz*wcen*wpthat); 
 	  
-	  if(!is_pp) {cent = my_primary->hiBin; }
 	  if(!is_data){data_mc_type_code = 1; }
 
 
@@ -486,7 +504,7 @@ int main(int argc, char *argv[]){
 	    pt= my_primary->trkPt->at(tracks);
 	    phi= my_primary->trkPhi->at(tracks);
 	    rmin = 99;
-	
+	    /*
 	    for(int ijet=0;ijet<(int) my_primary->calo_jtpt->size();ijet++){
 
 	      if( my_primary->calo_trackMax->at(ijet)/my_primary->calo_rawpt->at(ijet) > 0.98 ||my_primary->calo_trackMax->at(ijet)/my_primary->calo_rawpt->at(ijet) < 0.01) continue;
@@ -498,10 +516,10 @@ int main(int argc, char *argv[]){
 	      r_reco=sqrt(pow(jeteta-eta,2)+pow(acos(cos(jetphi-phi)),2));
 	      if(r_reco<rmin)rmin=r_reco;
 	    }
-
+	    */
 	
 	    if(is_pp)  trk_corr = trkCorr->getTrkCorr(pt,eta,phi,0,rmin);
-	    else   trk_corr = trkCorr->getTrkCorr(pt,eta,phi,hiBin,rmin);
+	    else   trk_corr = trkCorr->getTrkCorr(pt,eta,phi,cent,rmin);
 
 	    track_pt = my_primary->trkPt->at(tracks);
 
@@ -510,13 +528,13 @@ int main(int argc, char *argv[]){
 	    //---------------------------
 	
 	    
-	    my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->trkPt->at(tracks),wvz*wcen);
-	    my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->trkEta->at(tracks),wvz*wcen);
-	    my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->trkPhi->at(tracks),wvz*wcen);
+	    my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->trkPt->at(tracks),wvz*wcen*wpthat);
+	    my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->trkEta->at(tracks),wvz*wcen*wpthat);
+	    my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->trkPhi->at(tracks),wvz*wcen*wpthat);
 	    
-	    my_hists[data_mc_type_code]->TrkPt_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkPt->at(tracks),trk_corr*wvz*wcen);
-	    my_hists[data_mc_type_code]->TrkEta_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkEta->at(tracks),trk_corr*wvz*wcen);
-	    my_hists[data_mc_type_code]->TrkPhi_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkPhi->at(tracks),trk_corr*wvz*wcen);
+	    my_hists[data_mc_type_code]->TrkPt_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkPt->at(tracks),trk_corr*wvz*wcen*wpthat);
+	    my_hists[data_mc_type_code]->TrkEta_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkEta->at(tracks),trk_corr*wvz*wcen*wpthat);
+	    my_hists[data_mc_type_code]->TrkPhi_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkPhi->at(tracks),trk_corr*wvz*wcen*wpthat);
 	    
 	    deta = my_primary->calo_jteta->at(j4i) - my_primary->trkEta->at(tracks);
 	    dphi = my_primary->calo_jtphi->at(j4i) - my_primary->trkPhi->at(tracks);
@@ -524,18 +542,20 @@ int main(int argc, char *argv[]){
 	    while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
 	    while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
 	    
-	    my_hists[data_mc_type_code]->hJetTrackSignalBackground[ibin][ibin2][ibin3]->Fill(deta,dphi, trk_corr*wvz*wcen);
-	    my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*trk_corr*wvz*wcen);
-	    my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen);
+	    my_hists[data_mc_type_code]->hJetTrackSignalBackground[ibin][ibin2][ibin3]->Fill(deta,dphi, trk_corr*wvz*wcen*wpthat);
+	    my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*trk_corr*wvz*wcen*wpthat);
+	    my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen*wpthat);
 	  	    	    
 	  } // Track loop
-	  	  
+	  	
 	  if(!is_data){
 
-	    data_mc_type_code = 2;
+	   
 	    //-------------------------------
 	    //   These jets, but gen tracks
 	    //-------------------------------
+
+	    data_mc_type_code = 2;
 
 	    for(int tracks =0; tracks < (int) my_primary->pt->size(); tracks++){
 	      if(fabs(my_primary->eta->at(tracks))>=trketamaxcut) continue;
@@ -548,9 +568,9 @@ int main(int argc, char *argv[]){
 		if (my_primary->pt->at(tracks) >=TrkPtBins[trkpti] && my_primary->pt->at(tracks) < TrkPtBins[trkpti+1])  ibin3 = trkpti ;
 	      } /// trkpti loop
 	  
-	      my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->pt->at(tracks),wvz*wcen);
-	      my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->eta->at(tracks),wvz*wcen);
-	      my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->phi->at(tracks),wvz*wcen);
+	      my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->pt->at(tracks),wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->eta->at(tracks),wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->phi->at(tracks),wvz*wcen*wpthat);
 
 	      track_pt = my_primary->pt->at(tracks);
 	    	   
@@ -561,9 +581,9 @@ int main(int argc, char *argv[]){
 	      while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
 	      while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
 	    
-	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen);
-	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*wvz*wcen);
-	  	  
+	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*wvz*wcen*wpthat);
+	    
 
 	      //Repeat, now subdividing into sube==0 and sube>0.   **duplicate both sube0 scan left for back-compatibility and checks**
 	      //-----------------------------------------------
@@ -572,9 +592,9 @@ int main(int argc, char *argv[]){
 	      else data_mc_type_code = 12;
 
 	    
-	      my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->pt->at(tracks),wvz*wcen);
-	      my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->eta->at(tracks),wvz*wcen);
-	      my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->phi->at(tracks),wvz*wcen);
+	      my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->pt->at(tracks),wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->eta->at(tracks),wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->phi->at(tracks),wvz*wcen*wpthat);
 	  
 	      deta = jet_dir_eta - my_primary->eta->at(tracks);
 	      dphi = jet_dir_phi - my_primary->phi->at(tracks);
@@ -582,93 +602,30 @@ int main(int argc, char *argv[]){
 	      while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
 	      while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
 	    
-	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen);
-	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*wvz*wcen);
-	    
-	      data_mc_type_code =2;
-	
-	    } // Gen particle loop
+	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*wvz*wcen*wpthat);
+	      /*
+	      if( closest_dr<0.3&&(my_primary->genpt->at(closest_j4i)>120.)){
+
+		data_mc_type_code = 8;
 	      
-	    //---------------
-	    //Reco Rightjets
-	    //---------------
+	      }else if(closest_dr<0.3&&(my_primary->genpt->at(closest_j4i)<=120.)){
 
-	
-	    //------- Begin RightJets --------
-	
-	    reco_eta = my_primary->calo_jteta->at(j4i);
-	    reco_phi = my_primary->calo_jtphi->at(j4i);
-
-	    closest_dr = 999.;
-	    closest_j4i = -1;
-
-	    for(int j4i_gen = 0; j4i_gen < (int) my_primary->genpt->size(); j4i_gen++) {
-
-	      gen_phi = my_primary->genphi->at(j4i_gen);
-	      gen_eta = my_primary->geneta->at(j4i_gen);
-	  
-	      dr = TMath::Sqrt((reco_eta-gen_eta)*(reco_eta-gen_eta)+(reco_phi-gen_phi)*(reco_phi-gen_phi));
-	      
-	      if(dr<closest_dr){
-		closest_j4i = j4i_gen;
-		closest_dr = dr;
+		data_mc_type_code = 9;
+	      }else{
+		data_mc_type_code = 10;
 	      }
-	    }// j4i_gen;
-       
-	
-	    //------- End RightJets -------
+	      */
 
-	
-	    if( closest_dr<0.3&&(my_primary->genpt->at(closest_j4i)>120.)){
+	      data_mc_type_code =2;
 
-	      data_mc_type_code = 8;
-	      
-	    }else if(closest_dr<0.3&&(my_primary->genpt->at(closest_j4i)<=120.)){
-
-	      data_mc_type_code = 9;
-	    }else{
-	      data_mc_type_code = 10;
-	    }
-
-	    my_hists[data_mc_type_code]->all_jets_corrpT[ibin][ibin2]->Fill(my_primary->calo_jtpt->at(j4i), wvz*wcen); 
-	    my_hists[data_mc_type_code]->all_jets_phi[ibin][ibin2]->Fill(my_primary->calo_jtphi->at(j4i), wvz*wcen); 
-	    my_hists[data_mc_type_code]->all_jets_eta[ibin][ibin2]->Fill(my_primary->calo_jteta->at(j4i), wvz*wcen); 
-
-	    for(int tracks =0; tracks < (int) my_primary->pt->size(); tracks++){
-	      if(fabs(my_primary->eta->at(tracks))>=trketamaxcut) continue;
-	      if(my_primary->pt->at(tracks)<=trkPtCut) continue;
-	      if(my_primary->chg->at(tracks)==0) continue;
-	      //	if(my_primary->sube->at(tracks)!=0) continue;  //only pythi for these closures
-
-	      track_pt = my_primary->pt->at(tracks);
-	  
-	      for(int trkpti = 0; trkpti < nTrkPtBins; trkpti++) {
-		if (my_primary->pt->at(tracks) >=TrkPtBins[trkpti] && my_primary->pt->at(tracks) < TrkPtBins[trkpti+1])  ibin3 = trkpti ;
-	      } /// trkpti loop
-	      
-	      my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->pt->at(tracks),wvz*wcen);
-	      my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->eta->at(tracks),wvz*wcen);
-	      my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->phi->at(tracks),wvz*wcen);
-	  	   
-	    
-	      deta = my_primary->calo_jteta->at(j4i) - my_primary->eta->at(tracks);
-	      dphi = my_primary->calo_jtphi->at(j4i) - my_primary->phi->at(tracks);
-	 
-	      while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
-	      while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
-	    
-	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen);
-	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*wvz*wcen);
-	    		   
 	    } // Gen particle loop
-	 
+	    
 	  }//!is_data 
 	
 	}/// Closes jpti loop.  THIS MEANS THAT WE TAKE ALL JETS IN AN EVENT >120 GeV, not just the hardest jets.
       
-	if(foundjet==kTRUE){my_hists[data_mc_type_code]->NEvents_test->Fill(hiBin/2.);}
-
-
+	if(foundjet==kTRUE){my_hists[data_mc_type_code]->NEvents_test->Fill(cent/2.);}
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -687,163 +644,138 @@ int main(int argc, char *argv[]){
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+	
 	if(!is_data){
-	data_mc_type_code = 4;
+	  data_mc_type_code = 4;
 
     
-	//----------------------------------------------------------------------------
-	// Time to start filling bins.
-	//----------------------------------------------------------------------------
+	  //----------------------------------------------------------------------------
+	  // Time to start filling bins.
+	  //----------------------------------------------------------------------------
 
-	//Loop over cent bins, but we pick only the right one to fill for PbPb.  We fill all cent bins (properly weighted each time) for pp.
+	  //Loop over cent bins, but we pick only the right one to fill for PbPb.  We fill all cent bins (properly weighted each time) for pp.
 
-     	for(int j4i = 0; j4i < (int) my_primary->genpt->size(); j4i++) {
+	  for(int j4i = 0; j4i < (int) my_primary->genpt->size(); j4i++) {
 
-	  data_mc_type_code = 4;
-	  if( fabs(my_primary->geneta->at(j4i)) > etacut ) continue;
-	  //	  if( my_primary->genpt->at(j4i) > pTmaxcut ) continue;
-	  if(my_primary->genpt->at(j4i) > pTmincut ){ 
-	    foundjet = kTRUE;  	
-	  } 
+	    data_mc_type_code = 4;
+	    if( fabs(my_primary->geneta->at(j4i)) > etacut ) continue;
+	    //	  if( my_primary->genpt->at(j4i) > pTmaxcut ) continue;
+	    if(my_primary->genpt->at(j4i) > pTmincut ){ 
+	      foundjet = kTRUE;  	
+	    }else{
+	      continue;
+	    } 
 
 
-	  ibin2 = 0;  ibin3=0;
+	    ibin2 = 0;  ibin3=0;
         
-	  for(int pti = 0; pti < nPtBins; pti++) {
-	    if (my_primary->genpt->at(j4i) >=PtBins[pti] && my_primary->genpt->at(j4i) < PtBins[pti+1])  ibin2 = pti ;
-	  }
+	    for(int pti = 0; pti < nPtBins; pti++) {
+	      if (my_primary->genpt->at(j4i) >=PtBins[pti] && my_primary->genpt->at(j4i) < PtBins[pti+1])  ibin2 = pti ;
+	    }
     
 	 
-	  my_hists[data_mc_type_code]->all_jets_corrpT[ibin][ibin2]->Fill(my_primary->genpt->at(j4i), wvz*wcen); 
-	  my_hists[data_mc_type_code]->all_jets_phi[ibin][ibin2]->Fill(my_primary->genphi->at(j4i), wvz*wcen); 
-	  my_hists[data_mc_type_code]->all_jets_eta[ibin][ibin2]->Fill(my_primary->geneta->at(j4i), wvz*wcen); 
+	    my_hists[data_mc_type_code]->all_jets_corrpT[ibin][ibin2]->Fill(my_primary->genpt->at(j4i), wvz*wcen*wpthat); 
+	    my_hists[data_mc_type_code]->all_jets_phi[ibin][ibin2]->Fill(my_primary->genphi->at(j4i), wvz*wcen*wpthat); 
+	    my_hists[data_mc_type_code]->all_jets_eta[ibin][ibin2]->Fill(my_primary->geneta->at(j4i), wvz*wcen*wpthat); 
 
-	  if(!is_data){	  data_mc_type_code = 3; }
+	    if(!is_data){	  data_mc_type_code = 3; }
        
-	  if(!is_pp) {cent = my_primary->hiBin; }
+	    for(int tracks =0; tracks < (int) my_primary->trkPt->size(); tracks++){
+	      if(fabs(my_primary->trkEta->at(tracks))>=trketamaxcut) continue;
+	      if (my_primary->highPurity->at(tracks)!=1) continue;
+	      if(!is_pp){
+		if ((my_primary->trkChi2->at(tracks)/(my_primary->trkNdof->at(tracks))/(my_primary->trkNlayer->at(tracks)) > 0.15)) continue;
+		if( my_primary->trkNHit->at(tracks)< 11 && (my_primary->trkPt->at(tracks)> 0.7)) continue;
+	      }
+	      float Et = (my_primary->pfHcal->at(tracks)+my_primary->pfEcal->at(tracks))/TMath::CosH(my_primary->trkEta->at(tracks));
+	      if(!(my_primary->trkPt->at(tracks)<20 || (Et>0.5*my_primary->trkPt->at(tracks)))) continue;
 
-	  for(int tracks =0; tracks < (int) my_primary->trkPt->size(); tracks++){
-	    if(fabs(my_primary->trkEta->at(tracks))>=trketamaxcut) continue;
-	    if (my_primary->highPurity->at(tracks)!=1) continue;
-	    if(!is_pp){
-	      if ((my_primary->trkChi2->at(tracks)/(my_primary->trkNdof->at(tracks))/(my_primary->trkNlayer->at(tracks)) > 0.15)) continue;
-	      if( my_primary->trkNHit->at(tracks)< 11 && (my_primary->trkPt->at(tracks)> 0.7)) continue;
-	    }
-	    float Et = (my_primary->pfHcal->at(tracks)+my_primary->pfEcal->at(tracks))/TMath::CosH(my_primary->trkEta->at(tracks));
-	    if(!(my_primary->trkPt->at(tracks)<20 || (Et>0.5*my_primary->trkPt->at(tracks)))) continue;
-
-	    if(my_primary->trkPt->at(tracks)<=trkPtCut) continue;
-	    if(my_primary->trkPt->at(tracks)> max_trkPt) continue;
+	      if(my_primary->trkPt->at(tracks)<=trkPtCut) continue;
+	      if(my_primary->trkPt->at(tracks)> max_trkPt) continue;
 
 	  
-	    for(int trkpti = 0; trkpti < nTrkPtBins; trkpti++) {
-	      if (my_primary->trkPt->at(tracks) >=TrkPtBins[trkpti] && my_primary->trkPt->at(tracks) < TrkPtBins[trkpti+1])  ibin3 = trkpti ;
-	    } /// trkpti loop
+	      for(int trkpti = 0; trkpti < nTrkPtBins; trkpti++) {
+		if (my_primary->trkPt->at(tracks) >=TrkPtBins[trkpti] && my_primary->trkPt->at(tracks) < TrkPtBins[trkpti+1])  ibin3 = trkpti ;
+	      } /// trkpti loop
 	  
 
 	      //  Prepare for and call efficiency calculation
 
-	    eta= my_primary->trkEta->at(tracks);
-	    pt= my_primary->trkPt->at(tracks);
-	    phi= my_primary->trkPhi->at(tracks);
-	    rmin = 99;
-	    
-	    for(int ijet=0;ijet<(int) my_primary->calo_jtpt->size();ijet++){
+	      eta= my_primary->trkEta->at(tracks);
+	      pt= my_primary->trkPt->at(tracks);
+	      phi= my_primary->trkPhi->at(tracks);
+	      rmin = 99;
+	      /*
+		for(int ijet=0;ijet<(int) my_primary->calo_jtpt->size();ijet++){
 
-	      if( my_primary->calo_trackMax->at(ijet)/my_primary->calo_rawpt->at(ijet) > 0.98 ||my_primary->calo_trackMax->at(ijet)/my_primary->calo_rawpt->at(ijet) < 0.01) continue;
-	      jeteta = my_primary->calo_jteta->at(ijet);
-	      jetphi = my_primary->calo_jtphi->at(ijet);
+		if( my_primary->calo_trackMax->at(ijet)/my_primary->calo_rawpt->at(ijet) > 0.98 ||my_primary->calo_trackMax->at(ijet)/my_primary->calo_rawpt->at(ijet) < 0.01) continue;
+		jeteta = my_primary->calo_jteta->at(ijet);
+		jetphi = my_primary->calo_jtphi->at(ijet);
 	    
-	      if(fabs(jeteta)>2 || my_primary->calo_jtpt->at(ijet)<50) continue;
+		if(fabs(jeteta)>2 || my_primary->calo_jtpt->at(ijet)<50) continue;
 	   
-	      r_reco=sqrt(pow(jeteta-eta,2)+pow(acos(cos(jetphi-phi)),2));
-	      if(r_reco<rmin)rmin=r_reco;
+		r_reco=sqrt(pow(jeteta-eta,2)+pow(acos(cos(jetphi-phi)),2));
+		if(r_reco<rmin)rmin=r_reco;
 	      
-	    }
-	
+		}
+	      */
 	 
-	    if(is_pp)	    trk_corr = trkCorr->getTrkCorr(pt,eta,phi,0,rmin);
-	    else 	    trk_corr = trkCorr->getTrkCorr(pt,eta,phi,cent,rmin);
+	      if(is_pp)	    trk_corr = trkCorr->getTrkCorr(pt,eta,phi,0,rmin);
+	      else 	    trk_corr = trkCorr->getTrkCorr(pt,eta,phi,cent,rmin);
 
-	    track_pt = my_primary->trkPt->at(tracks);
+	      track_pt = my_primary->trkPt->at(tracks);
 	 	 	
-	    //---------------------------
-	    // Now we are ready to fill!
-	    //---------------------------
+	      //---------------------------
+	      // Now we are ready to fill!
+	      //---------------------------
 	
-	    my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->trkPt->at(tracks),wvz*wcen);
-	    my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->trkEta->at(tracks),wvz*wcen);
-	    my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->trkPhi->at(tracks),wvz*wcen);
+	      my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->trkPt->at(tracks),wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->trkEta->at(tracks),wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->trkPhi->at(tracks),wvz*wcen*wpthat);
 	    
-	    my_hists[data_mc_type_code]->TrkPt_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkPt->at(tracks),trk_corr*wvz*wcen);
-	    my_hists[data_mc_type_code]->TrkEta_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkEta->at(tracks),trk_corr*wvz*wcen);
-	    my_hists[data_mc_type_code]->TrkPhi_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkPhi->at(tracks),trk_corr*wvz*wcen);
+	      my_hists[data_mc_type_code]->TrkPt_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkPt->at(tracks),trk_corr*wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->TrkEta_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkEta->at(tracks),trk_corr*wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->TrkPhi_weighted[ibin][ibin2][ibin3]->Fill(my_primary->trkPhi->at(tracks),trk_corr*wvz*wcen*wpthat);
 
 	   
 	    
-	    deta = my_primary->geneta->at(j4i) - my_primary->trkEta->at(tracks);
-	    dphi = my_primary->genphi->at(j4i) - my_primary->trkPhi->at(tracks);
+	      deta = my_primary->geneta->at(j4i) - my_primary->trkEta->at(tracks);
+	      dphi = my_primary->genphi->at(j4i) - my_primary->trkPhi->at(tracks);
 	 
-	    while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
-	    while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
+	      while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
+	      while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
 	    
-	    my_hists[data_mc_type_code]->hJetTrackSignalBackground[ibin][ibin2][ibin3]->Fill(deta,dphi, trk_corr*wvz*wcen);
-	    my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*trk_corr*wvz*wcen);
-	    my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen);
+	      my_hists[data_mc_type_code]->hJetTrackSignalBackground[ibin][ibin2][ibin3]->Fill(deta,dphi, trk_corr*wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*trk_corr*wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen*wpthat);
 	  
-	  } // Track loop
+	    } // Track loop
 	
 	    //-------------------------------
 	    //   These jets, but gen tracks
 	    //-------------------------------
 
-	  data_mc_type_code = 4;
+	    data_mc_type_code = 4;
 	    
-	  for(int tracks =0; tracks < (int) my_primary->pt->size(); tracks++){
-	    if(fabs(my_primary->eta->at(tracks))>=trketamaxcut) continue;
-	    if(my_primary->pt->at(tracks)<=trkPtCut) continue;
-	    if(my_primary->pt->at(tracks)> max_trkPt) continue;
-	    if(my_primary->chg->at(tracks)==0) continue;
+	    for(int tracks =0; tracks < (int) my_primary->pt->size(); tracks++){
+	      if(fabs(my_primary->eta->at(tracks))>=trketamaxcut) continue;
+	      if(my_primary->pt->at(tracks)<=trkPtCut) continue;
+	      if(my_primary->pt->at(tracks)> max_trkPt) continue;
+	      if(my_primary->chg->at(tracks)==0) continue;
 	 
-	    //	    if(my_primary->sube->at(tracks)!=0) continue;
+	      //	    if(my_primary->sube->at(tracks)!=0) continue;
 
 	  
-	    for(int trkpti = 0; trkpti < nTrkPtBins; trkpti++) {
-	      if (my_primary->pt->at(tracks) >=TrkPtBins[trkpti] && my_primary->pt->at(tracks) < TrkPtBins[trkpti+1])  ibin3 = trkpti ;
-	    } /// trkpti loop
+	      for(int trkpti = 0; trkpti < nTrkPtBins; trkpti++) {
+		if (my_primary->pt->at(tracks) >=TrkPtBins[trkpti] && my_primary->pt->at(tracks) < TrkPtBins[trkpti+1])  ibin3 = trkpti ;
+	      } /// trkpti loop
 		
-	    my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->pt->at(tracks),wvz*wcen);
-	    my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->eta->at(tracks),wvz*wcen);
-	    my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->phi->at(tracks),wvz*wcen);
+	      my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->pt->at(tracks),wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->eta->at(tracks),wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->phi->at(tracks),wvz*wcen*wpthat);
 	    
 	
-	    track_pt = my_primary->pt->at(tracks);
-	    
-	    deta = my_primary->geneta->at(j4i) - my_primary->eta->at(tracks);
-	    dphi = my_primary->genphi->at(j4i) - my_primary->phi->at(tracks);
-	 
-	    while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
-	    while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
-	    
-	    my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen);
-	    my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*wvz*wcen);
-	  
-	    /*
-	    //-------------------------------
-	    //  Same but split by sube==0
-	    //-----------------------------
-
-	    if(!is_pp){
-
-	      if(my_primary->sube->at(tracks)==0) data_mc_type_code = 13;
-	      else data_mc_type_code = 14;
-	 
-	  
-	      my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->pt->at(tracks),wvz*wcen);
-	      my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->eta->at(tracks),wvz*wcen);
-	      my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->phi->at(tracks),wvz*wcen);
-		   
+	      track_pt = my_primary->pt->at(tracks);
 	    
 	      deta = my_primary->geneta->at(j4i) - my_primary->eta->at(tracks);
 	      dphi = my_primary->genphi->at(j4i) - my_primary->phi->at(tracks);
@@ -851,18 +783,43 @@ int main(int argc, char *argv[]){
 	      while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
 	      while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
 	    
-	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen);
-	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*wvz*wcen);
+	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen*wpthat);
+	      my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*wvz*wcen*wpthat);
 	  
 	   
-	    } //!is_pp
-	    */
+	      //-------------------------------
+	      //  Same but split by sube0
+	      //-----------------------------
 
-	    data_mc_type_code =4;
+	      if(!is_pp){
+
+		if(my_primary->sube->at(tracks)==0) data_mc_type_code = 13;
+		else data_mc_type_code = 14;
+	 
 	  
+		my_hists[data_mc_type_code]->TrkPt[ibin][ibin2][ibin3]->Fill(my_primary->pt->at(tracks),wvz*wcen*wpthat);
+		my_hists[data_mc_type_code]->TrkEta[ibin][ibin2][ibin3]->Fill(my_primary->eta->at(tracks),wvz*wcen*wpthat);
+		my_hists[data_mc_type_code]->TrkPhi[ibin][ibin2][ibin3]->Fill(my_primary->phi->at(tracks),wvz*wcen*wpthat);
+		   
 	    
-	  } // Gen particle loop
-	} // Gen jet loop
+		deta = my_primary->geneta->at(j4i) - my_primary->eta->at(tracks);
+		dphi = my_primary->genphi->at(j4i) - my_primary->phi->at(tracks);
+	 
+		while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
+		while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
+	    
+		my_hists[data_mc_type_code]->hJetTrackSignalBackground_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen*wpthat);
+		my_hists[data_mc_type_code]->hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Fill(deta,dphi, track_pt*wvz*wcen*wpthat);
+	  
+	   
+	      } //!is_pp
+	
+
+	      data_mc_type_code = 4;
+	  
+	  
+	    } // Gen particle loop
+	  } // Gen jet loop
 	} //!is_data
     	  //----------------------------------------------------
 	  //      EVENT MIXING STARTS HERE!  (ALL JET TYPES MATCHED AT ONCE)
@@ -870,12 +827,10 @@ int main(int argc, char *argv[]){
       
 	if(do_mixing&&foundjet){ // new scheme:  match event once if we have found a jet
 	  jet_cent = 0;
-	  if(!is_pp){ jet_cent = centbins->FindBin(my_primary->hiBin);}
+
+	  if(!is_pp){ jet_cent = centbins->FindBin(cent);}
 	  jet_vzbin = vzbins->FindBin(my_primary->vz);
       
-	  //	  cout << "mixing now " << me <<" "<<nme<<endl;
-
-	  int startovercheck = 0;
 	  int mevi = 0;
 
 	  while(mevi< meptrig){  //
@@ -940,10 +895,9 @@ int main(int argc, char *argv[]){
 		eta= me_tree->trkEta->at(tracks);
 		pt= me_tree->trkPt->at(tracks);
 		phi= me_tree->trkPhi->at(tracks);
-		if(!is_pp){cent = me_tree->hiBin;}
-	  
+		  
 		rmin = 99;
-	
+		/*
 		for(int ijet=0;ijet<(int) me_tree->calo_jtpt->size();ijet++){
 		  if( me_tree->calo_trackMax->at(ijet)/me_tree->calo_rawpt->at(ijet) > 0.98 ||me_tree->calo_trackMax->at(ijet)/me_tree->calo_rawpt->at(ijet) < 0.01) continue;
 		  jeteta = me_tree->calo_jteta->at(ijet);
@@ -953,7 +907,7 @@ int main(int argc, char *argv[]){
 		  r_reco=sqrt(pow(jeteta-eta,2)+pow(acos(cos(jetphi-phi)),2));
 		  if(r_reco<rmin)rmin=r_reco;
 		}
-	
+		*/
 
 		if(is_pp)	    trk_corr = trkCorr->getTrkCorr(pt,eta,phi,0,rmin);
 		else 	    trk_corr = trkCorr->getTrkCorr(pt,eta,phi,cent,rmin);
@@ -965,13 +919,13 @@ int main(int argc, char *argv[]){
 		// Now we are ready to fill!
 		//---------------------------
 		 
-		my_hists[data_mc_type_code]->ME_TrkPt[ibin][ibin2][ibin3]->Fill(me_tree->trkPt->at(tracks),wvz*wcen);
-		my_hists[data_mc_type_code]->ME_TrkEta[ibin][ibin2][ibin3]->Fill(me_tree->trkEta->at(tracks),wvz*wcen);
-		my_hists[data_mc_type_code]->ME_TrkPhi[ibin][ibin2][ibin3]->Fill(me_tree->trkPhi->at(tracks),wvz*wcen);
+		my_hists[data_mc_type_code]->ME_TrkPt[ibin][ibin2][ibin3]->Fill(me_tree->trkPt->at(tracks),wvz*wcen*wpthat);
+		my_hists[data_mc_type_code]->ME_TrkEta[ibin][ibin2][ibin3]->Fill(me_tree->trkEta->at(tracks),wvz*wcen*wpthat);
+		my_hists[data_mc_type_code]->ME_TrkPhi[ibin][ibin2][ibin3]->Fill(me_tree->trkPhi->at(tracks),wvz*wcen*wpthat);
 	    
-		my_hists[data_mc_type_code]->ME_TrkPt_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkPt->at(tracks),trk_corr*wvz*wcen);
-		my_hists[data_mc_type_code]->ME_TrkEta_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkEta->at(tracks),trk_corr*wvz*wcen);
-		my_hists[data_mc_type_code]->ME_TrkPhi_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkPhi->at(tracks),trk_corr*wvz*wcen);
+		my_hists[data_mc_type_code]->ME_TrkPt_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkPt->at(tracks),trk_corr*wvz*wcen*wpthat);
+		my_hists[data_mc_type_code]->ME_TrkEta_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkEta->at(tracks),trk_corr*wvz*wcen*wpthat);
+		my_hists[data_mc_type_code]->ME_TrkPhi_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkPhi->at(tracks),trk_corr*wvz*wcen*wpthat);
 
 	    
 		   	    
@@ -981,8 +935,8 @@ int main(int argc, char *argv[]){
 		while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
 		while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
 	    
-		my_hists[data_mc_type_code]->hJetTrackME[ibin][ibin2][ibin3]->Fill(deta,dphi, trk_corr*wvz*wcen);
-		my_hists[data_mc_type_code]->hJetTrackME_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen);
+		my_hists[data_mc_type_code]->hJetTrackME[ibin][ibin2][ibin3]->Fill(deta,dphi, trk_corr*wvz*wcen*wpthat);
+		my_hists[data_mc_type_code]->hJetTrackME_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen*wpthat);
 	
 	  
 	      }  //track mixed event for data
@@ -1008,13 +962,13 @@ int main(int argc, char *argv[]){
 		  // Now we are ready to fill!
 		  //---------------------------
 		 
-		  my_hists[data_mc_type_code]->ME_TrkPt[ibin][ibin2][ibin3]->Fill(me_tree->pt->at(tracks),wvz*wcen);
-		  my_hists[data_mc_type_code]->ME_TrkEta[ibin][ibin2][ibin3]->Fill(me_tree->eta->at(tracks),wvz*wcen);
-		  my_hists[data_mc_type_code]->ME_TrkPhi[ibin][ibin2][ibin3]->Fill(me_tree->phi->at(tracks),wvz*wcen);
+		  my_hists[data_mc_type_code]->ME_TrkPt[ibin][ibin2][ibin3]->Fill(me_tree->pt->at(tracks),wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->ME_TrkEta[ibin][ibin2][ibin3]->Fill(me_tree->eta->at(tracks),wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->ME_TrkPhi[ibin][ibin2][ibin3]->Fill(me_tree->phi->at(tracks),wvz*wcen*wpthat);
 	    
-		  my_hists[data_mc_type_code]->ME_TrkPt_weighted[ibin][ibin2][ibin3]->Fill(me_tree->pt->at(tracks),trk_corr*wvz*wcen);
-		  my_hists[data_mc_type_code]->ME_TrkEta_weighted[ibin][ibin2][ibin3]->Fill(me_tree->eta->at(tracks),trk_corr*wvz*wcen);
-		  my_hists[data_mc_type_code]->ME_TrkPhi_weighted[ibin][ibin2][ibin3]->Fill(me_tree->phi->at(tracks),trk_corr*wvz*wcen);
+		  my_hists[data_mc_type_code]->ME_TrkPt_weighted[ibin][ibin2][ibin3]->Fill(me_tree->pt->at(tracks),trk_corr*wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->ME_TrkEta_weighted[ibin][ibin2][ibin3]->Fill(me_tree->eta->at(tracks),trk_corr*wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->ME_TrkPhi_weighted[ibin][ibin2][ibin3]->Fill(me_tree->phi->at(tracks),trk_corr*wvz*wcen*wpthat);
 
 	    	   	    
 		  deta = my_primary->calo_jteta->at(j4i) - me_tree->eta->at(tracks);
@@ -1023,8 +977,8 @@ int main(int argc, char *argv[]){
 		  while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
 		  while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
 	    
-		  my_hists[data_mc_type_code]->hJetTrackME[ibin][ibin2][ibin3]->Fill(deta,dphi, trk_corr*wvz*wcen);
-		  my_hists[data_mc_type_code]->hJetTrackME_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen);
+		  my_hists[data_mc_type_code]->hJetTrackME[ibin][ibin2][ibin3]->Fill(deta,dphi, trk_corr*wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->hJetTrackME_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen*wpthat);
 	  
 	  
 		}  //track mixed event for RecoGen MC
@@ -1071,7 +1025,7 @@ int main(int argc, char *argv[]){
 		  if(!is_pp){cent = me_tree->hiBin;}
 	  
 		  rmin = 99;
-	
+		  /*
 		  for(int ijet=0;ijet<(int) me_tree->calo_jtpt->size();ijet++){
 		    if( me_tree->calo_trackMax->at(ijet)/me_tree->calo_rawpt->at(ijet) > 0.98 ||me_tree->calo_trackMax->at(ijet)/me_tree->calo_rawpt->at(ijet) < 0.01) continue;
 		    jeteta = me_tree->calo_jteta->at(ijet);
@@ -1081,7 +1035,7 @@ int main(int argc, char *argv[]){
 		    r_reco=sqrt(pow(jeteta-eta,2)+pow(acos(cos(jetphi-phi)),2));
 		    if(r_reco<rmin)rmin=r_reco;
 		  }
-	
+		  */
 		  if(is_pp)	    trk_corr = trkCorr->getTrkCorr(pt,eta,phi,0,rmin);
 		  else 	    trk_corr = trkCorr->getTrkCorr(pt,eta,phi,cent,rmin);
 			    
@@ -1089,13 +1043,13 @@ int main(int argc, char *argv[]){
 		  // Now we are ready to fill!
 		  //---------------------------
 		 
-		  my_hists[data_mc_type_code]->ME_TrkPt[ibin][ibin2][ibin3]->Fill(me_tree->trkPt->at(tracks),wvz*wcen);
-		  my_hists[data_mc_type_code]->ME_TrkEta[ibin][ibin2][ibin3]->Fill(me_tree->trkEta->at(tracks),wvz*wcen);
-		  my_hists[data_mc_type_code]->ME_TrkPhi[ibin][ibin2][ibin3]->Fill(me_tree->trkPhi->at(tracks),wvz*wcen);
+		  my_hists[data_mc_type_code]->ME_TrkPt[ibin][ibin2][ibin3]->Fill(me_tree->trkPt->at(tracks),wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->ME_TrkEta[ibin][ibin2][ibin3]->Fill(me_tree->trkEta->at(tracks),wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->ME_TrkPhi[ibin][ibin2][ibin3]->Fill(me_tree->trkPhi->at(tracks),wvz*wcen*wpthat);
 	    
-		  my_hists[data_mc_type_code]->ME_TrkPt_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkPt->at(tracks),trk_corr*wvz*wcen);
-		  my_hists[data_mc_type_code]->ME_TrkEta_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkEta->at(tracks),trk_corr*wvz*wcen);
-		  my_hists[data_mc_type_code]->ME_TrkPhi_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkPhi->at(tracks),trk_corr*wvz*wcen);
+		  my_hists[data_mc_type_code]->ME_TrkPt_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkPt->at(tracks),trk_corr*wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->ME_TrkEta_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkEta->at(tracks),trk_corr*wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->ME_TrkPhi_weighted[ibin][ibin2][ibin3]->Fill(me_tree->trkPhi->at(tracks),trk_corr*wvz*wcen*wpthat);
 
 
 		  
@@ -1105,8 +1059,8 @@ int main(int argc, char *argv[]){
 		  while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
 		  while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
 	    
-		  my_hists[data_mc_type_code]->hJetTrackME[ibin][ibin2][ibin3]->Fill(deta,dphi, trk_corr*wvz*wcen);
-		  my_hists[data_mc_type_code]->hJetTrackME_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen);
+		  my_hists[data_mc_type_code]->hJetTrackME[ibin][ibin2][ibin3]->Fill(deta,dphi, trk_corr*wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->hJetTrackME_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen*wpthat);
 	  
 	  
 		}  //track mixed event for data
@@ -1130,9 +1084,9 @@ int main(int argc, char *argv[]){
 		  // Now we are ready to fill!
 		  //---------------------------
 		 
-		  my_hists[data_mc_type_code]->ME_TrkPt[ibin][ibin2][ibin3]->Fill(me_tree->pt->at(tracks),wvz*wcen);
-		  my_hists[data_mc_type_code]->ME_TrkEta[ibin][ibin2][ibin3]->Fill(me_tree->eta->at(tracks),wvz*wcen);
-		  my_hists[data_mc_type_code]->ME_TrkPhi[ibin][ibin2][ibin3]->Fill(me_tree->phi->at(tracks),wvz*wcen);
+		  my_hists[data_mc_type_code]->ME_TrkPt[ibin][ibin2][ibin3]->Fill(me_tree->pt->at(tracks),wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->ME_TrkEta[ibin][ibin2][ibin3]->Fill(me_tree->eta->at(tracks),wvz*wcen*wpthat);
+		  my_hists[data_mc_type_code]->ME_TrkPhi[ibin][ibin2][ibin3]->Fill(me_tree->phi->at(tracks),wvz*wcen*wpthat);
 	    
 		  deta = my_primary->geneta->at(j4i) - me_tree->eta->at(tracks);
 		  dphi = my_primary->genphi->at(j4i) - me_tree->phi->at(tracks);
@@ -1140,7 +1094,7 @@ int main(int argc, char *argv[]){
 		  while(dphi>(1.5*TMath::Pi())){dphi+= -2*TMath::Pi();}
 		  while(dphi<(-0.5*TMath::Pi())){dphi+= 2*TMath::Pi();}
 	    
-		  my_hists[data_mc_type_code]->hJetTrackME_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen);
+		  my_hists[data_mc_type_code]->hJetTrackME_notrkcorr[ibin][ibin2][ibin3]->Fill(deta,dphi, wvz*wcen*wpthat);
 	  
 			  
 		}  //track mixed event for GenGen MC

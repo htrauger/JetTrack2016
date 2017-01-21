@@ -18,6 +18,7 @@
 #include "TStyle.h"
 #include "TLatex.h"
 #include "THStack.h"
+#include "TGaxis.h"
 
 
 #include <iostream>
@@ -33,13 +34,9 @@ using namespace std;
 Int_t particle_yields(bool is_number = kTRUE){
 
   gROOT->ForceStyle();
-  gStyle->SetOptDate(0);
-  gStyle->SetOptStat(0);
-  gStyle->SetOptFit(0);
-  gStyle->SetOptTitle(1);
-
+  gStyle->SetOptStat(0);  
   gStyle->SetPadBottomMargin(0.15);
-  gStyle->SetPadTopMargin   (0.05);
+  gStyle->SetPadTopMargin   (0.25);
   gStyle->SetPadLeftMargin  (0.15);
   gStyle->SetPadRightMargin (0.05);
     
@@ -120,6 +117,8 @@ Int_t particle_yields(bool is_number = kTRUE){
 
 
   TFile *f_in_pbpb = new TFile("../me_correct/PbPb_Inclusive_Correlations.root");
+
+  TFile *f_in_ref = new TFile("../HIN_14_016_comparison/Inclusive_Data_AllPlots.root");
  
   if(!is_number){
 
@@ -150,9 +149,9 @@ Int_t particle_yields(bool is_number = kTRUE){
 
   int lbin, rbin;
 
-  double bin_width_phi, bin_width_eta, diff_max, diff_min, signal_min, signal_max, stacked_max, stacked_min, bc, err;
+  double bin_width_phi, bin_width_eta, diff_max, diff_min, signal_min, signal_max, stacked_max, stacked_max_diff, stacked_min_diff, stacked_min, bc, err;
 
-  float rel_err_pbpb =TMath::Sqrt(0.05*0.05+0.05*0.05+0.03*0.03);
+  float rel_err_pbpb =TMath::Sqrt(0.05*0.05+0.01*0.01+0.04*0.04);
   float rel_err_pp =TMath::Sqrt(0.05*0.05+0.04*0.04+0.03*0.03);
 
   TF1 *fit_line_left = new TF1("fit_line_left","[0]");
@@ -221,7 +220,7 @@ Int_t particle_yields(bool is_number = kTRUE){
 	rbin = result[g][i][j]->GetXaxis()->FindBin(etalim-.0001);
 
 	  
-	if(g==0)	signal_dPhi[g][i][j] = (TH1D*)result[g][i][j]->ProjectionY((TString)("Proj_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
+	if(g==0)	signal_dPhi[g][i][j] = (TH1D*)result[g][i][j]->ProjectionY((TString)("Proj_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
 	else	signal_dPhi[g][i][j] = (TH1D*)result[g][i][j]->ProjectionY((TString)("Proj_dPhi_pp_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
 
 
@@ -251,7 +250,7 @@ Int_t particle_yields(bool is_number = kTRUE){
 
 
 	  
-	if(g==0)	signal_dEta[g][i][j] = (TH1D*)result[g][i][j]->ProjectionX((TString)("Proj_dEta_PbPb_"+  CBin_strs[j] + "_" + CBin_strs[j+1]+" "+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
+	if(g==0)	signal_dEta[g][i][j] = (TH1D*)result[g][i][j]->ProjectionX((TString)("Proj_dEta_PbPb_"+  CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
 	else 	signal_dEta[g][i][j] = (TH1D*)result[g][i][j]->ProjectionX((TString)("Proj_dEta_pp_"+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
 
 	bin_width_eta =  signal_dEta[g][i][j]->GetBinWidth(1);
@@ -296,10 +295,15 @@ Int_t particle_yields(bool is_number = kTRUE){
 
 	  cout<<"starting corrs"<<endl;
 	  if(i>4){
-	  
+	    /*
 	    TString	jff_name =(TString)("JFF_Residual_Eta_"+CBin_strs[j]+"_"+CBin_strs[j+1]+"_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
 	    jff_residual_dEta[g][i][j] = (TH1D*)f_jff_hyd->Get(jff_name)->Clone(jff_name);
+	    */	    
+	    TString	jff_name =(TString)("JFF_Residual_Eta_"+CBin_strs[0]+"_"+CBin_strs[1]+"_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
+	    jff_residual_dEta[g][i][j] = (TH1D*)f_jff_hyd->Get(jff_name)->Clone(jff_name);
 	    
+
+
 	    jff_name.ReplaceAll("Eta","Phi");
 	    jff_residual_dPhi[g][i][j] = (TH1D*)f_jff_hyd->Get(jff_name)->Clone(jff_name);
 
@@ -307,13 +311,19 @@ Int_t particle_yields(bool is_number = kTRUE){
 	    signal_dPhi_rebin[g][i][j]->Add(jff_residual_dPhi[g][i][j],-1.);
 	  
 	  }else{
+	    /*
+	    TString	jff_name =(TString)("JFF_Residual_Eta_"+CBin_strs[j]+"_"+CBin_strs[j+1]+"_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
+	    jff_residual_dEta[g][i][j] = (TH1D*)f_jff_hyd->Get(jff_name)->Clone(jff_name);
+
+	    */
 
 	    TString	jff_name =(TString)("JFF_Residual_Eta_"+CBin_strs[0]+"_"+CBin_strs[1]+"_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
-	    jff_residual_dEta[g][i][j] = (TH1D*)f_jff_pyth->Get(jff_name)->Clone(jff_name);
+	    jff_residual_dEta[g][i][j] = (TH1D*)f_jff_hyd->Get(jff_name)->Clone(jff_name);
+	    
 	    
 	    jff_name.ReplaceAll("Eta","Phi");
 
-	    jff_residual_dPhi[g][i][j] = (TH1D*)f_jff_pyth->Get(jff_name)->Clone(jff_name);
+	    jff_residual_dPhi[g][i][j] = (TH1D*)f_jff_hyd->Get(jff_name)->Clone(jff_name);
 	   
 	    signal_dEta_rebin[g][i][j]->Add(jff_residual_dEta[g][i][j],-1.);
 	    signal_dPhi_rebin[g][i][j]->Add(jff_residual_dPhi[g][i][j],-1.);
@@ -327,7 +337,7 @@ Int_t particle_yields(bool is_number = kTRUE){
 	    spillover_name.ReplaceAll("Eta","Phi");
 	    spill_over_dPhi[g][i][j] = (TH1D*)f_spillover->Get(spillover_name)->Clone(spillover_name);
 	  
-	    if(i>3){
+	    if(i<3){
 	      signal_dEta_rebin[g][i][j]->Add(spill_over_dEta[g][i][j],-1.);
 	      signal_dPhi_rebin[g][i][j]->Add(spill_over_dPhi[g][i][j],-1.);
 	    }
@@ -389,7 +399,7 @@ Int_t particle_yields(bool is_number = kTRUE){
 	rbin = result[g][i][j]->GetXaxis()->FindBin(etalim-.0001);
 
 	  
-	if(g==0)	signal_dPhi[g][i][j] = (TH1D*)result[g][i][j]->ProjectionY((TString)("Proj_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
+	if(g==0)	signal_dPhi[g][i][j] = (TH1D*)result[g][i][j]->ProjectionY((TString)("Proj_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
 	else	signal_dPhi[g][i][j] = (TH1D*)result[g][i][j]->ProjectionY((TString)("Proj_dPhi_pp_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
 
 	if( signal_dPhi[g][i][j]->GetBinWidth(1)!= signal_dPhi[g][i][j]->GetBinWidth(1))cout<<"Widths do not match!"<<endl;
@@ -404,7 +414,7 @@ Int_t particle_yields(bool is_number = kTRUE){
 
 
 	  
-	if(g==0)	signal_dEta[g][i][j] = (TH1D*)result[g][i][j]->ProjectionX((TString)("Proj_dEta_PbPb_"+  CBin_strs[j] + "_" + CBin_strs[j+1]+" "+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
+	if(g==0)	signal_dEta[g][i][j] = (TH1D*)result[g][i][j]->ProjectionX((TString)("Proj_dEta_PbPb_"+  CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
 	else 	signal_dEta[g][i][j] = (TH1D*)result[g][i][j]->ProjectionX((TString)("Proj_dEta_pp_"+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
 
 	bin_width_eta =  signal_dEta[g][i][j]->GetBinWidth(1);
@@ -468,7 +478,7 @@ Int_t particle_yields(bool is_number = kTRUE){
 
 	  bc =  signal_dPhi_syst[0][i][j]->GetBinContent(k);
 
-	  if(i<4) err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dPhi[0][i][j]->GetBinContent(k)*jff_residual_dPhi[0][i][j]->GetBinContent(k)/4.+spill_over_dPhi[0][i][j]->GetBinContent(k)*spill_over_dPhi[0][i][j]->GetBinContent(k)/4.+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
+	  if(i<4) err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dPhi[0][i][j]->GetBinContent(k)*jff_residual_dPhi[0][i][j]->GetBinContent(k)/4.+spill_over_dPhi[0][i][j]->GetBinContent(k)*spill_over_dPhi[0][i][j]->GetBinContent(k)*.58*.58+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
 
 	  else   err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dPhi[0][i][j]->GetBinContent(k)*jff_residual_dPhi[0][i][j]->GetBinContent(k)/4.+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
 
@@ -489,7 +499,7 @@ Int_t particle_yields(bool is_number = kTRUE){
 
 	  bc =  signal_dEta_syst[0][i][j]->GetBinContent(k);
 	  
-	  if(i<4)	  err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dEta[0][i][j]->GetBinError(1)*jff_residual_dEta[0][i][j]->GetBinError(1)/4.+spill_over_dEta[0][i][j]->GetBinError(1)*spill_over_dEta[0][i][j]->GetBinError(1)/4.+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
+	  if(i<4)	  err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dEta[0][i][j]->GetBinError(1)*jff_residual_dEta[0][i][j]->GetBinError(1)/4.+spill_over_dEta[0][i][j]->GetBinError(1)*spill_over_dEta[0][i][j]->GetBinError(1)*.58*.58+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
 	  else  err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dEta[0][i][j]->GetBinError(1)*jff_residual_dEta[0][i][j]->GetBinError(1)/4.+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
 
 	  signal_dEta_syst[0][i][j]->SetBinError(k,err);
@@ -508,40 +518,40 @@ Int_t particle_yields(bool is_number = kTRUE){
       
       switch(i){
       case 0: 
-	signal_max = 15.;
+	signal_max = 13.;
 	signal_min = -1.;
-	diff_max = 15.;
+	diff_max = 13.;
 	diff_min = -1.;
 	break;
       case 1: 
-	signal_max = 15.;
-	signal_min = -1.;
-	diff_max = 15.;
-	diff_min = -1.;
+	signal_max = 8.;
+	signal_min = -.5;
+	diff_max = 8.;
+	diff_min = -.5;
 	break;
       case 2: 
-	signal_max = 15.;
-	signal_min = -1.;
-	diff_max = 15.;
-	diff_min = -1.;
+	signal_max = 6.;
+	signal_min = -.5;
+	diff_max = 6.;
+	diff_min = -.5;
 	break;
       case 3:
-	signal_max = 15.;
-	signal_min = -1.; 
-	diff_max = 15.;
-	diff_min = -1.;
+	signal_max = 6.;
+	signal_min = -.5; 
+	diff_max = 6.;
+	diff_min = -.5;
 	break;
       case 4: 
-	signal_max = 15.;
-	signal_min = -1.;
-	diff_max = 15.;
-	diff_min = -1.;
+	signal_max = 4.;
+	signal_min = -.5;
+	diff_max = 4.;
+	diff_min = -.5;
 	break;
       case 5: 
-	signal_max = 15.;
-	signal_min = -1.;
-	diff_max = 15.;
-	diff_min = -1.;
+	signal_max = 2.;
+	signal_min = -.5;
+	diff_max = 2.;
+	diff_min = -.5;
 	break;
       default: 
 	break;
@@ -549,7 +559,9 @@ Int_t particle_yields(bool is_number = kTRUE){
 
 
       stacked_min = -3.;
+      stacked_min_diff = -2.;
       stacked_max = 35.;
+      stacked_max_diff = 13.;
      
       c_yields_phi->cd(4*(i+1)-j);
      
@@ -557,9 +569,9 @@ Int_t particle_yields(bool is_number = kTRUE){
       signal_dPhi_rebin[0][i][j]->SetMaximum(signal_max);
 
 
-      if(j==4){
-	signal_dPhi_rebin[0][i][j]->GetYaxis()->SetLabelSize(0.06);
-	signal_dPhi_rebin[0][i][j]->GetYaxis()->SetTitleSize(0.06);
+      if(j==3){
+	signal_dPhi_rebin[0][i][j]->GetYaxis()->SetLabelSize(0.08);
+	signal_dPhi_rebin[0][i][j]->GetYaxis()->SetTitleSize(0.08);
 	signal_dPhi_rebin[0][i][j]->GetYaxis()->SetTitle("1/N_{evt} 1/d#Delta#phi");
       }else{
 	signal_dPhi_rebin[0][i][j]->GetYaxis()->SetLabelSize(0.0);
@@ -620,12 +632,12 @@ Int_t particle_yields(bool is_number = kTRUE){
       c_PbPb_pp_phi->cd(4*(i+1)-j);
       
 
-      signal_dPhi_PbPb_pp[0][i][j] = (TH1D*)signal_dPhi_rebin[0][i][j]->Clone((TString)("Diff_dPhi_"+ CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+      signal_dPhi_PbPb_pp[0][i][j] = (TH1D*)signal_dPhi_rebin[0][i][j]->Clone((TString)("Diff_dPhi_"+ CBin_strs[j] + "_" + CBin_strs[j+1] +"_"+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
       signal_dPhi_PbPb_pp[0][i][j]->Add(signal_dPhi_rebin[1][i][0],-1.);
 
 
 
-      signal_dPhi_PbPb_pp_syst[0][i][j] = (TH1D*)signal_dPhi_syst[0][i][j]->Clone((TString)("Diff_dPhi_syst_"+ CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+      signal_dPhi_PbPb_pp_syst[0][i][j] = (TH1D*)signal_dPhi_syst[0][i][j]->Clone((TString)("Diff_dPhi_syst_"+ CBin_strs[j] + "_" + CBin_strs[j+1] + "_"+TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
       signal_dPhi_PbPb_pp_syst[0][i][j]->Add(signal_dPhi_syst[1][i][0],-1.);
 
 
@@ -683,8 +695,8 @@ Int_t particle_yields(bool is_number = kTRUE){
       signal_dEta_rebin[0][i][j]->SetMaximum(signal_max);
 
       if(j==3){
-	signal_dEta_rebin[0][i][j]->GetYaxis()->SetLabelSize(0.06);
-	signal_dEta_rebin[0][i][j]->GetYaxis()->SetTitleSize(0.06);
+	signal_dEta_rebin[0][i][j]->GetYaxis()->SetLabelSize(0.08);
+	signal_dEta_rebin[0][i][j]->GetYaxis()->SetTitleSize(0.08);
 	signal_dEta_rebin[0][i][j]->GetYaxis()->SetTitle("1/N_{evt} 1/d#Delta#eta");
       }else{
 	signal_dEta_rebin[0][i][j]->GetYaxis()->SetLabelSize(0.0);
@@ -726,11 +738,11 @@ Int_t particle_yields(bool is_number = kTRUE){
 
 
 
-      signal_dEta_PbPb_pp[0][i][j] = (TH1D*)signal_dEta_rebin[0][i][j]->Clone((TString)("Diff_dEta_"+ CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+      signal_dEta_PbPb_pp[0][i][j] = (TH1D*)signal_dEta_rebin[0][i][j]->Clone((TString)("Diff_dEta_"+ CBin_strs[j] + "_" + CBin_strs[j+1] + "_"+TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
       signal_dEta_PbPb_pp[0][i][j]->Add(signal_dEta_rebin[1][i][0],-1.);
 
 
-      signal_dEta_PbPb_pp_syst[0][i][j] = (TH1D*)signal_dEta_syst[0][i][j]->Clone((TString)("Diff_dEta_syst_"+ CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+      signal_dEta_PbPb_pp_syst[0][i][j] = (TH1D*)signal_dEta_syst[0][i][j]->Clone((TString)("Diff_dEta_syst_"+ CBin_strs[j] + "_" + CBin_strs[j+1] +"_"+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
       signal_dEta_PbPb_pp_syst[0][i][j]->Add(signal_dEta_syst[1][i][0],-1.);
 
 
@@ -750,8 +762,8 @@ Int_t particle_yields(bool is_number = kTRUE){
       }
 
       if(i==7){
-	signal_dEta_PbPb_pp[0][i][j]->GetXaxis()->SetLabelSize(0.1);
-	signal_dEta_PbPb_pp[0][i][j]->GetXaxis()->SetTitleSize(0.1);
+	signal_dEta_PbPb_pp[0][i][j]->GetXaxis()->SetLabelSize(0.08);
+	signal_dEta_PbPb_pp[0][i][j]->GetXaxis()->SetTitleSize(0.08);
 	signal_dEta_PbPb_pp[0][i][j]->GetXaxis()->SetTitle("#Delta#eta");
 	signal_dEta_PbPb_pp[0][i][j]->GetXaxis()->CenterTitle();
 
@@ -807,14 +819,14 @@ Int_t particle_yields(bool is_number = kTRUE){
      
 
   
-      signal_dEta_PbPb_pp_up[0][i][j] = (TH1D*)signal_dEta_PbPb_pp[0][i][j]->Clone((TString)("Diff_dEta_Up"+ CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+      signal_dEta_PbPb_pp_up[0][i][j] = (TH1D*)signal_dEta_PbPb_pp[0][i][j]->Clone((TString)("Diff_dEta_Up"+ CBin_strs[j] + "_" + CBin_strs[j+1] +"_"+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 
-      signal_dEta_PbPb_pp_down[0][i][j] = (TH1D*)signal_dEta_PbPb_pp[0][i][j]->Clone((TString)("Diff_dEta_Down"+ CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+      signal_dEta_PbPb_pp_down[0][i][j] = (TH1D*)signal_dEta_PbPb_pp[0][i][j]->Clone((TString)("Diff_dEta_Down"+ CBin_strs[j] + "_" + CBin_strs[j+1] +"_"+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 
 
-      signal_dPhi_PbPb_pp_up[0][i][j] = (TH1D*)signal_dPhi_PbPb_pp[0][i][j]->Clone((TString)("Diff_dPhi_Up"+ CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+      signal_dPhi_PbPb_pp_up[0][i][j] = (TH1D*)signal_dPhi_PbPb_pp[0][i][j]->Clone((TString)("Diff_dPhi_Up"+ CBin_strs[j] + "_" + CBin_strs[j+1] + "_"+TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 
-      signal_dPhi_PbPb_pp_down[0][i][j] = (TH1D*)signal_dPhi_PbPb_pp[0][i][j]->Clone((TString)("Diff_dPhi_Down"+ CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+      signal_dPhi_PbPb_pp_down[0][i][j] = (TH1D*)signal_dPhi_PbPb_pp[0][i][j]->Clone((TString)("Diff_dPhi_Down"+ CBin_strs[j] + "_" + CBin_strs[j+1] +"_"+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
      
     }
   }
@@ -843,26 +855,26 @@ Int_t particle_yields(bool is_number = kTRUE){
   for(int j = 0; j < nCBins; j++){
     
 
-    signal_dEta_rebin[0][8][j] = (TH1D*) signal_dEta_rebin[0][0][j]->Clone((TString)("Combined_dEta_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
-    signal_dPhi_rebin[0][8][j] = (TH1D*) signal_dPhi_rebin[0][0][j]->Clone((TString)("Combined_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+    signal_dEta_rebin[0][8][j] = (TH1D*) signal_dEta_rebin[0][0][j]->Clone((TString)("Combined_dEta_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+    signal_dPhi_rebin[0][8][j] = (TH1D*) signal_dPhi_rebin[0][0][j]->Clone((TString)("Combined_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
  
-   signal_dEta_syst[0][8][j] = (TH1D*) signal_dEta_syst[0][0][j]->Clone((TString)("Combined_dEta_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
-   signal_dPhi_syst[0][8][j] = (TH1D*) signal_dPhi_syst[0][0][j]->Clone((TString)("Combined_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+   signal_dEta_syst[0][8][j] = (TH1D*) signal_dEta_syst[0][0][j]->Clone((TString)("Combined_dEta_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+   signal_dPhi_syst[0][8][j] = (TH1D*) signal_dPhi_syst[0][0][j]->Clone((TString)("Combined_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
  
    if(j==0){
-     signal_dEta_rebin[1][8][j] = (TH1D*) signal_dEta_rebin[1][0][j]->Clone((TString)("Combined_dEta_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
-     signal_dPhi_rebin[1][8][j] = (TH1D*) signal_dPhi_rebin[1][0][j]->Clone((TString)("Combined_dPhi_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+     signal_dEta_rebin[1][8][j] = (TH1D*) signal_dEta_rebin[1][0][j]->Clone((TString)("Combined_dEta_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+     signal_dPhi_rebin[1][8][j] = (TH1D*) signal_dPhi_rebin[1][0][j]->Clone((TString)("Combined_dPhi_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
  
-     signal_dEta_syst[1][8][j] = (TH1D*) signal_dEta_syst[1][0][j]->Clone((TString)("Combined_dEta_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
-     signal_dPhi_syst[1][8][j] = (TH1D*) signal_dPhi_syst[1][0][j]->Clone((TString)("Combined_dPhi_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+     signal_dEta_syst[1][8][j] = (TH1D*) signal_dEta_syst[1][0][j]->Clone((TString)("Combined_dEta_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+     signal_dPhi_syst[1][8][j] = (TH1D*) signal_dPhi_syst[1][0][j]->Clone((TString)("Combined_dPhi_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
    }
 
 
-    signal_dEta_PbPb_pp[0][8][j] = (TH1D*) signal_dEta_PbPb_pp[0][0][j]->Clone((TString)("Combined_dEta_PbPb_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
-    signal_dPhi_PbPb_pp[0][8][j] = (TH1D*) signal_dPhi_PbPb_pp[0][0][j]->Clone((TString)("Combined_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+    signal_dEta_PbPb_pp[0][8][j] = (TH1D*) signal_dEta_PbPb_pp[0][0][j]->Clone((TString)("Combined_dEta_PbPb_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+    signal_dPhi_PbPb_pp[0][8][j] = (TH1D*) signal_dPhi_PbPb_pp[0][0][j]->Clone((TString)("Combined_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
  
-   signal_dEta_PbPb_pp_syst[0][8][j] = (TH1D*) signal_dEta_PbPb_pp_syst[0][0][j]->Clone((TString)("Combined_dEta_PbPb_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
-   signal_dPhi_PbPb_pp_syst[0][8][j] = (TH1D*) signal_dPhi_PbPb_pp_syst[0][0][j]->Clone((TString)("Combined_dPhi_PbPb_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+" "+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+   signal_dEta_PbPb_pp_syst[0][8][j] = (TH1D*) signal_dEta_PbPb_pp_syst[0][0][j]->Clone((TString)("Combined_dEta_PbPb_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
+   signal_dPhi_PbPb_pp_syst[0][8][j] = (TH1D*) signal_dPhi_PbPb_pp_syst[0][0][j]->Clone((TString)("Combined_dPhi_PbPb_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1]+"_"+TrkPtBin_strs[0] + "_" + TrkPtBin_strs[8]));
  
 
     for(int k = 1; k<8; k++){
@@ -1210,8 +1222,8 @@ Int_t particle_yields(bool is_number = kTRUE){
     
     c_stacked_eta->cd(10-j);
 
-    signal_dEta_diff_stack_up[0][j]->SetMinimum(stacked_min);
-    signal_dEta_diff_stack_up[0][j]->SetMaximum(stacked_max);
+    signal_dEta_diff_stack_up[0][j]->SetMinimum(stacked_min_diff);
+    signal_dEta_diff_stack_up[0][j]->SetMaximum(stacked_max_diff);
 
     signal_dEta_diff_stack_up[0][j]->Draw();
     signal_dEta_diff_stack_up[0][j]->GetXaxis()->SetRangeUser(-1.5,1.5);
@@ -1224,7 +1236,7 @@ Int_t particle_yields(bool is_number = kTRUE){
       signal_dEta_diff_stack_up[0][j]->GetYaxis()->SetTitleSize(0.06);
       signal_dEta_diff_stack_up[0][j]->GetYaxis()->SetLabelSize(0.06);
       signal_dEta_diff_stack_up[0][j]->GetYaxis()->SetTitleOffset(1.5);
-      signal_dEta_diff_stack_up[0][j]->GetYaxis()->SetTitle("Y = #frac{1}{N_{jets}} #frac{dN}{d#Delta#eta}");
+      signal_dEta_diff_stack_up[0][j]->GetYaxis()->SetTitle("Y_{PbPb} - Y_{pp}");
     }else{
       signal_dEta_diff_stack_up[0][j]->GetYaxis()->SetLabelSize(0.0);
     }
@@ -1264,7 +1276,49 @@ Int_t particle_yields(bool is_number = kTRUE){
   legend->SetTextSize(0.06);
   legend->SetLineColor(kWhite);
   legend->Draw();
+
+  TGaxis *dummy_axis_diff = new TGaxis(1.,0.13,1.0,.975,stacked_min_diff, stacked_max_diff);
+
+  dummy_axis_diff->ImportAxisAttributes( signal_dEta_stack[1][0]->GetYaxis());
+  dummy_axis_diff->SetTitleOffset(1.);
+  dummy_axis_diff->SetTickSize(0.);
+  dummy_axis_diff->CenterTitle();
+  dummy_axis_diff->SetTitleSize(0.08);
+  dummy_axis_diff->SetLabelSize(0.06);
+  dummy_axis_diff->SetTitle("Y_{PbPb} - Y_{pp}");
+  dummy_axis_diff->Draw();
   
+  c_stacked_eta->cd(0);
+
+  TLatex *type_tex;
+  type_tex = new TLatex(0.05,0.92,"Particle Yield by #Delta#eta");
+    type_tex->SetTextSize(0.035);
+  type_tex->SetLineColor(kWhite);
+  type_tex->SetNDC();
+  type_tex->Draw();
+   
+  TLatex   *luminosity_tex_pp = new TLatex(0.2,0.92,"pp 25 pb^{-1} (5.02 TeV)");
+  luminosity_tex_pp->SetTextFont(43);
+  luminosity_tex_pp->SetTextSizePixels(35);
+  luminosity_tex_pp->SetLineColor(kWhite);
+  luminosity_tex_pp->SetNDC();
+  luminosity_tex_pp->Draw();
+ 
+  TLatex   *luminosity_tex_PbPb = new TLatex(0.4,0.92,"PbPb 404 #mub^{-1} (5.02 TeV)");
+  luminosity_tex_PbPb->SetTextFont(43);
+  luminosity_tex_PbPb->SetTextSizePixels(35);
+  luminosity_tex_PbPb->SetLineColor(kWhite);
+  luminosity_tex_PbPb->SetNDC();
+  luminosity_tex_PbPb->Draw();
+ 
+  TLatex   *jet_reco_tex = new TLatex(0.6,0.92,"ak4CaloJets, p_{T}> 120, |#eta_{jet}| < 1.6");
+  jet_reco_tex->SetTextFont(43);
+  jet_reco_tex->SetTextSizePixels(35);
+  jet_reco_tex->SetLineColor(kWhite);
+  jet_reco_tex->SetNDC();
+  jet_reco_tex->Draw();
+
+
   
   c_stacked_eta->SaveAs("Yield_dEta_Stacked.png");
   c_stacked_eta->SaveAs("Yield_dEta_Stacked.pdf");
@@ -1336,8 +1390,8 @@ Int_t particle_yields(bool is_number = kTRUE){
     
     c_stacked_phi->cd(10-j);
 
-    signal_dPhi_diff_stack_up[0][j]->SetMinimum(stacked_min);
-    signal_dPhi_diff_stack_up[0][j]->SetMaximum(stacked_max);
+    signal_dPhi_diff_stack_up[0][j]->SetMinimum(stacked_min_diff);
+    signal_dPhi_diff_stack_up[0][j]->SetMaximum(stacked_max_diff);
 
     signal_dPhi_diff_stack_up[0][j]->Draw();
     signal_dPhi_diff_stack_up[0][j]->GetXaxis()->SetRangeUser(-1.5,1.5);
@@ -1350,7 +1404,7 @@ Int_t particle_yields(bool is_number = kTRUE){
       signal_dPhi_diff_stack_up[0][j]->GetYaxis()->SetTitleSize(0.06);
       signal_dPhi_diff_stack_up[0][j]->GetYaxis()->SetLabelSize(0.06);
       signal_dPhi_diff_stack_up[0][j]->GetYaxis()->SetTitleOffset(1.5);
-      signal_dPhi_diff_stack_up[0][j]->GetYaxis()->SetTitle("Y = #frac{1}{N_{jets}} #frac{dN}{d#Delta#phi}");
+      signal_dPhi_diff_stack_up[0][j]->GetYaxis()->SetTitle("Y_{PbPb} - Y_{pp}");
     }else{
       signal_dPhi_diff_stack_up[0][j]->GetYaxis()->SetLabelSize(0.0);
     }
@@ -1377,9 +1431,24 @@ Int_t particle_yields(bool is_number = kTRUE){
   }
 
   c_stacked_phi->cd(6);
+
+
   legend->Draw();
 
-  
+  dummy_axis_diff->Draw();
+
+  c_stacked_phi->cd(0);
+
+  type_tex = new TLatex(0.05,0.92,"Particle Yield by #Delta#phi");
+  type_tex->SetTextSize(0.035);
+  type_tex->SetLineColor(kWhite);
+  type_tex->SetNDC();
+  type_tex->Draw();
+   
+  luminosity_tex_pp->Draw();
+  luminosity_tex_PbPb->Draw();
+  jet_reco_tex->Draw();
+    
   c_stacked_phi->SaveAs("Yield_dPhi_Stacked.png");
   c_stacked_phi->SaveAs("Yield_dPhi_Stacked.pdf");
 
@@ -1401,6 +1470,7 @@ Int_t particle_yields(bool is_number = kTRUE){
 	Integral_phi_Pt[g][j] = new TH1D("Integral_Phi_pp","",9,pTbins);
 	Integral_eta_Pt[g][j] = new TH1D("Integral_Eta_pp","",9,pTbins);
       }
+
      
       for(int i = 0; i<nTrkPtBins; i++){
       
@@ -1517,12 +1587,28 @@ Int_t particle_yields(bool is_number = kTRUE){
 
     Integral_diff_Pt[0][j] = (TH1D*)  Integral_phi_Pt[0][j]->Clone((TString)("Integral_Diff_"+CBin_strs[j]+"_"+CBin_strs[j+1]));
     Integral_diff_Pt[0][j]->Add(Integral_phi_Pt[1][0],-1.);
-      
+
+    Integral_diff_Pt[2][j] = (TH1D*) f_in_ref->Get((TString)("Integrated_Yield_Eta_"+CBin_strs[j]+"_"+CBin_strs[j+1]))->Clone((TString)("Integrated_Yield_Eta_"+CBin_strs[j]+"_"+CBin_strs[j+1]));
+
+    Integral_diff_Pt[2][j]->SetLineColor(kBlue);
+    Integral_diff_Pt[2][j]->SetMarkerColor(kBlue);
+    Integral_diff_Pt[2][j]->SetMarkerStyle(20);
+    Integral_diff_Pt[2][j]->SetMarkerSize(1.5);
+  
     Integral_diff_Pt[0][j]->SetMaximum(8.5);
     Integral_diff_Pt[0][j]->SetMinimum(-1.5);
     Integral_diff_Pt[0][j]->Draw();
 
+    Integral_diff_Pt[2][j]->Draw("same");
+    
     if(j==3){
+      TLegend *int_legend = new TLegend(0.18,0.6,0.9,0.85);
+      int_legend->AddEntry( Integral_diff_Pt[0][j],"PbPb - pp 5.02 TeV");
+      int_legend->AddEntry( Integral_diff_Pt[2][0],"PbPb - pp 2.76 TeV)");
+      int_legend->SetLineColor(kWhite);
+      int_legend->SetTextSize(0.06);
+      int_legend->Draw();
+
       labels = new TPaveText(0.18,0.85,0.45,0.95,"NDC");
       labels->SetTextSize(0.055);
     }else{
@@ -1545,6 +1631,17 @@ Int_t particle_yields(bool is_number = kTRUE){
     Integral_eta_Pt[1][0]->Write();
     Integral_diff_Pt[0][j]->Write();
 
+
+    c_integral->cd(0);
+    type_tex = new TLatex(0.02,0.96,"Integrated Particle Yields");
+    type_tex->SetTextSize(0.035);
+    type_tex->SetLineColor(kWhite);
+    type_tex->SetNDC();
+    type_tex->Draw();
+   
+    luminosity_tex_pp->Draw();
+    luminosity_tex_PbPb->Draw();
+    jet_reco_tex->Draw();
 
   }
 

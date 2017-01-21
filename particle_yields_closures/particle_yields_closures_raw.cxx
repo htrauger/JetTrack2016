@@ -30,7 +30,7 @@
 
 using namespace std;
 
-Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int do_closures = 0){
+Int_t particle_yields_closures_raw(bool is_number = kTRUE, int type_code = 1, int do_closures = 0, int ref_is_reco = 0){
 
   gROOT->ForceStyle();
   gStyle->SetOptDate(0);
@@ -122,7 +122,7 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
 
   TString data_mc_type_strs[n_data_mc_types] = {"Data","RecoJet_RecoTrack","RecoJet_GenTrack","GenJet_RecoTrack", "GenJet_GenTrack","RightGenJet_GenTrack","SpilledUnderJet_GenTrack","UnmatchedGenJet_GenTrack","RightRecoJet_GenTrack","SpilledReco_GenTrack","UnmatchedReco_GenTrack","RecoJet_GenTrack_Sube0","RecoJet_GenTrack_NoSube0","GenJet_GenTrack_Sube0","GenJet_GenTrack_NoSube0","MatchedRecoJet_GenTrack_Sube0","MatchedRecoJet_GenTrack_NoSube0","SwappedRecoJet_GenTrack_Sube0","SwappedRecoJet_GenTrack_NoSube0","UnmatchedRecoJet_GenTrack_Sube0","UnmatchedRecoJet_GenTrack_NoSube0",};
 
-  TString data_mc_type_labels[9] = {"Data","RecoJet, RecoTrack","RecoJet, GenTrack","GenJet, RecoTrack", "RecoReco minus GenGen","RecoGen minus GenGen", "GenReco minus GenGen"};
+  TString data_mc_type_labels[9] = {"Data","RecoJet, RecoTrack","RecoJet, GenTrack","GenJet, RecoTrack", "GenJet, GenTrack", "RecoReco minus GenGen","RecoGen minus GenGen", "GenReco minus GenGen"};
   int data_mc_type_code = -999;
 
   TString do_closures_string = "";
@@ -134,14 +134,28 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
   TFile *f_in_pbpb_gen, *f_in_pp_gen;
 
   if(do_closures){
+
+    if(ref_is_reco){
+
+      do_closures_string = "_over_RecoGen_Raw";
+      f_in_pbpb_gen = new TFile((TString)("../me_correct/Hydjet_RecoJet_GenTrack_Inclusive_Correlations.root"));
+      f_in_pp_gen = new TFile((TString)("../me_correct/Pythia_RecoJet_GenTrack_Inclusive_Correlations.root"));
+
+      f_in_pbpb_gen = new TFile((TString)("Particle_Yields_RecoJet_GenTrack.root"));
+      f_in_pp_gen = new TFile((TString)("Particle_Yields_RecoJet_GenTrack.root"));
+
+
+    }else{
     if(type_code==4)cout<<"THIS WILL BE ZERO BY DEFINITION!!"<<endl;
 
-    do_closures_string = "_minus_GenGen";
+    do_closures_string = "_over_GenGen_Raw";
     f_in_pbpb_gen = new TFile((TString)("../me_correct/Hydjet_GenJet_GenTrack_Inclusive_Correlations.root"));
     f_in_pp_gen = new TFile((TString)("../me_correct/Pythia_GenJet_GenTrack_Inclusive_Correlations.root"));
 
     f_in_pbpb_gen = new TFile((TString)("Particle_Yields_GenJet_GenTrack.root"));
     f_in_pp_gen = new TFile((TString)("Particle_Yields_GenJet_GenTrack.root"));
+
+    }
 
  
   }
@@ -187,7 +201,7 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
  
 
   
-  for(int i = 0; i<nTrkPtBins-1; i++){
+  for(int i = 0; i<nTrkPtBins; i++){
 
     for(int j = 0; j<4; j++){
 
@@ -197,12 +211,12 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
 
 	cout<<"Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]<<endl;
 	if(g==0){
-	result[g][i][j] = (TH2D*)f_in_pbpb->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	result[g][i][j] = (TH2D*)f_in_pbpb->Get((TString)("Raw_Yield_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Raw_Yield_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 	
 	//result[g][i][j] = (TH2D*)f_in_pbpb->Get((TString)("Yield_BkgSub_pTweighted" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 	}else{
 
-	  result[g][i][j] = (TH2D*)f_in_pp->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	  result[g][i][j] = (TH2D*)f_in_pp->Get((TString)("Raw_Yield_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Raw_Yield_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 
 
 	}
@@ -270,7 +284,6 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
 	//Apply corrections
 	//-------------------
 	/*
-	
 	if(type_code==1||type_code==2){
 	  if(g==1){
 	  
@@ -287,7 +300,7 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
 	
 	  }else{
 	    cout<<"starting corrs"<<endl;
-	    if(i>3){
+	    if(i>4){
 	  
 	      TString	jff_name =(TString)("JFF_Residual_Eta_"+CBin_strs[j]+"_"+CBin_strs[j+1]+"_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
 	      jff_residual_dEta[g][i][j] = (TH1D*)f_jff_hyd->Get(jff_name)->Clone(jff_name);
@@ -326,13 +339,13 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
 
 
 	if(do_closures){
-	  if(g==0)	  signal_dEta_rebin[g+2][i][j] = (TH1D*)f_in_pbpb_gen->Get((TString)("Proj_dEta_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]+"_Rebin"))->Clone((TString)("Yield_BkgSub_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
-	  else 	  signal_dEta_rebin[g+2][i][j] = (TH1D*)f_in_pp_gen->Get((TString)("Proj_dEta_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]+"_Rebin"))->Clone((TString)("Yield_BkgSub_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	  if(g==0)	  signal_dEta_rebin[g+2][i][j] = (TH1D*)f_in_pbpb_gen->Get((TString)("Proj_dEta_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]+ TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]+"_Rebin"))->Clone((TString)("Proj_dEta_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	  else 	  signal_dEta_rebin[g+2][i][j] = (TH1D*)f_in_pp_gen->Get((TString)("Proj_dEta_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]+"_Rebin"))->Clone((TString)("Proj_dEta_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 	    
 	  signal_dEta_rebin[g][i][j]->Divide( signal_dEta_rebin[g+2][i][j]);
 
-	  if(g==0)	  signal_dPhi_rebin[g+2][i][j] = (TH1D*)f_in_pbpb_gen->Get((TString)("Proj_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]  + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]+"_Rebin"))->Clone((TString)("Yield_BkgSub_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
-	  else 	  signal_dPhi_rebin[g+2][i][j] = (TH1D*)f_in_pp_gen->Get((TString)("Proj_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]+"_Rebin"))->Clone((TString)("Yield_BkgSub_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	  if(g==0)	  signal_dPhi_rebin[g+2][i][j] = (TH1D*)f_in_pbpb_gen->Get((TString)("Proj_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1]  + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]+"_Rebin"))->Clone((TString)("Proj_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	  else 	  signal_dPhi_rebin[g+2][i][j] = (TH1D*)f_in_pp_gen->Get((TString)("Proj_dPhi_pp_" + CBin_strs[j] + "_" + CBin_strs[j+1] + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]+"_Rebin"))->Clone((TString)("Proj_dPhi_PbPb_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt300_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 	    
 	  signal_dPhi_rebin[g][i][j]->Divide( signal_dPhi_rebin[g+2][i][j]);
 	}  
@@ -372,10 +385,10 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
       }//g to get hists
 
       if(do_closures){
-	signal_max = 2.;
-	signal_min = -2.;
-	diff_max = 2.;
-	diff_min = -2.;
+	signal_max = 1.3;
+	signal_min = 0.8;
+	diff_max = 1.3;
+	diff_min = 0.8;
       }else{
 	signal_max = 15.;
 	signal_min = -1.;
@@ -531,9 +544,19 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
       // Drawing
       //------------
 
-      TLine *zero = new TLine(-1.5,0.,1.5,0.);
-      zero->SetLineStyle(2);
-      zero->Draw();
+      TLine *one = new TLine(-1.5,1.,1.5,1.);
+      one->SetLineStyle(2);
+      one->Draw();
+
+
+ TLine *down = new TLine(-1.5,.95,1.5,.95);
+      down->SetLineStyle(2);
+      down->Draw();
+
+
+ TLine *up = new TLine(-1.5,1.05,1.5,1.05);
+      up->SetLineStyle(2);
+      up->Draw();
 
       if(j==3){
 	labels = new TPaveText(0.18,0.75,0.45,0.95,"NDC");
@@ -592,7 +615,7 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
 
       signal_dPhi_PbPb_pp[0][i][j]->Draw();
 
-      zero->Draw();
+      one->Draw();
       labels->SetLineColor(0);
       labels->Draw("same");
 
@@ -614,6 +637,7 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
 
       c_yields_eta->cd(4*(i+1)-j);
 
+      signal_dEta_rebin[0][i][j]->GetXaxis()->SetRangeUser(-1.5,1.5);
       signal_dEta_rebin[0][i][j]->SetMinimum(signal_min);
       signal_dEta_rebin[0][i][j]->SetMaximum(signal_max);
 
@@ -635,7 +659,9 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
       signal_dEta_rebin[0][i][j]->Draw();
       signal_dEta_rebin[1][i][0]->Draw("same");
 
-      zero->Draw();
+      one->Draw();
+      up->Draw();
+      down->Draw();
       labels->Draw("same");
 
       if(i==0&&j==3){
@@ -682,7 +708,7 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
 
       signal_dEta_PbPb_pp[0][i][j]->Draw();
 
-      zero->Draw();
+      one->Draw();
       labels->SetLineColor(0);
       labels->Draw("same");
 
@@ -738,16 +764,16 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
   }
 
 
-  c_yields_phi->SaveAs((TString)("Yields_dPhi_Inclusive_"+data_mc_type_strs[type_code]+do_closures_string+".png"));
-  //c_PbPb_pp_phi->SaveAs((TString)("Yields_dPhi_PbPb_minus_pp_Inclusive.png"));
-  c_yields_eta->SaveAs((TString)("Yields_dEta_Inclusive_"+data_mc_type_strs[type_code]+do_closures_string+".png"));
-  // c_PbPb_pp_eta->SaveAs((TString)("Yields_dEta_PbPb_minus_pp_Inclusive.png"));
+  c_yields_phi->SaveAs((TString)("Yields_dPhi_Inclusive_"+data_mc_type_strs[type_code]+do_closures_string+"_NoBkgSub.png"));
+  //c_PbPb_pp_phi->SaveAs((TString)("Yields_dPhi_PbPb_over_pp_Inclusive.png"));
+  c_yields_eta->SaveAs((TString)("Yields_dEta_Inclusive_"+data_mc_type_strs[type_code]+do_closures_string+"_NoBkgSub.png"));
+  // c_PbPb_pp_eta->SaveAs((TString)("Yields_dEta_PbPb_over_pp_Inclusive.png"));
 
 
-  c_yields_phi->SaveAs((TString)("Yields_dPhi_Inclusive_"+data_mc_type_strs[type_code]+do_closures_string+".pdf"));
-  //  c_PbPb_pp_phi->SaveAs((TString)("Yields_dPhi_PbPb_minus_pp_Inclusive.pdf"));
-  c_yields_eta->SaveAs((TString)("Yields_dEta_Inclusive_"+data_mc_type_strs[type_code]+do_closures_string+".pdf"));
-  //  c_PbPb_pp_eta->SaveAs((TString)("Yields_dEta_PbPb_minus_pp_Inclusive.pdf"));
+  c_yields_phi->SaveAs((TString)("Yields_dPhi_Inclusive_"+data_mc_type_strs[type_code]+do_closures_string+"_NoBkgSub.pdf"));
+  //  c_PbPb_pp_phi->SaveAs((TString)("Yields_dPhi_PbPb_over_pp_Inclusive.pdf"));
+  c_yields_eta->SaveAs((TString)("Yields_dEta_Inclusive_"+data_mc_type_strs[type_code]+do_closures_string+"_NoBkgSub.pdf"));
+  //  c_PbPb_pp_eta->SaveAs((TString)("Yields_dEta_PbPb_over_pp_Inclusive.pdf"));
 
 
  
@@ -1034,7 +1060,7 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
     labels->SetFillColor(0);
     labels->SetLineColor(0);
     labels->SetTextAlign(11);
-    labels->AddText((TString)("HYDJET ("+CBin_labels[j]+") minus PYTHIA"));
+    labels->AddText((TString)("HYDJET ("+CBin_labels[j]+") over PYTHIA"));
     labels->SetTextSize(0.06);
     labels->Draw("same");
 
@@ -1151,7 +1177,7 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
     labels->SetFillColor(0);
     labels->SetLineColor(0);
     labels->SetTextAlign(11);
-    labels->AddText((TString)("HYDJET ("+CBin_labels[j]+") minus PYTHIA"));
+    labels->AddText((TString)("HYDJET ("+CBin_labels[j]+") over PYTHIA"));
     labels->SetTextSize(0.06);
     labels->Draw("same");
   
@@ -1315,7 +1341,7 @@ Int_t particle_yields_closures2(bool is_number = kTRUE, int type_code = 1, int d
     labels->SetFillColor(0);
     labels->SetLineColor(0);
     labels->SetTextAlign(11);
-    labels->AddText((TString)("HYDJET (" + CBin_labels[j]+") minus PYTHIA"));
+    labels->AddText((TString)("HYDJET (" + CBin_labels[j]+") over PYTHIA"));
    
     labels->Draw("same");
   

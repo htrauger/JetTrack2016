@@ -64,6 +64,7 @@ Int_t jff_residual(bool is_number = kTRUE){
 
   float TrkPtBins[nTrkPtBins+1] = {0.7, 1, 2, 3, 4, 8, 12, 16, 20, 300};
   TString TrkPtBin_strs[nTrkPtBins+1] = {"TrkPt07","TrkPt1", "TrkPt2", "TrkPt3", "TrkPt4", "TrkPt8","TrkPt12","TrkPt16","TrkPt20","TrkPt300" };
+  TString TrkPtBin_strs2[nTrkPtBins+1] = {"TrkPt0p7","TrkPt1", "TrkPt2", "TrkPt3", "TrkPt4", "TrkPt8","TrkPt12","TrkPt16","TrkPt20","TrkPt300" };
   TString TrkPtBin_labels[nTrkPtBins] = {"0.7<pT<1","1<pT<2","2<pT<3","3<pT<4","4<pT<8","8<pT<12","12<pT<16","16<pT<20","pT>20"};
 
   float x, offset, value;
@@ -284,7 +285,7 @@ Int_t jff_residual(bool is_number = kTRUE){
 	if(g<6&&j>0)continue;
        
 
-	TString in_name = "Yield_BkgSub_"; in_name+=jettype;in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; in_name+= "_Pt100_Pt300_"; in_name+=TrkPtBin_strs[i]; in_name+="_"; in_name+=TrkPtBin_strs[i+1];
+	TString in_name = "Yield_BkgSub_"; in_name+=jettype;in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; in_name+= "_Pt100_Pt300_"; in_name+=TrkPtBin_strs[i]; in_name+="_"; in_name+=TrkPtBin_strs[i+1]; 
 
 	cout<<in_name<<endl;
 	/*
@@ -295,7 +296,6 @@ Int_t jff_residual(bool is_number = kTRUE){
 	  in_name = "Raw_Yield_"; in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; in_name+= "_Pt100_Pt300_"; in_name+=TrkPtBin_strs[i]; in_name+="_"; in_name+=TrkPtBin_strs[i+1];
 	}
 	*/
-
 	cout<<g<<" "<<i<<" "<<j<<" "<<in_name<<endl;
 	result[g][i][j] = (TH2D*)fin[g]->Get(in_name)->Clone(in_name);
 
@@ -314,6 +314,9 @@ Int_t jff_residual(bool is_number = kTRUE){
 	eta_proj_name.ReplaceAll("Yield_BkgSub","Eta_Proj");
 	eta_proj_name.ReplaceAll("hJetTrackSignalBackground","Eta_Proj");
 	eta_proj_name.ReplaceAll("Yield","Eta_Proj");
+
+	if(g==6)eta_proj_name+="_Gen";
+	if(g==7)eta_proj_name+="_Reco";
 	    
 	llimiteta = result[g][i][j]->GetXaxis()->FindBin(-etalim+.001);
 	rlimiteta = result[g][i][j]->GetXaxis()->FindBin(etalim-.001);
@@ -345,6 +348,10 @@ Int_t jff_residual(bool is_number = kTRUE){
 	phi_proj_name.ReplaceAll("hJetTrackSignalBackground","Phi_Proj");
 	phi_proj_name.ReplaceAll("Yield","Phi_Proj");
 
+
+	if(g==6)phi_proj_name+="_Gen";
+	if(g==7)phi_proj_name+="_Reco";
+
 	phi_proj[g][i][j] = result[g][i][j]->ProjectionY(phi_proj_name,llimiteta,rlimiteta);
 	dx_phi = phi_proj[g][i][j]->GetBinWidth(1);
 	phi_proj[g][i][j]->Scale(1/dx_phi);
@@ -363,8 +370,8 @@ Int_t jff_residual(bool is_number = kTRUE){
 
 	do_offset->SetParameter(0, offset);
 
-	//	eta_proj_rebin[g][i][j]->Add(do_offset);
-	//	phi_proj_rebin[g][i][j]->Add(do_offset);
+	//eta_proj_rebin[g][i][j]->Add(do_offset);
+	//phi_proj_rebin[g][i][j]->Add(do_offset);
 
 	check_ymax  = 4.;
 	check_ymin = -1.;

@@ -215,8 +215,6 @@ Int_t spill_over(bool is_number = kTRUE){
   corr_canvas_phi[7] = new TCanvas(Form("CorrCanvasPhi%d",7)," ",10,10,1500,2400);
   corr_canvas_phi[7]->Divide(4,9,0.,0.);
 
-  TFile *fin2[12]; 
-
   if(is_number)  fout[7] = new TFile("Inclusive_Hydjet_SpillOvers.root", "RECREATE");
   else   fout[7] = new TFile("Inclusive_Hydjet_SpillOvers_pTweighted.root", "RECREATE");
 
@@ -233,19 +231,13 @@ Int_t spill_over(bool is_number = kTRUE){
  
 	case 6:
 	  fin[g] = new TFile("../me_correct/HydJet_GenJet_GenTrack_NoSube0_Inclusive_Correlations.root","READ");
-	  if(is_number)	  fin2[6] = new TFile("../jff_residual/Inclusive_Hydjet_JFFResiduals.root","READ");
-	  else	  fin2[6] = new TFile("../jff_residual/Inclusive_Hydjet_JFFResiduals_pTweighted.root","READ");
-      
 	  jettype = "";
 	  if(!is_number) jettype = "pTweighted";
 	  jettype2 = "Inclusive";
 	  break;
+
 	case 7:
 	  fin[g] = new TFile("../me_correct/HydJet_RecoJet_GenTrack_NoSube0_Inclusive_Correlations.root","READ");
-
-	  //if(is_number)   fin[g] = new TFile("../jff_residual/Inclusive_Hydjet_JFFResiduals.root","READ");
-	  //else    fin[g] = new TFile("../jff_residual/Inclusive_Hydjet_JFFResiduals_pTweighted.root","READ");
-      
 	  jettype = "";
 	  if(!is_number) jettype = "pTweighted";
 	  jettype2 = "Inclusive";
@@ -260,13 +252,10 @@ Int_t spill_over(bool is_number = kTRUE){
 
 
 
-	//	if(g==&6j>0)continue;
-
 	TString in_name = "Yield_BkgSub_"; in_name+=jettype;in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; in_name+= "_Pt100_Pt300_"; in_name+=TrkPtBin_strs[i]; in_name+="_"; in_name+=TrkPtBin_strs[i+1];
 
 	cout<<g<<" "<<i<<" "<<j<<" "<<in_name<<endl;
-	result[g][i][j] = (TH2D*)fin[g]->Get(in_name)->Clone(in_name);
-
+	result[g][i][j] = (TH2D*)fin[g]->Get(in_name)->Clone((TString)(in_name+"_All"));
 
 	if(i>3){
 	  result[g][i][j]->Scale(1./4.);
@@ -331,22 +320,15 @@ Int_t spill_over(bool is_number = kTRUE){
 
 	float totbins = eta_proj_rebin[g][i][j]->GetNbinsX();
 		
-	offset= (eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(1.001))+eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(-1.01)))/2.;
-
-	if(i==0&&j>0) 	offset= (eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(1.51))+eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(-1.51)))/2.;
-
-	//	if(i==0&&j==0) offset= (eta_proj_rebin[g][i][j]->GetBinContent(2)+eta_proj_rebin[g][i][j]->GetBinContent(3)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-2)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-1))/4.;
-
-	  //	offset= (eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(2.001))+eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(-2.01)))/2.;
-
+	//offset= (eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(1.001))+eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(-1.01)))/2.;
      
-      // offset= (eta_proj_rebin[g][i][j]->GetBinContent(1)+eta_proj_rebin[g][i][j]->GetBinContent(2)+eta_proj_rebin[g][i][j]->GetBinContent(3)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-2)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-1)+eta_proj_rebin[g][i][j]->GetBinContent(totbins))/6.;
+	offset= (eta_proj_rebin[g][i][j]->GetBinContent(2)+eta_proj_rebin[g][i][j]->GetBinContent(3)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-3)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-2))/4.;
+
 
 	do_offset->SetParameter(0, offset);
-
 	eta_proj_rebin[g][i][j]->Add(do_offset);
 	phi_proj_rebin[g][i][j]->Add(do_offset);
-
+	
 	check_ymax  = 4.;
 	check_ymin = -1.;
 
@@ -363,19 +345,19 @@ Int_t spill_over(bool is_number = kTRUE){
       //--------------------
     
       dummy->cd();
+      /*
+      eta_proj_rebin[1][i][j] = (TH1D*)fin2[6]->Get( (TString)("JFF_Residual_Eta_"+jettype+ CBin_strs[j]+"_"+CBin_strs[j+1] +"_Pt100_Pt300_"+TrkPtBin_strs[i]+"_"+TrkPtBin_strs[i+1]))->Clone((TString)("JFF_Residual_Eta_"+jettype+ CBin_strs[j]+"_"+CBin_strs[j+1] +"_Pt100_Pt300_"+TrkPtBin_strs[i]+"_"+TrkPtBin_strs[i+1]+"_Reco"));
 
-      eta_proj_rebin[1][i][j] = (TH1D*)fin2[6]->Get( (TString)("JFF_Residual_Eta_"+jettype+ CBin_strs[j]+"_"+CBin_strs[j+1] +"_Pt100_Pt300_"+TrkPtBin_strs[i]+"_"+TrkPtBin_strs[i+1]))->Clone((TString)("JFF_Residual_Eta_"+jettype+ CBin_strs[j]+"_"+CBin_strs[j+1] +"_Pt100_Pt300_"+TrkPtBin_strs[i]+"_"+TrkPtBin_strs[i+1]));
-
-      phi_proj_rebin[1][i][j] = (TH1D*)fin2[6]->Get( (TString)("JFF_Residual_Phi_"+jettype+ CBin_strs[j]+"_"+CBin_strs[j+1] +"_Pt100_Pt300_"+TrkPtBin_strs[i]+"_"+TrkPtBin_strs[i+1]))->Clone((TString)("JFF_Residual_Phi_"+jettype+ CBin_strs[j]+"_"+CBin_strs[j+1] +"_Pt100_Pt300_"+TrkPtBin_strs[i]+"_"+TrkPtBin_strs[i+1]));
+      phi_proj_rebin[1][i][j] = (TH1D*)fin2[6]->Get( (TString)("JFF_Residual_Phi_"+jettype+ CBin_strs[j]+"_"+CBin_strs[j+1] +"_Pt100_Pt300_"+TrkPtBin_strs[i]+"_"+TrkPtBin_strs[i+1]))->Clone((TString)("JFF_Residual_Phi_"+jettype+ CBin_strs[j]+"_"+CBin_strs[j+1] +"_Pt100_Pt300_"+TrkPtBin_strs[i]+"_"+TrkPtBin_strs[i+1]+"_Reco"));
   
-
-      //     eta_proj_rebin[7][i][j]->Add(eta_proj_rebin[6][i][0],-1.);
-      //phi_proj_rebin[7][i][j]->Add(phi_proj_rebin[6][i][0],-1.);
-
-      //      eta_proj_rebin[7][i][j]->Add(eta_proj_rebin[1][i][0],-1.);
-      //phi_proj_rebin[7][i][j]->Add(phi_proj_rebin[1][i][0],-1.);
-
-	
+   
+      //    eta_proj_rebin[7][i][j]->Add(eta_proj_rebin[6][i][0],-1.);
+      // phi_proj_rebin[7][i][j]->Add(phi_proj_rebin[6][i][0],-1.);
+ 
+      eta_proj_rebin[7][i][j]->Add(eta_proj_rebin[1][i][j],-1.);
+      phi_proj_rebin[7][i][j]->Add(phi_proj_rebin[1][i][j],-1.);
+ 
+      */
       eta_proj_rebin[7][i][j]->SetLineColor(kBlack);
       eta_proj_rebin[7][i][j]->SetMarkerColor(kBlack);
       eta_proj_rebin[7][i][j]->SetMarkerStyle(24);
@@ -420,6 +402,8 @@ Int_t spill_over(bool is_number = kTRUE){
       cout<<"added"<<endl;
 
       eta_proj_rebin[7][i][j]->Fit("gaus1d","","",-1.,1.);
+
+      if(i==0&&j==1)   eta_proj_rebin[7][i][j]->Fit("gaus1d","","",-1.,0.);
 	      
       TString gaus_eta_name = "Eta_SpillOver_Fit_"; gaus_eta_name+= CBin_strs[j]; gaus_eta_name+="_"; gaus_eta_name+= CBin_strs[j+1]; gaus_eta_name+= "_Pt100_Pt300_"; gaus_eta_name+=TrkPtBin_strs[i]; gaus_eta_name+="_"; gaus_eta_name+=TrkPtBin_strs[i+1];
 
@@ -438,14 +422,21 @@ Int_t spill_over(bool is_number = kTRUE){
 
       eta_spill_over[7][i][j] = (TH1D*)eta_proj_rebin[7][i][j]->Clone(gaus_eta_name);
       
+      float temp_diff = 0;
+
       for(int k=0; k< eta_spill_over[7][i][j]->GetNbinsX()+1; k++){
 	evalpt = eta_spill_over[7][i][j]->GetBinCenter(k);
 	bc = gaus1d->Eval(evalpt);
+
+	temp_diff += TMath::Abs(bc - eta_spill_over[7][i][j]->GetBinContent(k));
+
 	eta_spill_over[7][i][j]->SetBinContent(k,bc);
 	eta_spill_over[7][i][j]->SetBinError(k,err_temp);
 
 
       }
+
+      cout<<"TEMP DIFF = "<<temp_diff<<" as percent = "<<temp_diff/eta_spill_over[7][i][j]->Integral(1,eta_spill_over[7][i][j]->GetNbinsX()+1);
 	
       double err_temp= gaus1d->GetParError(2);
 
@@ -559,6 +550,7 @@ Int_t spill_over(bool is_number = kTRUE){
       eta_proj_rebin[7][i][j]->GetXaxis()->SetLabelSize(0.06);
 
 
+      eta_proj_rebin[7][i][j]->GetXaxis()->SetRangeUser(-1.49,1.49);
       eta_proj_rebin[7][i][j]->Draw();
 
 

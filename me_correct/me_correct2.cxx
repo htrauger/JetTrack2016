@@ -23,7 +23,7 @@
 #include "../JetTrack2016_functions.h"
 
 
-Int_t me_correct(int data_mc_type_code=0, bool is_pp=kFALSE){
+Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE){
 
   //-------------Input files & set eta-----------------
 
@@ -35,57 +35,75 @@ Int_t me_correct(int data_mc_type_code=0, bool is_pp=kFALSE){
   TF1 *pol0 = new TF1("pol0","[0]+x-x",-.3,.3);
 
 
-  TFile *fin, *fin_me, *fin_me2, *fin_me3, *fin_jets, *fout_inc, *fout_inc_pTweighted;
-
-
+  TFile *fin, *fin_me, *fout_inc;
   enum enum_data_mc_types {Data, RecoReco, RecoGen, GenReco, GenGen, RightGen, SpilledUnderGen, UnmatchedGen, RightReco, SpilledReco, UnmatchedReco, RecoGenSube0,RecoGenNoSube0,GenGenSube0,GenGenNoSube0,MatchedRecoGenSube0,MatchedRecoGenNoSube0,SwappedRecoGenSube0,SwappedRecoGenNoSube0, UnMatchedRecoGenSube0,UnMatchedRecoGenNoSube0,n_data_mc_types};
 
 
   TString data_mc_type_strs[n_data_mc_types] = {"Data","RecoJet_RecoTrack","RecoJet_GenTrack","GenJet_RecoTrack", "GenJet_GenTrack","RightGenJet_GenTrack","SpilledUnderJet_GenTrack","UnmatchedGenJet_GenTrack","RightRecoJet_GenTrack","SpilledReco_GenTrack","UnmatchedReco_GenTrack","RecoJet_GenTrack_Sube0","RecoJet_GenTrack_NoSube0","GenJet_GenTrack_Sube0","GenJet_GenTrack_NoSube0","MatchedRecoJet_GenTrack_Sube0","MatchedRecoJet_GenTrack_NoSube0","SwappedRecoJet_GenTrack_Sube0","SwappedRecoJet_GenTrack_NoSube0","UnmatchedRecoJet_GenTrack_Sube0","UnmatchedRecoJet_GenTrack_NoSube0",};
 
-
   TString desc = data_mc_type_strs[data_mc_type_code];
+
+  desc.ReplaceAll("_Sube0","");
+  desc.ReplaceAll("_NoSube0","");
 
 
   if(data_mc_type_code==0){
     if(is_pp){
       datalabel = "pp";
       fin = new TFile("../data_raw_correlations/Data_pp_Aug18.root","READ");
-      fin_me = new TFile("../data_raw_correlations/Data_pp_July10.root","READ");
-      fin_me2 = new TFile("../data_raw_correlations/Data_pp_July10.root","READ");
       fout_inc = new TFile("pp_Inclusive_Correlations.root","RECREATE");
     }else{
       datalabel = "PbPb";
-      fin = new TFile("../data_raw_correlations/Data_PbPb_Aug18.root","READ");
-      fin_me = new TFile("../data_raw_correlations/Data_PbPb_Partial_Aug14.root","READ");
-      fin_me3 = new TFile("../data_raw_correlations/Data_PbPb_ME_Aug23.root","READ");
-      fin_me2 = new TFile("../data_raw_correlations/Data_pp_July10.root","READ");
+      fin = new TFile("../data_raw_correlations/PbPb_5TeV_Data_MixHistos_newJetTrackCorrections_FullDataMerged_fineBin.root","READ");
       fout_inc = new TFile("PbPb_Inclusive_Correlations.root","RECREATE");
     }
   }else{
     if(is_pp){
       datalabel = "Pythia";
-      if(data_mc_type_code==1||data_mc_type_code==2||data_mc_type_code==11||data_mc_type_code==12) fin = new TFile((TString)("../mc_raw_correlations/old_mc/Pythia_"+data_mc_type_strs[data_mc_type_code]+"_Aug23.root"),"READ");
-      else fin = new TFile((TString)("../mc_raw_correlations/old_mc/Pythia_"+data_mc_type_strs[data_mc_type_code]+"_Aug23.root"),"READ");
-    
-      fin_me = new TFile((TString)("../mc_raw_correlations/old_mc/Pythia_"+data_mc_type_strs[data_mc_type_code]+"_Aug10.root"),"READ");
-      if(data_mc_type_code==1)    fin_jets = new TFile((TString)("../mc_raw_correlations/old_mc/Pythia_RecoJet_GenTrack_Aug23.root"),"READ");
-      if(data_mc_type_code==3)    fin_jets = new TFile((TString)("../mc_raw_correlations/old_mc/Pythia_GenJet_GenTrack_Aug23.root"),"READ");
-      fin_me2 = new TFile("../data_raw_correlations/Data_pp_July10.root","READ");
-      fout_inc = new TFile((TString)("Pythia_"+data_mc_type_strs[data_mc_type_code]+"_Inclusive_Correlations.root"),"RECREATE");
-
+   
+      fout_inc = new TFile((TString)("Pythia_"+data_mc_type_strs[data_mc_type_code]+"_Inclusive_Correlations.root"),"RECREATE");      
     }else{
       datalabel = "Hydjet";
-      if(data_mc_type_code==1||data_mc_type_code==2||data_mc_type_code==11||data_mc_type_code==12)  fin = new TFile((TString)("../mc_raw_correlations/old_mc/HydJet_"+data_mc_type_strs[data_mc_type_code]+"_Aug23.root"),"READ");
-      else fin = new TFile((TString)("../mc_raw_correlations/old_mc/HydJet_"+data_mc_type_strs[data_mc_type_code]+"_Aug23.root"),"READ"); 
-      if(data_mc_type_code==1||data_mc_type_code==11||data_mc_type_code==12)    fin_jets = new TFile((TString)("../mc_raw_correlations/old_mc/HydJet_RecoJet_GenTrack_Aug23.root"),"READ");
-      if(data_mc_type_code==3||data_mc_type_code==13||data_mc_type_code==14)    fin_jets = new TFile((TString)("../mc_raw_correlations/old_mc/HydJet_GenJet_GenTrack_Aug23.root"),"READ");
+      switch(data_mc_type_code){
+      case 1: 
+	fin = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_RecoRecoReduced_Merged_refpt_newJetTrackCorrections_fineBin.root","READ");
+	break;
+      case 2: 
+	fin = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_RecoGenReduced_Merged_refpt_newJetTrackCorrections_fineBin.root","READ");
+	break;
+      case 3: 
+	fin = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_GenRecoReduced_refpt_newJetTrackCorrections_Merged_fineBin.root","READ");
+	break;
+      case 4: 
+	fin = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_Merged_GenGenReduced_fineBin.root","READ");
+	break;
 
-      if(data_mc_type_code==2)  fin_me = new TFile((TString)("../mc_raw_correlations/old_mc/HydJet_RecoJet_GenTrack_NoSube0_Aug23.root"),"READ");
-      if(data_mc_type_code==4)  fin_me = new TFile((TString)("../mc_raw_correlations/old_mc/HydJet_GenJet_GenTrack_NoSube0_Aug23.root"),"READ");
-      fin_me2 = new TFile("../data_raw_correlations/Data_pp_July10.root","READ");
-      fout_inc = new TFile((TString)("Hydjet_"+data_mc_type_strs[data_mc_type_code]+"_Inclusive_Correlations.root"),"RECREATE");
+      case 11: 
+	fin = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_RecoGenReduced_sube0_Merged_refpt_newJetTrackCorrections_fineBin.root","READ");
+	fin_me = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_RecoGenReduced_Merged_refpt_newJetTrackCorrections_fineBin.root","READ");
+	break;
+
+      case 12: 
+	fin = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_RecoGenReduced_subeNon0_Merged_withMix_newJetTrackCorrections_fineBin.root","READ");
+	break;
+
+      case 13: 
+	fin = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_GenGenReduced_sube0_Merged_refpt_newJetTrackCorrections_fineBin.root","READ");
+	fin_me = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_Merged_GenGenReduced_fineBin.root","READ");
+	break;
+
+      case 14: 
+	fin = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_GenGenReduced_subeNon0_Merged_withMix_newJetTrackCorrections_fineBin.root","READ");
+	break;
+
+	
+      default: 
+	cout<<"Sorry, you are mistaken, this is not a sample we have"<<endl;
+	return -1;
       }
+
+      fout_inc = new TFile((TString)("Hydjet_"+data_mc_type_strs[data_mc_type_code]+"_Inclusive_Correlations.root"),"RECREATE");      
+       }
     }
     //----------------------------------------------------
 
@@ -136,9 +154,9 @@ Int_t me_correct(int data_mc_type_code=0, bool is_pp=kFALSE){
   TString CBin_strs[nCBins+1] = {"Cent0", "Cent10", "Cent30","Cent50", "Cent100"};
   TString CBin_labels[nCBins] = {"Cent. 0-10%","Cent. 10-30%","Cent. 30-50%","Cent. 50-100%"};
 
-  float TrkPtBins[nTrkPtBins+1] = {07, 1, 2, 3, 4, 8, 12, 16, 20, 300};
-  TString TrkPtBin_strs2[nTrkPtBins+1] = {"TrkPt05","TrkPt1", "TrkPt2", "TrkPt3", "TrkPt4", "TrkPt8", "TrkPt12", "TrkPt16", "TrkPt20", "TrkPt300" };
+  float TrkPtBins[nTrkPtBins+1] = {07, 1, 2, 3, 4, 8, 12, 16, 20, 999};
   TString TrkPtBin_strs[nTrkPtBins+1] = {"TrkPt07","TrkPt1", "TrkPt2", "TrkPt3", "TrkPt4", "TrkPt8", "TrkPt12", "TrkPt16", "TrkPt20", "TrkPt300" };
+  TString TrkPtBin_strs2[nTrkPtBins+1] = {"TrkPt0p7","TrkPt1", "TrkPt2", "TrkPt3", "TrkPt4", "TrkPt8", "TrkPt12", "TrkPt16", "TrkPt20", "TrkPt999" };
    TString TrkPtBin_labels[nTrkPtBins] = {"0.7<pT<1","1<pT<2","2<pT<3","3<pT<4","4<pT<8","8<pT<12", "12<pT<16","16<pT<20","pT>20"};
   
   TString ref_name;
@@ -152,7 +170,9 @@ Int_t me_correct(int data_mc_type_code=0, bool is_pp=kFALSE){
   TH1F* all_jets_corrpT[nCBins][nPtBins];
  
   TH2D* hJetTrackSignalBackground[nCBins][nPtBins][nTrkPtBins];
+  TH2D* hJetTrackSignalBackground2[nCBins][nPtBins][nTrkPtBins];
   TH2D* hJetTrackSignalBackground_pTweighted[nCBins][nPtBins][nTrkPtBins];
+  TH2D* hJetTrackSignalBackground_pTweighted2[nCBins][nPtBins][nTrkPtBins];
   
   TH2D* hJetTrackME[nCBins][nPtBins][nTrkPtBins];
  
@@ -190,72 +210,33 @@ Int_t me_correct(int data_mc_type_code=0, bool is_pp=kFALSE){
 
       cout<<desc + "_all_jets_corrpT"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]<<endl;
 
-         
-      if(data_mc_type_code ==1||data_mc_type_code ==11||data_mc_type_code ==12){  
-
-	all_jets_corrpT[ibin][ibin2] = (TH1F*)fin_jets->Get((TString) ("RecoJet_GenTrack_all_jets_corrpT"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]))->Clone((TString) ("all_jets_corrpT_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]));
-
-      }else  if(data_mc_type_code ==3||data_mc_type_code ==13||data_mc_type_code ==14){  
-
-	all_jets_corrpT[ibin][ibin2] = (TH1F*)fin_jets->Get((TString) ("GenJet_GenTrack_all_jets_corrpT"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]))->Clone((TString) ("all_jets_corrpT_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]));
-
-	}else{
-	all_jets_corrpT[ibin][ibin2] = (TH1F*)fin->Get((TString) (data_mc_type_strs[data_mc_type_code] + "_all_jets_corrpT"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]))->Clone((TString) ("all_jets_corrpT_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]));
-
-
-      }
+      all_jets_corrpT[ibin][ibin2] = (TH1F*)fin->Get((TString) (desc+ "_all_jets_corrpT"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]))->Clone((TString) ("all_jets_corrpT_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]));
          
       for (int ibin3=0;ibin3<nTrkPtBins;ibin3++){
+
 	if(data_mc_type_code > 0 && (data_mc_type_code%2==0||data_mc_type_code > 10)){ //if gen
 
-	  hJetTrackSignalBackground[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc + "_hJetTrackSignalBackground_notrkcorr"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Raw_Yield_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-		  
-	  hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc + "_hJetTrackSignalBackground_pTweighted"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Raw_Yield_pTweighted"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	 
-	  if(ibin3>5||is_pp){
-	    
-	    hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin_me2->Get((TString)("Data_hJetTrackME"+ CBin_strs[0] + "_" + CBin_strs[1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	  hJetTrackSignalBackground[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc + "_hJetTrackSignalBackground_notrkcorr"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs2[ibin3+1]))->Clone((TString) ("Raw_Yield_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+
+	  //*TEMP JUST BECAUSE KURT DIDN'T RUN PT WEIGHTED*//	  
+	  hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc + "_hJetTrackSignalBackground_notrkcorr"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs2[ibin3+1]))->Clone((TString) ("Raw_Yield_pTweighted"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	  
+
+	  if(data_mc_type_code>10&&data_mc_type_code%2!=0)	  hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin_me->Get((TString)(desc+"_hJetTrackME_notrkcorr"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs2[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+
+	  else	  hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc+"_hJetTrackME_notrkcorr"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs2[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 	
-  	  }else {
-
-	      hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc + "_hJetTrackSignalBackground_notrkcorr"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	    cout<<"here"<<endl;
-
-	    if(!is_pp&&data_mc_type_code == 2&&!(ibin3==0&&ibin==0))    hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin_me->Get((TString)("RecoJet_GenTrack_NoSube0_hJetTrackSignalBackground_notrkcorr"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-
-	    //if(!is_pp&&data_mc_type_code == 4&&!(ibin3==0&&ibin==0))	      hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin_me->Get((TString)("GenJet_GenTrack_NoSube0_hJetTrackSignalBackground_notrkcorr"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-
-	    if(!is_pp&&data_mc_type_code == 4&&!(ibin==0&&ibin3==1))	      hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin_me->Get((TString)("GenJet_GenTrack_NoSube0_hJetTrackSignalBackground_notrkcorr"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-
-	    if(!is_pp&&data_mc_type_code == 2&&(ibin3<1&&ibin==0))	      hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin_me->Get((TString)("RecoJet_GenTrack_NoSube0_hJetTrackSignalBackground_notrkcorr"+ CBin_strs[1] + "_" + CBin_strs[2] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-
-	    //	    if(!is_pp&&data_mc_type_code == 4&&(ibin3==0&&ibin==0))	      hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin_me->Get((TString)("GenJet_GenTrack_NoSube0_hJetTrackSignalBackground_notrkcorr"+ CBin_strs[1] + "_" + CBin_strs[2] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-
-	  }
 
 	}else{
-	  cout<<desc + "_hJetTrackSignalBackground"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]<<endl;
 
-	  hJetTrackSignalBackground[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc + "_hJetTrackSignalBackground"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Raw_Yield_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	  hJetTrackSignalBackground[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc + "_hJetTrackSignalBackground"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs2[ibin3+1]))->Clone((TString) ("Raw_Yield_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
-	  hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc + "_hJetTrackSignalBackground_pTweighted"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Raw_Yield_pTweighted"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	 
-	  if(ibin3>5||is_pp){  //high-pT, just use pp for geometry
- 	    hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin_me2->Get((TString)("Data_hJetTrackME"+ CBin_strs[0] + "_" + CBin_strs[1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	 
-	    //	  }else if(data_mc_type_code!=0||(ibin3==0&&is_pp)){
-	  }else if(data_mc_type_code!=0||ibin3==0){
-	    cout<<"using this one"<<endl;
-	    hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc+"_hJetTrackSignalBackground"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	    /* 
-	  }else if(data_mc_type_code==0&is_pp==0&&ibin3==0){
+	  //*TEMP JUST BECAUSE KURT DIDN'T RUN PT WEIGHTED*//
+	  if(data_mc_type_code==0)  hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc + "_hJetTrackSignalBackground_pTweighted"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs2[ibin3+1]))->Clone((TString) ("Raw_Yield_pTweighted"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
-	    hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin_me3->Get((TString)(desc+"_hJetTrackME"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	    */  
-	  }else{
-	    hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin_me->Get((TString)(desc+"_hJetTrackME"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	  else  hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc + "_hJetTrackSignalBackground"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs2[ibin3+1]))->Clone((TString) ("Raw_Yield_pTweighted"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
-	  }
+	  hJetTrackME[ibin][ibin2][ibin3] = (TH2D*) fin->Get((TString)(desc + "_hJetTrackME"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs2[ibin3+1]))->Clone((TString) ("Mixed_Event_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
 	}
       } /// ibin3
@@ -296,34 +277,22 @@ Int_t me_correct(int data_mc_type_code=0, bool is_pp=kFALSE){
 
 	int lbin = 1;
 	int rbin = 200;
-
-	if((data_mc_type_code!=0 && ibin3<6)||ibin3==0){
-	  lbin = 82;
-	  rbin = 119;
-	}
-
-	if((data_mc_type_code==12||data_mc_type_code==14||data_mc_type_code==2||data_mc_type_code==4) && (ibin3<6&&!is_pp)){
-	  lbin = 82;
-	  rbin = 200;
-	}
-
 	      
 	me_proj[ibin][ibin2][ibin3] = hJetTrackME[ibin][ibin2][ibin3]->ProjectionX(Form("me_proj_temp_%d%d%d",ibin,ibin2,ibin3),lbin,rbin);
 	
-	cout<<ibin<<" "<<ibin3<<" "<< hJetTrackME[ibin][ibin2][ibin3]->GetEntries()<<endl;;
 
 	me_proj[ibin][ibin2][ibin3]->Scale (1./(rbin-lbin+1));
-	me_proj[ibin][ibin2][ibin3] -> Fit("pol0","","",-.4,.4);
+	me_proj[ibin][ibin2][ibin3] -> Fit("pol0","","",-.3,.3);
 
 	me00 = 	me_proj[ibin][ibin2][ibin3]->GetFunction("pol0")->GetParameter(0);
 
 
-
-	for(int k = 1;  k<yield_inc[ibin][ibin2][ibin3]->GetNbinsX(); k++){
+	
+	for(int k = 1;  k<yield_inc[ibin][ibin2][ibin3]->GetNbinsX()+1; k++){
 	  temp1 = me_proj[ibin][ibin2][ibin3]->GetBinContent(k);
 	  err1 = me_proj[ibin][ibin2][ibin3]->GetBinError(k);
 	    
-	  for(int m = 1;  m<yield_inc[ibin][ibin2][ibin3]->GetNbinsY(); m++){
+	  for(int m = 1;  m<yield_inc[ibin][ibin2][ibin3]->GetNbinsY()+1; m++){
 	    hJetTrackME[ibin][ibin2][ibin3]->SetBinContent(k,m,temp1);
 	    hJetTrackME[ibin][ibin2][ibin3]->SetBinError(k,m,err1);
 	  }
@@ -425,28 +394,22 @@ Int_t me_correct(int data_mc_type_code=0, bool is_pp=kFALSE){
 	if(is_pp) result_proj_canvas->cd(ibin3+1);
 	else 	result_proj_canvas->cd(4*(ibin3+1)-ibin);      
 
-	if((data_mc_type_code==2||data_mc_type_code == 12)&&is_pp&&ibin3==0){
-	  llimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-2.5+0.0001);
-	  rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-1.5-0.0001);
-
-	}else{
-	  llimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(1.5+0.0001);
-	  rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(2.5-0.0001);
+	float bg_inner = 1.5;
+	float bg_outer = 2.5;
 
 
-	}
+	llimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(bg_inner+0.0001);
+	rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(bg_outer-0.0001);
 
 	background_proj[ibin][ibin2][ibin3] = (TH1D*)yield_inc[ibin][ibin2][ibin3]->ProjectionY(Form("ProjectedBackground%d%d%d",ibin,ibin2,ibin3),llimiteta,rlimiteta);
 
-	if(data_mc_type_code == 0&&is_pp&&ibin==0&ibin3==0){
-	  llimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-2.5+0.0001);
-	  rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-1.5-0.0001);
-	}else{
-	  llimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-2.5+0.0001);
-	  rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-1.5-0.0001);
-	}
 
+
+	llimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-bg_outer+0.0001);
+	rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-bg_inner-0.0001);
+	
 	background_left[ibin][ibin2][ibin3] = (TH1D*)yield_inc[ibin][ibin2][ibin3]->ProjectionY(Form("LeftSideBackground%d%d%d",ibin,ibin2,ibin3),llimiteta,rlimiteta);
+
 	      
 	background_proj[ibin][ibin2][ibin3]->Add(background_left[ibin][ibin2][ibin3]);
 
@@ -478,62 +441,17 @@ Int_t me_correct(int data_mc_type_code=0, bool is_pp=kFALSE){
 
 
 
-	if((data_mc_type_code==2||data_mc_type_code == 12)&&is_pp&&ibin3==0){
-	  llimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-2.5+0.0001);
-	  rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-1.5-0.0001);
+	llimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(bg_inner+0.0001);
+	rlimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(bg_outer-0.0001);
 
-	}else{
-	  llimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(1.5+0.0001);
-	  rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(2.5-0.0001);
-
-
-	}
-
-	background_proj[ibin][ibin2][ibin3] = (TH1D*)yield_inc[ibin][ibin2][ibin3]->ProjectionY(Form("ProjectedBackground%d%d%d",ibin,ibin2,ibin3),llimiteta,rlimiteta);
-
-	if(data_mc_type_code == 0&&is_pp&&ibin==0&ibin3==0){
-	  llimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-2.5+0.0001);
-	  rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-1.5-0.0001);
-	}else{
-	  llimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-2.5+0.0001);
-	  rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-1.5-0.0001);
-	}
-
-	background_left[ibin][ibin2][ibin3] = (TH1D*)yield_inc[ibin][ibin2][ibin3]->ProjectionY(Form("LeftSideBackground%d%d%d",ibin,ibin2,ibin3),llimiteta,rlimiteta);
-
-
-
-
-	if((data_mc_type_code==2||data_mc_type_code == 12)&&ibin<2&&is_pp&&ibin3==0){
-	  llimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-2.5+0.0001);
-	  rlimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-1.5-0.0001);
-
-	}else{
-	  llimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(1.5+0.0001);
-	  rlimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(2.5-0.0001);
-
-
-	}
 
 	background_proj[ibin][ibin2][ibin3] = (TH1D*)yield_inc_pTweighted[ibin][ibin2][ibin3]->ProjectionY(Form("ProjectedBackground%d%d%d",ibin,ibin2,ibin3),llimiteta,rlimiteta);
 
-	if(data_mc_type_code == 0&&is_pp&&ibin==0&ibin3==0){
-	  llimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-2.5+0.0001);
-	  rlimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-1.5-0.0001);
-	}else{
-	  llimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-2.5+0.0001);
-	  rlimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-1.5-0.0001);
-	}
+	llimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-bg_outer+0.0001);
+	rlimiteta = yield_inc_pTweighted[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-bg_inner-0.0001);
 
 	background_left[ibin][ibin2][ibin3] = (TH1D*)yield_inc_pTweighted[ibin][ibin2][ibin3]->ProjectionY(Form("LeftSideBackground%d%d%d",ibin,ibin2,ibin3),llimiteta,rlimiteta);
 
-
-
-
-
-
-
-	background_left[ibin][ibin2][ibin3] = (TH1D*)yield_inc_pTweighted[ibin][ibin2][ibin3]->ProjectionY(Form("LeftSideBackground%d%d%d",ibin,ibin2,ibin3),llimiteta,rlimiteta);
 	      
 	background_proj[ibin][ibin2][ibin3]->Add(background_left[ibin][ibin2][ibin3]);
 
@@ -568,7 +486,7 @@ Int_t me_correct(int data_mc_type_code=0, bool is_pp=kFALSE){
 	if(data_mc_type_code!=0){
 	  
 	  //	  cout<<"symmetrizing X"<<endl;
-  
+	  /*
 	  int nbins = yield_bgsub[ibin][ibin2][ibin3]->GetNbinsX();
 	  
 	  for(int m = 1; m< yield_bgsub[ibin][ibin2][ibin3]->GetNbinsY()+1; m++){
@@ -645,7 +563,8 @@ Int_t me_correct(int data_mc_type_code=0, bool is_pp=kFALSE){
 	    }
 	    
 	  }
-
+	  */
+	
 	}
 
 

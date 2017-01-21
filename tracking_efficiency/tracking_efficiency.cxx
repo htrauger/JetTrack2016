@@ -38,7 +38,7 @@ Int_t tracking_efficiency(bool is_pythia = kFALSE){
   TString CBin_labels[nCBins] = {"Cent. 0-10%", "Cent. 10-30%", "Cent. 30-50%","Cent. 50-100%"};
 
    float TrkPtBins[nTrkPtBins+1] = {07, 1, 2, 3, 4, 8, 12, 16, 20, 300};
-  TString TrkPtBin_strs[nTrkPtBins+1] = {"TrkPt07","TrkPt1", "TrkPt2", "TrkPt3", "TrkPt4", "TrkPt8", "TrkPt12", "TrkPt16", "TrkPt20", "TrkPt300" };
+  TString TrkPtBin_strs[nTrkPtBins+1] = {"TrkPt0p7","TrkPt1", "TrkPt2", "TrkPt3", "TrkPt4", "TrkPt8", "TrkPt12", "TrkPt16", "TrkPt20", "TrkPt999" };
   TString TrkPtBin_labels[nTrkPtBins] = {"0.7<pT<1","1<pT<2","2<pT<3","3<pT<4","4<pT<8","8<pT<12", "12<pT<16","16<pT<20","pT>20"};
  
 
@@ -113,8 +113,8 @@ Int_t tracking_efficiency(bool is_pythia = kFALSE){
      f_Reco = new TFile("../mc_raw_correlations/Pythia_GenJet_RecoTrack_Aug23.root");
 
   }else{
-    f_Gen  = new TFile("../mc_raw_correlations/HydJet_GenJet_GenTrack_Aug23.root");
-    f_Reco = new TFile("../mc_raw_correlations//HydJet_GenJet_RecoTrack_Aug23.root");
+    f_Gen  = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_Merged_GenGenReduced_fineBin.root");
+    f_Reco = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_GenRecoReduced_refpt_newJetTrackCorrections_Merged_fineBin.root");
   }
   
 

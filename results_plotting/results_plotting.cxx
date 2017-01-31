@@ -315,7 +315,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 	  JetShape[g][ibin][ibin3]->GetXaxis()->SetTickLength(x_tick_length);
 	  JetShape[g][ibin][ibin3]->GetXaxis()->SetTitleOffset(x_title_offset);
 	  JetShape[g][ibin][ibin3]->GetXaxis()->SetTitleFont(label_font);
-	  JetShape[g][ibin][ibin3]->GetYaxis()->SetTitle("#Rho(#Deltar)");
+	  JetShape[g][ibin][ibin3]->GetYaxis()->SetTitle("#Rho(#Deltar) (GeV)");
 	  JetShape[g][ibin][ibin3]->GetYaxis()->CenterTitle(true);
 	  JetShape[g][ibin][ibin3]->GetYaxis()->SetLabelFont(label_font);
 	  JetShape[g][ibin][ibin3]->GetYaxis()->SetLabelOffset(y_label_offset);
@@ -720,7 +720,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   JetShape_Stack_Up[1][0]->GetYaxis()->SetTitleSize(y_title_size);
   JetShape_Stack_Up[1][0]->GetYaxis()->SetTitleOffset(y_title_offset);
   if(is_number) JetShape_Stack_Up[1][0]->GetYaxis()->SetTitle("Y = #frac{1}{N_{jets}} #frac{dN}{d#Deltar}");
-  else JetShape_Stack_Up[1][0]->GetYaxis()->SetTitle("     #Rho(#Deltar)");
+  else JetShape_Stack_Up[1][0]->GetYaxis()->SetTitle("     #Rho(#Deltar) (GeV)");
   JetShape_Stack_Up[1][0]->GetYaxis()->CenterTitle();
 
   JetShape_Stack_Down[1][0]->Draw("same");
@@ -1097,13 +1097,13 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
       Integral_diff_graph_ref[2][ibin]->SetFillStyle(3001);
       Integral_diff_graph_ref[2][ibin]->SetFillColor(kYellow-4);
 
-      Integral_diff_Pt[2][ibin]->SetLineColor(kGreen+2);
-      Integral_diff_Pt[2][ibin]->SetMarkerColor(kGreen+2);
+      Integral_diff_Pt[2][ibin]->SetLineColor(kRed);
+      Integral_diff_Pt[2][ibin]->SetMarkerColor(kRed);
       Integral_diff_Pt[2][ibin]->SetMarkerStyle(34);
       Integral_diff_Pt[2][ibin]->SetMarkerSize(2);
 
-      Integral_diff_graph_ref[2][ibin]->SetLineColor(kGreen+2);
-      Integral_diff_graph_ref[2][ibin]->SetMarkerColor(kGreen+2);
+      Integral_diff_graph_ref[2][ibin]->SetLineColor(kRed);
+      Integral_diff_graph_ref[2][ibin]->SetMarkerColor(kRed);
       Integral_diff_graph_ref[2][ibin]->SetMarkerStyle(34);
       Integral_diff_graph_ref[2][ibin]->SetMarkerSize(2);
     
@@ -1864,28 +1864,28 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   PAS_plot_3row->cd(0);
   
   TLatex *type_tex;
-  if(is_number)type_tex = new TLatex(0.05,0.94,"Particle Yield by #Deltar");
-  else  type_tex = new TLatex(0.05,0.94,"Inclusive Jet Shape");
+  if(is_number)type_tex = new TLatex(0.05,0.945,"Particle Yield by #Deltar");
+  else  type_tex = new TLatex(0.05,0.945,"Inclusive Jet Shape");
   type_tex->SetTextSize(0.025);
   type_tex->SetLineColor(kWhite);
   type_tex->SetNDC();
   type_tex->Draw();
    
-  TLatex   *luminosity_tex_pp = new TLatex(0.2,0.94,"pp 25 pb^{-1} (5.02 TeV)");
+  TLatex   *luminosity_tex_pp = new TLatex(0.2,0.945,"pp 25 pb^{-1} (5.02 TeV)");
   luminosity_tex_pp->SetTextFont(43);
   luminosity_tex_pp->SetTextSizePixels(35);
   luminosity_tex_pp->SetLineColor(kWhite);
   luminosity_tex_pp->SetNDC();
   luminosity_tex_pp->Draw();
  
-  TLatex   *luminosity_tex_PbPb = new TLatex(0.4,0.94,"PbPb 404 #mub^{-1} (5.02 TeV)");
+  TLatex   *luminosity_tex_PbPb = new TLatex(0.4,0.945,"PbPb 404 #mub^{-1} (5.02 TeV)");
   luminosity_tex_PbPb->SetTextFont(43);
   luminosity_tex_PbPb->SetTextSizePixels(35);
   luminosity_tex_PbPb->SetLineColor(kWhite);
   luminosity_tex_PbPb->SetNDC();
   luminosity_tex_PbPb->Draw();
  
-  TLatex   *jet_reco_tex = new TLatex(0.6,0.94,"ak4CaloJets, p_{T}> 120 GeV, |#eta_{jet}| < 1.6");
+  TLatex   *jet_reco_tex = new TLatex(0.6,0.945,"ak4CaloJets, p_{T}> 120 GeV, |#eta_{jet}| < 1.6");
   jet_reco_tex->SetTextFont(43);
   jet_reco_tex->SetTextSizePixels(35);
   jet_reco_tex->SetLineColor(kWhite);
@@ -1906,7 +1906,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   JetShape_Stack_Up[1][0]->GetYaxis()->SetTitleSize(y_title_size);
   JetShape_Stack_Up[1][0]->GetYaxis()->SetTitleOffset(y_title_offset);
   if(is_number) JetShape_Stack_Up[1][0]->GetYaxis()->SetTitle("Y = #frac{1}{N_{jets}} #frac{dN}{d#Deltar}");
-  else JetShape_Stack_Up[1][0]->GetYaxis()->SetTitle("     #Rho(#Deltar)");
+  else JetShape_Stack_Up[1][0]->GetYaxis()->SetTitle("   #Rho(#Deltar)  (GeV)");
   JetShape_Stack_Up[1][0]->GetYaxis()->CenterTitle();
 
   JetShape_Stack_Down[1][0]->Draw("same");

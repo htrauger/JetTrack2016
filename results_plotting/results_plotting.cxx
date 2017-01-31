@@ -685,7 +685,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   type_tex->SetNDC();
   type_tex->Draw();
    
-  TLatex   *luminosity_tex_pp = new TLatex(0.2,0.92,"pp 25 pb^{-1} (5.02 TeV)");
+  TLatex   *luminosity_tex_pp = new TLatex(0.2,0.92,"pp 27.4 pb^{-1} (5.02 TeV)");
   luminosity_tex_pp->SetTextFont(43);
   luminosity_tex_pp->SetTextSizePixels(35);
   luminosity_tex_pp->SetLineColor(kWhite);
@@ -1682,7 +1682,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
       type_tex->SetNDC();
       type_tex->Draw();
    
-      TLatex   *luminosity_tex_pp = new TLatex(0.2,0.92,"pp 25 pb^{-1} (5.02 TeV)");
+      TLatex   *luminosity_tex_pp = new TLatex(0.2,0.92,"pp 27.4 pb^{-1} (5.02 TeV)");
       luminosity_tex_pp->SetTextFont(43);
       luminosity_tex_pp->SetTextSizePixels(35);
       luminosity_tex_pp->SetLineColor(kWhite);
@@ -1871,7 +1871,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   type_tex->SetNDC();
   type_tex->Draw();
    
-  TLatex   *luminosity_tex_pp = new TLatex(0.2,0.945,"pp 25 pb^{-1} (5.02 TeV)");
+  TLatex   *luminosity_tex_pp = new TLatex(0.2,0.945,"pp 27.4 pb^{-1} (5.02 TeV)");
   luminosity_tex_pp->SetTextFont(43);
   luminosity_tex_pp->SetTextSizePixels(35);
   luminosity_tex_pp->SetLineColor(kWhite);

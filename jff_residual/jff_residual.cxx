@@ -79,6 +79,7 @@ Int_t jff_residual(bool is_number = kTRUE){
 
    
   TFile *fin[12];
+  TFile *fin2[12];
   TFile *fin_ref[12];
   TFile *fout[12];
   TFile *fclosures[12];
@@ -219,6 +220,7 @@ Int_t jff_residual(bool is_number = kTRUE){
     case 0:
 
       fin[g] = new TFile("../me_correct/Pythia_RecoJet_GenTrack_Inclusive_Correlations.root","READ");
+      //    fin2[g] = new TFile("../me_correct/Pythia_RecoJet_RecoTrack_Inclusive_Correlations.root","READ");
       mc_type_code = 2;
       if(is_number)  jettype = "";
       else jettype = "pTweighted";
@@ -226,6 +228,7 @@ Int_t jff_residual(bool is_number = kTRUE){
       break;
     case 1:
       fin[g] = new TFile("../me_correct/Pythia_GenJet_GenTrack_Inclusive_Correlations.root","READ");
+      //    fin2[g] = new TFile("../me_correct/Pythia_GenJet_GenTrack_Inclusive_Correlations.root","READ");
       mc_type_code = 4;
       if(is_number)  jettype = "";
       else jettype = "pTweighted";
@@ -237,7 +240,8 @@ Int_t jff_residual(bool is_number = kTRUE){
 
     case 6:
       fin[g] = new TFile("../me_correct/HydJet_RecoJet_GenTrack_Sube0_Inclusive_Correlations.root","READ");
-      
+      // fin[g] = new TFile("../me_correct/HydJet_RecoJet_RecoTrack_Inclusive_Correlations.root","READ");
+           
       mc_type_code = 2;
       if(is_number)  jettype = "";
       else jettype = "pTweighted";
@@ -245,7 +249,8 @@ Int_t jff_residual(bool is_number = kTRUE){
       break;
     case 7:
       fin[g] = new TFile("../me_correct/HydJet_GenJet_GenTrack_Sube0_Inclusive_Correlations.root","READ");
-      
+      // fin[g] = new TFile("../me_correct/HydJet_GenJet_GenTrack_Inclusive_Correlations.root","READ");
+           
       mc_type_code = 4;
       if(is_number)  jettype = "";
       else jettype = "pTweighted";
@@ -285,27 +290,27 @@ Int_t jff_residual(bool is_number = kTRUE){
 	if(g<6&&j>0)continue;
        
 
-	TString in_name = "Yield_BkgSub_"; in_name+=jettype;in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; in_name+= "_Pt100_Pt300_"; in_name+=TrkPtBin_strs[i]; in_name+="_"; in_name+=TrkPtBin_strs[i+1]; 
+	TString in_name = "Yield_BkgSub_"; in_name+=jettype;in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; 
+	//TString in_name = "Raw_Yield_"; in_name+=jettype;in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; 
+	if(g==1)	in_name+= "_Pt100_Pt1000_"; 
+	else in_name+= "_Pt100_Pt1000_"; 
+	in_name+=TrkPtBin_strs[i]; in_name+="_"; in_name+=TrkPtBin_strs[i+1]; 
+
 
 	cout<<in_name<<endl;
-	/*
-	if(g==7){
-	  in_name = "Raw_Yield_"; in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; in_name+= "_Pt100_Pt300_"; in_name+=TrkPtBin_strs[i]; in_name+="_"; in_name+=TrkPtBin_strs[i+1];
-	}
-	if(g==6){	
-	  in_name = "Raw_Yield_"; in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; in_name+= "_Pt100_Pt300_"; in_name+=TrkPtBin_strs[i]; in_name+="_"; in_name+=TrkPtBin_strs[i+1];
-	}
-	*/
-	cout<<g<<" "<<i<<" "<<j<<" "<<in_name<<endl;
+	//	if(i<4)
 	result[g][i][j] = (TH2D*)fin[g]->Get(in_name)->Clone(in_name);
+	//	else 	result[g][i][j] = (TH2D*)fin2[g]->Get(in_name)->Clone(in_name);
 
 
-	if(i>3){
-	  result[g][i][j]->Scale(1./4.);
-	}else if(i==0){
-	  result[g][i][j]->Scale(1/.3);
+
+	if(is_number){
+	  if(i>3){
+	    result[g][i][j]->Scale(1./4.);
+	  }else if(i==0){
+	    result[g][i][j]->Scale(1/.3);
+	  }
 	}
-
 	//-------------------------------
 	//dEta projection
 	//------------------------
@@ -364,14 +369,14 @@ Int_t jff_residual(bool is_number = kTRUE){
 
 	float totbins = eta_proj_rebin[g][i][j]->GetNbinsX();
 
-	//	  offset= (eta_proj_rebin[g][i][j]->GetBinContent(1)+eta_proj_rebin[g][i][j]->GetBinContent(2)+eta_proj_rebin[g][i][j]->GetBinContent(3)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-2)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-1)+eta_proj_rebin[g][i][j]->GetBinContent(totbins))/6.;
+	offset= (eta_proj_rebin[g][i][j]->GetBinContent(1)+eta_proj_rebin[g][i][j]->GetBinContent(2)+eta_proj_rebin[g][i][j]->GetBinContent(3)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-2)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-1)+eta_proj_rebin[g][i][j]->GetBinContent(totbins))/6.;
 
-	offset= (eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(1.001))+eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(-1.01)))/2.;
+	//	offset= (eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(1.001))+eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(-1.01)))/2.;
 
 	do_offset->SetParameter(0, offset);
 
-	//eta_proj_rebin[g][i][j]->Add(do_offset);
-	//phi_proj_rebin[g][i][j]->Add(do_offset);
+	//	eta_proj_rebin[g][i][j]->Add(do_offset);
+	//	phi_proj_rebin[g][i][j]->Add(do_offset);
 
 	check_ymax  = 4.;
 	check_ymin = -1.;
@@ -399,7 +404,7 @@ Int_t jff_residual(bool is_number = kTRUE){
 	  check_ymin = -1.; 
 	  break;
 	default: 
-	  check_ymax = 10.;
+	  check_ymax = 3.;
 	  check_ymin = -1.; 
 	  break;
 	}
@@ -439,14 +444,22 @@ Int_t jff_residual(bool is_number = kTRUE){
 	residual_name_eta.ReplaceAll("Yield","JFF_Residual_Eta");
 
 	jff_residual_eta[g][i][j] = (TH1D*)eta_proj_rebin[g-1][i][j]->Clone(residual_name_eta);
+	//	if(i>3)	jff_residual_eta[g][i][j]->Add(eta_proj_rebin[1][i][0],-1.);
+	//	else 
 	jff_residual_eta[g][i][j]->Add(eta_proj_rebin[g][i][j],-1.);
 	jff_residual_eta[g][i][j]->SetMinimum(check_ymin-1.);
 	jff_residual_eta[g][i][j]->SetMaximum(check_ymax-1.);
-	if(i==4){
+
+	if(i>3){
 	  jff_residual_eta[g][i][j]->SetMinimum(-10.);
 	  jff_residual_eta[g][i][j]->SetMaximum(11.);
 	}
-	
+
+
+	if(is_number){
+	  jff_residual_eta[g][i][j]->SetMinimum(-1.);
+	  jff_residual_eta[g][i][j]->SetMaximum(1.);
+	}
 	eta_proj_rebin[g-1][i][j]->Write();
 	eta_proj_rebin[g][i][j]->Write();
 	jff_residual_eta[g][i][j]->Write();
@@ -458,13 +471,21 @@ Int_t jff_residual(bool is_number = kTRUE){
 	residual_name_phi.ReplaceAll("Yield","JFF_Residual_Phi");
 
 	jff_residual_phi[g][i][j] = (TH1D*)phi_proj_rebin[g-1][i][j]->Clone(residual_name_phi);
+	//if(i>3)	jff_residual_phi[g][i][j]->Add(phi_proj_rebin[1][i][0],-1.);
+	//	else
 	jff_residual_phi[g][i][j]->Add(phi_proj_rebin[g][i][j],-1.);
 	jff_residual_phi[g][i][j]->SetMinimum(check_ymin-1.);
 	jff_residual_phi[g][i][j]->SetMaximum(check_ymax-1.);
 	
-	if(i==4){
+	if(i>3){
 	  jff_residual_phi[g][i][j]->SetMinimum(-10.);
 	  jff_residual_phi[g][i][j]->SetMaximum(11.);
+	}
+
+
+	if(is_number){
+	  jff_residual_eta[g][i][j]->SetMinimum(-1.);
+	  jff_residual_eta[g][i][j]->SetMaximum(1.);
 	}
 
 
@@ -640,6 +661,7 @@ Int_t jff_residual(bool is_number = kTRUE){
 	save_name_eta+=jettype2;
 	save_name_eta+=jettype;
 	save_name_eta+=TrkPtBin_strs[i]; save_name_eta+="_"; save_name_eta+=TrkPtBin_strs[i+1];
+	if(!is_number)save_name_eta+="_pTweighted";
 	save_name_eta+=".png";
 	corr_canvas_eta[g][i]->SaveAs(save_name_eta);
 	save_name_eta.ReplaceAll(".png",".pdf");
@@ -649,6 +671,7 @@ Int_t jff_residual(bool is_number = kTRUE){
 	save_name_phi+=jettype2;
 	save_name_phi+=jettype;
 	save_name_phi+=TrkPtBin_strs[i]; save_name_phi+="_"; save_name_phi+=TrkPtBin_strs[i+1];
+	if(!is_number)save_name_phi+="_pTweighted";
 	save_name_phi+=".png";
 	corr_canvas_phi[g][i]->SaveAs(save_name_phi);
 	save_name_phi.ReplaceAll(".png",".pdf");
@@ -664,7 +687,7 @@ Int_t jff_residual(bool is_number = kTRUE){
       cout<<"starting integrals"<<endl;
       TString integral_eta_pT_name = "integral_eta_pT";
       integral_eta_pT_name+=g;
-
+  
       cintegral_eta_pT[g] = new TCanvas(integral_eta_pT_name,"",10,10,1500,500);
       cintegral_eta_pT[g]->Divide(4,1,0.,0.);
 
@@ -691,7 +714,7 @@ Int_t jff_residual(bool is_number = kTRUE){
 	TString ClosureIntegralEtaPt_name = in_name;
 	ClosureIntegralEtaPt_name.ReplaceAll("Yield_BkgSub","Closure_Integral_Eta");
 	ClosureIntegralEtaPt_name.ReplaceAll("_TrkPt4_TrkPt8","");
-	ClosureIntegralEtaPt_name.ReplaceAll("_Pt100_Pt300",jettype);
+	ClosureIntegralEtaPt_name.ReplaceAll("_Pt100_Pt1000",jettype);
 	ClosureIntegralEtaPt_name+=g;
  
 
@@ -723,8 +746,8 @@ Int_t jff_residual(bool is_number = kTRUE){
 	Closure_integral_eta_pT[g][j]->SetMarkerStyle(10);
 
 
-	Closure_integral_eta_pT[g][j]->SetMinimum(-2.);
-	Closure_integral_eta_pT[g][j]->SetMaximum(3.);
+	Closure_integral_eta_pT[g][j]->SetMinimum(-.5);
+	Closure_integral_eta_pT[g][j]->SetMaximum(.5);
 	    
 	Closure_integral_eta_pT[g][j]->GetXaxis()->SetRangeUser(.5,20.);
 	Closure_integral_eta_pT[g][j]->GetYaxis()->SetNdivisions(306);
@@ -894,8 +917,8 @@ Int_t jff_residual(bool is_number = kTRUE){
 	  histnameblank2+=i;
 
 	
-	  blank[i]->SetMinimum(-2.);
-	  blank[i]->SetMaximum(3.);
+	  blank[i]->SetMinimum(-.5);
+	  blank[i]->SetMaximum(.5);
 	  blank[i]->GetXaxis()->SetTitle("Centrality (%)");
 	  blank[i]->GetXaxis()->SetTitleOffset(1.1);
 	  blank[i]->GetXaxis()->CenterTitle(true);
@@ -1013,8 +1036,6 @@ Int_t jff_residual(bool is_number = kTRUE){
       canvas_title2->SetTextSizePixels(tspixels);
       canvas_title2->Draw();
 
-      cintegral_eta_pT[g]->SaveAs("Integral_JFFResidual_pT.pdf");
-      cintegral_eta_pT[g]->SaveAs("Integral_JFFResidual_pT.png");
 
 
       cintegral_eta_cent[g]->cd(0);
@@ -1023,10 +1044,23 @@ Int_t jff_residual(bool is_number = kTRUE){
 
       canvas_title2->Draw();
 
-   
+      if(is_number){
+      cintegral_eta_pT[g]->SaveAs("Integral_JFFResidual_pT.pdf");
+      cintegral_eta_pT[g]->SaveAs("Integral_JFFResidual_pT.png");
+
 
       cintegral_eta_cent[g]->SaveAs("Integral_JFFResidual_Cent.png");
       cintegral_eta_cent[g]->SaveAs("Integral_JFFResidual_Cent.pdf");
+      }else{
+
+	cintegral_eta_pT[g]->SaveAs("Integral_JFFResidual_pTweighted_pT.pdf");
+	cintegral_eta_pT[g]->SaveAs("Integral_JFFResidual_pTweighted_pT.png");
+
+
+	cintegral_eta_cent[g]->SaveAs("Integral_JFFResidual_pTweighted_Cent.png");
+	cintegral_eta_cent[g]->SaveAs("Integral_JFFResidual_pTweighted_Cent.pdf");
+
+      }
     }
 
   }//g

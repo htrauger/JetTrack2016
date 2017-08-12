@@ -150,23 +150,25 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   TFile *f_in, *f_in_ref, *f_in_eta_phi;
 
   //HALLIE'S FILE PATHS FOR EASY ITERATION
-  /*
+  
 
   if(is_number){
     f_in = new TFile("../jet_shapes_result/Jet_Shapes.root");
     f_in_eta_phi = new TFile("../particle_yields/Particle_Yields.root");
-    f_in_ref = new TFile("Jet_Shapes_Preapproval.root");
+    f_in_ref = new TFile("Jet_Shapes_QM.root");
+    //  f_in_ref = new TFile("Jet_Shapes_Preapproval.root");
 
   }else{
 
     f_in = new TFile("../jet_shapes_result/Jet_Shapes_pTweighted.root");
-    //  f_in_ref = new TFile("Jet_Shapes_pTweighted_Preapproval.root");
-    f_in_ref = new TFile("Jet_Shapes_Run1.root");
+    f_in_ref = new TFile("Jet_Shapes_pTweighted_QM.root");
+    //   f_in_ref = new TFile("Jet_Shapes_pTweighted_Preapproval.root");
+    //  f_in_ref = new TFile("Jet_Shapes_Run1.root");
 
   }
-  */
-  //FILE PATHS IN GITHUB CODE:
 
+  //FILE PATHS IN GITHUB CODE:
+  /*
  if(is_number){
     f_in = new TFile("Jet_Shapes.root");
     f_in_eta_phi = new TFile("Particle_Yields.root");
@@ -179,7 +181,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
     f_in_ref = new TFile("Jet_Shapes_Run1.root");
 
   }
-
+  */
   TF1 *temp_func = new TF1("temp_func","[0]"); // this exists because you can't scale a graph normally
   //-----------------------------------
   // Consolidated style settings
@@ -203,7 +205,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   float r_max = 0.999;
 
   float number_y_min = -5.;
-  float number_y_max = 40.;
+  float number_y_max = 43.;
   
   float jetshape_y_min_normed = .005;
   float jetshape_y_max_normed = 23.5;
@@ -215,18 +217,18 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   float jetshape_ratio_y_min = 0.;
   float jetshape_ratio_y_max = 3.2;
 
-  if(do_ref)jetshape_ratio_y_max = 6.5;
+  //  if(do_ref)jetshape_ratio_y_max = 6.5;
 
-  float number_diff_y_min = -3.5;
-  float number_diff_y_max = 13.;
+  float number_diff_y_min = -1.5;
+  float number_diff_y_max = 15.;
 
   float number_diff_y_min_r = -5.5;
-  float number_diff_y_max_r = 15.5;
+  float number_diff_y_max_r = 19.5;
 
   float integral_max = 13.;
   float integral_min = -1.;
 
-  float integral_diff_max = 6.2;
+  float integral_diff_max = 8.2;
   float integral_diff_min = -1.;
 
 
@@ -251,17 +253,17 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
     
 	for (int ibin3=0;ibin3<nTrkPtBins;ibin3++){
 
+
+	  cout<<(TString)(stem + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1])<<endl;
 	  if(g==0){
 	    JetShape[g][ibin][ibin3] = (TH1D*)f_in->Get((TString)(stem + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
-	 
-	    //    if(do_ref)    JetShape_ref[g][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)(stem + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_Ref_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	
-	    if(!is_number&&do_ref)    JetShape_ref[g][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)("JetShape2_Yield_BkgSub_PbPb_Leading_"+ CBin_strs[ibin]  +"_"+ CBin_strs[ibin+1] + "_TrkPt300_"))->Clone((TString) (stem + "_Ref_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs2[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-
-	  
+	    cout<<"0"<<ibin<<" "<<ibin3<<endl;
+	    if(do_ref)    JetShape_ref[g][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)(stem + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_Ref_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+		  
 	    JetShape_syst[g][ibin][ibin3] = (TH1D*)f_in->Get((TString)("Jet_Shape_SystErr_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Jet_Shape_SystErr_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
+	    cout<<"1"<<endl;
 	 
 	    if(is_number&&ibin3<8){
 
@@ -269,35 +271,41 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 	      
 	      signal_dEta_rebin[g][ibin][ibin3] = (TH1D*)f_in_eta_phi->Get((TString)("Proj_dEta_PbPb_" + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]+"_Rebin"))->Clone((TString) ("Proj_dEta_PbPb_"  + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])); 
 
-	      signal_dPhi_syst[g][ibin][ibin3] = (TH1D*)f_in_eta_phi->Get((TString)("dPhi_Syst_PbPb_" + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_Pt100_Pt300_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("dPhi_Syst_PbPb_"  + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])); 
-	      signal_dEta_syst[g][ibin][ibin3] = (TH1D*)f_in_eta_phi->Get((TString)("dEta_Syst_PbPb_" + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_Pt100_Pt300_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("dEta_Syst_PbPb_"  + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])); 
+	      signal_dPhi_syst[g][ibin][ibin3] = (TH1D*)f_in_eta_phi->Get((TString)("dPhi_Syst_PbPb_" + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("dPhi_Syst_PbPb_"  + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])); 
+	      signal_dEta_syst[g][ibin][ibin3] = (TH1D*)f_in_eta_phi->Get((TString)("dEta_Syst_PbPb_" + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("dEta_Syst_PbPb_"  + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])); 
 
 
 	    }
 
+	  
 	  }else{
 
+
 	    JetShape[g][ibin][ibin3] = (TH1D*)f_in->Get((TString)(stem +"pp_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	 
-	    //	    if(do_ref)   JetShape_ref[g][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)(stem +"pp_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_Ref_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	    if(!is_number&&do_ref)    JetShape_ref[g][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)("JetShape2_Yield_BkgSub_pp_Leading_Cent50_Cent100_TrkPt300_"))->Clone((TString) (stem + "_Ref_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs2[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	    
+	    cout<<"0 for pp"<<endl;
+	    
 
-
+	    cout<<(TString)(stem +"pp_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1])<<endl;
+	    if(do_ref)	    JetShape_ref[g][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)(stem +"pp_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_Ref_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	    
 	    
 	    JetShape_syst[g][ibin][ibin3] = (TH1D*)f_in->Get((TString)("Jet_Shape_SystErr_pp_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Jet_Shape_SystErr_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	
+	    cout<<"1"<<endl;
 
 	    if(is_number&&ibin3<8){
 	      signal_dPhi_rebin[g][ibin][ibin3] = (TH1D*)f_in_eta_phi->Get((TString)("Proj_dPhi_pp_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]+"_Rebin"))->Clone((TString) ("Proj_dPhi_pp_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])); 
 	      signal_dEta_rebin[g][ibin][ibin3] = (TH1D*)f_in_eta_phi->Get((TString)("Proj_dEta_pp_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]+"_Rebin"))->Clone((TString) ("Proj_dEta_pp_"  +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])); 
 
-	      signal_dPhi_syst[g][ibin][ibin3] = (TH1D*)f_in_eta_phi->Get((TString)("dPhi_Syst_pp_Cent0_Cent10_Pt100_Pt300_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("dPhi_Syst_pp_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])); 
+	      signal_dPhi_syst[g][ibin][ibin3] = (TH1D*)f_in_eta_phi->Get((TString)("dPhi_Syst_pp_Cent0_Cent10_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("dPhi_Syst_pp_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])); 
 
-	      signal_dEta_syst[g][ibin][ibin3] = (TH1D*)f_in_eta_phi->Get((TString)("dEta_Syst_pp_Cent0_Cent10_Pt100_Pt300_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("dEta_Syst_pp_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])); 
+	      signal_dEta_syst[g][ibin][ibin3] = (TH1D*)f_in_eta_phi->Get((TString)("dEta_Syst_pp_Cent0_Cent10_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("dEta_Syst_pp_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])); 
 
 
 
 	    }
+	  
+	    cout<<"2"<<endl;
 	  }
 
 
@@ -330,10 +338,14 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 	  JetShape[g][ibin][ibin3]->SetLineColor(kBlack);
 	  JetShape[g][ibin][ibin3]->SetMarkerColor(kBlack);
 	  JetShape[g][ibin][ibin3]->SetMarkerStyle(24);
-	  if(!is_number&&do_ref){
+
+	  cout<<"3"<<endl;
+	  if(do_ref){
 	    JetShape_ref[g][ibin][ibin3]->SetMarkerSize(2);
-	    JetShape_ref[g][ibin][ibin3]->SetLineColor(kSpring);
-	    JetShape_ref[g][ibin][ibin3]->SetMarkerColor(kSpring);
+	    if(is_number)   JetShape_ref[g][ibin][ibin3]->SetLineColor(kRed);
+	    else    JetShape_ref[g][ibin][ibin3]->SetLineColor(kSpring);
+	    if(is_number)	    JetShape_ref[g][ibin][ibin3]->SetMarkerColor(kRed);
+	    else 	    JetShape_ref[g][ibin][ibin3]->SetMarkerColor(kSpring);
 	    JetShape_ref[g][ibin][ibin3]->SetMarkerStyle(34);
 	
 	  }
@@ -341,16 +353,22 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 	  JetShape[g+3][ibin][ibin3] = (TH1D*) JetShape[g][ibin][ibin3]->Clone((TString) (stem + "_NormedJetShape_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 	  JetShape_syst[g+3][ibin][ibin3] = (TH1D*) JetShape_syst[g][ibin][ibin3]->Clone((TString) (stem + "_NormedJetShape_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
+	  
 
 	  if(!is_number&&ibin3==9){
 
+	    cout<<"4"<<endl;
 	    if(do_ref){
 	      JetShape_ref[g+3][ibin][ibin3] = (TH1D*) JetShape_ref[g][ibin][ibin3]->Clone((TString) (stem + "_NormedJetShape_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 	 
-	      if(g==0)	      JetShape_syst_ref[g+3][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)("Jet_Shape_SystErr_PbPb_"+ CBin_strs[ibin]  +"_"+ CBin_strs[ibin+1] + "TrkPt300_"))->Clone((TString) (stem + "_Syst_PbPb_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs2[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	      else 	      JetShape_syst_ref[g+3][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)("Jet_Shape_SystErr_pp_"+ CBin_strs[ibin]  +"_"+ CBin_strs[ibin+1] + "TrkPt300_"))->Clone((TString) (stem + "_Syst_pp_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs2[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-
+	      cout<<g<<endl;
+	      /*
+	      if(g==0)	      JetShape_syst_ref[g+3][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)("Jet_Shape_SystErr_"+ CBin_strs[ibin]  +"_"+ CBin_strs[ibin+1] + "_TrkPt300_"))->Clone((TString) (stem + "_Syst_PbPb_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs2[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	      else 	      JetShape_syst_ref[g+3][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)("Jet_Shape_SystErr_pp_TrkPt300_"))->Clone((TString) (stem + "_Syst_pp_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs2[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	      */
 	    }
+
+	    cout<<"5"<<endl;
 	    norm = JetShape[g][ibin][ibin3]->Integral("width");
 	  
 	    for(int k = 0; k<10; k++){
@@ -363,7 +381,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 	      norm = JetShape_ref[g][ibin][ibin3]->Integral("width");
 	
 	      JetShape_ref[g+3][ibin][ibin3]->Scale(1./norm);
-	      JetShape_syst_ref[g+3][ibin][ibin3]->Scale(1./norm);
+	      // JetShape_syst_ref[g+3][ibin][ibin3]->Scale(1./norm);
 	    }
 	    
 	  }
@@ -414,7 +432,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 	  if(!is_number&&do_ref&&ibin3==9){
 	    JetShape_ref_ratio[g][ibin][ibin3] = (TH1D*)JetShape_ref[g][ibin][ibin3]->Clone((TString)(ratio_name+"_Ref"));
 	    JetShape_ref_ratio[g][ibin][ibin3]->Divide( JetShape_ref[g+1][0][ibin3]);
-	 
+	    /*
 	    if(g==3){
 	      JetShape_syst_ref[g+2][ibin][ibin3] = (TH1D*)JetShape_syst_ref[g][ibin][ibin3]->Clone((TString)(ratio_name+"_SystRef"));
 
@@ -443,6 +461,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 	      JetShape_syst_ref[g][ibin][ibin3]->SetFillStyle(3001);
 
 	    }
+	    */
 	  }
       }
     }
@@ -687,21 +706,21 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
    
   TLatex   *luminosity_tex_pp = new TLatex(0.2,0.92,"pp 27.4 pb^{-1} (5.02 TeV)");
   luminosity_tex_pp->SetTextFont(43);
-  luminosity_tex_pp->SetTextSizePixels(35);
+  luminosity_tex_pp->SetTextSizePixels(30);
   luminosity_tex_pp->SetLineColor(kWhite);
   luminosity_tex_pp->SetNDC();
   luminosity_tex_pp->Draw();
  
   TLatex   *luminosity_tex_PbPb = new TLatex(0.4,0.92,"PbPb 404 #mub^{-1} (5.02 TeV)");
   luminosity_tex_PbPb->SetTextFont(43);
-  luminosity_tex_PbPb->SetTextSizePixels(35);
+  luminosity_tex_PbPb->SetTextSizePixels(30);
   luminosity_tex_PbPb->SetLineColor(kWhite);
   luminosity_tex_PbPb->SetNDC();
   luminosity_tex_PbPb->Draw();
  
-  TLatex   *jet_reco_tex = new TLatex(0.6,0.92,"ak4CaloJets, p_{T}> 120 GeV, |#eta_{jet}| < 1.6");
+  TLatex   *jet_reco_tex = new TLatex(0.65,0.92,"ak4CaloJets, p_{T}> 120 GeV, |#eta_{jet}| < 1.6");
   jet_reco_tex->SetTextFont(43);
-  jet_reco_tex->SetTextSizePixels(35);
+  jet_reco_tex->SetTextSizePixels(30);
   jet_reco_tex->SetLineColor(kWhite);
   jet_reco_tex->SetNDC();
   jet_reco_tex->Draw();
@@ -731,10 +750,12 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 
   JetShape[1][0][9]->Draw("same");
 
+  cout<<"here"<<endl;
+
   if(do_ref){
-    //   JetShape_ref[1][0][9]->Draw("same");
+    JetShape_ref[1][0][9]->Draw("same");
   } 
- 
+  cout<<"and here"<<endl;
   labels = new TPaveText(0.28,0.8,0.45,.99,"NDC");
     
   labels->SetName("labels");
@@ -803,7 +824,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 
 
     if(do_ref){
-      //   JetShape_ref[0][ibin][9]->Draw("same");
+      JetShape_ref[0][ibin][9]->Draw("same");
     }
 
    
@@ -870,7 +891,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
       TLegend *legend_ratio = new TLegend(0.02,0.7,0.9,0.9);
       if(is_number)legend_ratio->AddEntry(JetShape_diff[0][ibin][9],"PbPb - pp");
       else legend_ratio->AddEntry(JetShape_ratio[0][ibin][9],"PbPb / pp");
-      if(!is_number&&do_ref) legend_ratio->AddEntry(JetShape_ref_ratio[0][ibin][9],"2.76 TeV Leading Jets");
+      if(!is_number&&do_ref) legend_ratio->AddEntry(JetShape_ref_ratio[0][ibin][9],"Results at QM");
       legend_ratio->SetLineColor(kWhite);
       legend_ratio->SetFillColor(kWhite);
       legend_ratio->SetTextSize(0.07);
@@ -929,12 +950,12 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   if(do_ref){
     if(!is_number){
         
-      PAS_plot->SaveAs("JetShapes_WithHighpT_pTweighted_Run1Ref.pdf");
-      PAS_plot->SaveAs("JetShapes_WithHighpT_pTweighted_RunlRef.png");
+      PAS_plot->SaveAs("JetShapes_WithHighpT_pTweighted_QMRef.pdf");
+      PAS_plot->SaveAs("JetShapes_WithHighpT_pTweighted_QMRef.png");
 
     }else{
-      PAS_plot->SaveAs("ParticleYield_by_dR_PreapprovalRef.pdf");
-      PAS_plot->SaveAs("ParticleYield_by_dR_PreapprovalRef.png");
+      PAS_plot->SaveAs("ParticleYield_by_dR_QMRef.pdf");
+      PAS_plot->SaveAs("ParticleYield_by_dR_QMRef.png");
 
     }
   }else{
@@ -968,8 +989,10 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
       Integral_Pt[0][ibin] = (TH1D*)f_in->Get((TString)("Integral_PbPb"+CBin_strs[ibin]+"_"+CBin_strs[ibin+1]))->Clone((TString)("Integral_PbPb"+CBin_strs[ibin]+"_"+CBin_strs[ibin+1]));
 
       Integral_syst_Pt[0][ibin] = (TH1D*)f_in->Get((TString)("Integral_PbPb_Syst"+CBin_strs[ibin]+"_"+CBin_strs[ibin+1]))->Clone((TString)("Integral_PbPb"+CBin_strs[ibin]+"_"+CBin_strs[ibin+1]));
+
+      cout<<"got integrals"<<endl;
     
-  if(ibin==0){
+      if(ibin==0){
 	Integral_Pt[1][0] = (TH1D*)f_in->Get((TString)("Integral_pp"));
 	Integral_syst_Pt[1][0] = (TH1D*)f_in->Get((TString)("Integral_pp_Syst"));
 
@@ -998,8 +1021,10 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 
       Integral_syst_Pt[0][ibin]->SetLineColor(kBlack);
       Integral_syst_Pt[0][ibin]->SetMarkerColor(kBlack);
-      Integral_Pt[0][ibin]->SetMarkerStyle(10);
-      Integral_syst_Pt[0][ibin]->SetMarkerStyle(10);
+      
+      Integral_Pt[0][ibin]->SetMarkerStyle(20);
+      Integral_syst_Pt[0][ibin]->SetMarkerStyle(20);
+      
       Integral_syst_Pt[0][ibin]->SetFillColor(kCyan-6);
  
       Integral_Pt[0][ibin]->GetXaxis()->SetRangeUser(0.01,19.5);
@@ -1696,7 +1721,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
       luminosity_tex_PbPb->SetNDC();
       luminosity_tex_PbPb->Draw();
  
-      TLatex   *jet_reco_tex = new TLatex(0.6,0.92,"ak4CaloJets, p_{T}> 120 GeV, |#eta_{jet}| < 1.6");
+      TLatex   *jet_reco_tex = new TLatex(0.6,0.92,"ak4CaloJets, p_{T }> 120 GeV, | #eta_{jet}| < 1.6");
       jet_reco_tex->SetTextFont(43);
       jet_reco_tex->SetTextSizePixels(35);
       jet_reco_tex->SetLineColor(kWhite);
@@ -1859,7 +1884,6 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 
   PAS_plot_3row->cd(6);
 
-    
 
   PAS_plot_3row->cd(0);
   
@@ -1873,21 +1897,21 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
    
   TLatex   *luminosity_tex_pp = new TLatex(0.2,0.945,"pp 27.4 pb^{-1} (5.02 TeV)");
   luminosity_tex_pp->SetTextFont(43);
-  luminosity_tex_pp->SetTextSizePixels(35);
+  luminosity_tex_pp->SetTextSizePixels(30);
   luminosity_tex_pp->SetLineColor(kWhite);
   luminosity_tex_pp->SetNDC();
   luminosity_tex_pp->Draw();
  
   TLatex   *luminosity_tex_PbPb = new TLatex(0.4,0.945,"PbPb 404 #mub^{-1} (5.02 TeV)");
   luminosity_tex_PbPb->SetTextFont(43);
-  luminosity_tex_PbPb->SetTextSizePixels(35);
+  luminosity_tex_PbPb->SetTextSizePixels(30);
   luminosity_tex_PbPb->SetLineColor(kWhite);
   luminosity_tex_PbPb->SetNDC();
   luminosity_tex_PbPb->Draw();
  
   TLatex   *jet_reco_tex = new TLatex(0.6,0.945,"ak4CaloJets, p_{T}> 120 GeV, |#eta_{jet}| < 1.6");
   jet_reco_tex->SetTextFont(43);
-  jet_reco_tex->SetTextSizePixels(35);
+  jet_reco_tex->SetTextSizePixels(30);
   jet_reco_tex->SetLineColor(kWhite);
   jet_reco_tex->SetNDC();
   jet_reco_tex->Draw();
@@ -1918,7 +1942,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   JetShape[1][0][9]->Draw("same");
 
   if(do_ref){
-    //   JetShape_ref[1][0][9]->Draw("same");
+    JetShape_ref[1][0][9]->Draw("same");
   } 
  
   labels = new TPaveText(0.28,0.8,0.45,.99,"NDC");
@@ -1976,7 +2000,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
     JetShape[0][ibin][9]->Draw("same");
 
     if(do_ref){
-      //    JetShape_ref[0][ibin][9]->Draw("same");
+      JetShape_ref[0][ibin][9]->Draw("same");
     }  
 
 
@@ -2017,7 +2041,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 
   if(do_ref){
     JetShape_ref[4][0][9]->Draw("same");
-    JetShape_syst_ref[4][0][9]->Draw("same p e2");
+    // JetShape_syst_ref[4][0][9]->Draw("same p e2");
   } 
  
   labels = new TPaveText(0.28,0.8,0.45,.99,"NDC");
@@ -2057,12 +2081,12 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
     JetShape_syst[3][ibin][9]->Draw("same e2 P");
     JetShape[3][ibin][9]->Draw("same");
 
-    if(do_ref&&(ibin==0||ibin==3)){
+    if(do_ref){
       JetShape_ref[3][ibin][9]->SetMarkerColor(kSpring);
-      JetShape_syst_ref[3][ibin][9]->SetMarkerColor(kSpring);
+      //  JetShape_syst_ref[3][ibin][9]->SetMarkerColor(kSpring);
       JetShape_ref[3][ibin][9]->Draw("same");
-      //    JetShape_syst_ref[3][ibin][9]->SetFillColor(kWhite);
-      // JetShape_syst_ref[3][ibin][9]->Draw("same p e2");
+      //   JetShape_syst_ref[3][ibin][9]->SetFillColor(kWhite);
+      //JetShape_syst_ref[3][ibin][9]->Draw("same p e2");
     }  
 
 
@@ -2099,8 +2123,8 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
     JetShape_ratio[3][ibin][9]->Draw("same");
  
     if(do_ref){
-      if(ibin==0)    JetShape_syst_ref[5][1][9]->Draw("same e2 P");
-      else if(ibin==3)    JetShape_syst_ref[5][ibin][9]->Draw("same e2 P");
+      //  JetShape_syst_ref[5][ibin][9]->Draw("same e2 P");
+      JetShape_ref_ratio[3][ibin][9]->Draw("same");
     }
     JetShape_syst[5][ibin][9]->Draw("same e2 P");
     JetShape_ratio[3][ibin][9]->Draw("same");
@@ -2114,7 +2138,8 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
     if(ibin==3){
       TLegend *legend_ratio = new TLegend(0.02,0.7,0.9,0.9);
       legend_ratio->AddEntry(JetShape_ratio[0][ibin][9],"#rho(r)_{PbPb} / #rho(r)_{pp}");
-      if(do_ref) legend_ratio->AddEntry(JetShape_syst_ref[5][ibin][9],"2.76 TeV Leading Jets");
+      //     if(do_ref) legend_ratio->AddEntry(JetShape_syst_ref[5][ibin][9],"QM Results");
+      if(do_ref) legend_ratio->AddEntry(JetShape_ref[3][ibin][9],"QM Results");
       legend_ratio->SetLineColor(kWhite);
       legend_ratio->SetFillColor(kWhite);
       legend_ratio->SetTextSize(0.07);
@@ -2160,8 +2185,8 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
  
   if(do_ref){
           
-    PAS_plot_3row->SaveAs("JetShapes_WithHighpT_pTweighted_3Row_Run1Ref.pdf");
-    PAS_plot_3row->SaveAs("JetShapes_WithHighpT_pTweighted_3Row_Run1Ref.png");
+    PAS_plot_3row->SaveAs("JetShapes_WithHighpT_pTweighted_3Row_QMRef.pdf");
+    PAS_plot_3row->SaveAs("JetShapes_WithHighpT_pTweighted_3Row_QMRef.png");
 
   }else{
 

@@ -197,7 +197,7 @@ Int_t spill_over(bool is_number = kTRUE){
   // Open data and output files
   //-------------------------------------------------
  
-  int gstart = 6; 
+  int gstart = 7; 
   int gend = 8;
 
   TCanvas *dummy = new TCanvas("toy_canvas");
@@ -252,18 +252,19 @@ Int_t spill_over(bool is_number = kTRUE){
 
 
 
-	TString in_name = "Yield_BkgSub_"; in_name+=jettype;in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; in_name+= "_Pt100_Pt300_"; in_name+=TrkPtBin_strs[i]; in_name+="_"; in_name+=TrkPtBin_strs[i+1];
+	TString in_name = "Yield_BkgSub_"; in_name+=jettype;in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; in_name+= "_Pt100_Pt1000_"; in_name+=TrkPtBin_strs[i]; in_name+="_"; in_name+=TrkPtBin_strs[i+1];
 
 	cout<<g<<" "<<i<<" "<<j<<" "<<in_name<<endl;
 	result[g][i][j] = (TH2D*)fin[g]->Get(in_name)->Clone((TString)(in_name+"_All"));
 
-	if(i>3){
-	  result[g][i][j]->Scale(1./4.);
-	}else if(i==0){
-	  result[g][i][j]->Scale(1/.3);
+	if(is_number){
+	  if(i>3){
+	    result[g][i][j]->Scale(1./4.);
+	  }else if(i==0){
+	    result[g][i][j]->Scale(1/.3);
+	  }
+
 	}
-
-
 	cout<<"got one"<<endl;
 
 
@@ -286,8 +287,6 @@ Int_t spill_over(bool is_number = kTRUE){
 	eta_proj[g][i][j] = result[g][i][j]->ProjectionX(eta_proj_name,llimitphi,rlimitphi);
 	dx_eta = eta_proj[g][i][j]->GetBinWidth(1);
 	eta_proj[g][i][j]->Scale(1/dx_eta);
-
-	//	  eta_proj[g][i][j]->Scale(0.8);
 	  
 
 	TString eta_proj_name_rebin = eta_proj_name;
@@ -326,8 +325,8 @@ Int_t spill_over(bool is_number = kTRUE){
 
 
 	do_offset->SetParameter(0, offset);
-	eta_proj_rebin[g][i][j]->Add(do_offset);
-	phi_proj_rebin[g][i][j]->Add(do_offset);
+	//	eta_proj_rebin[g][i][j]->Add(do_offset);
+	//	phi_proj_rebin[g][i][j]->Add(do_offset);
 	
 	check_ymax  = 4.;
 	check_ymin = -1.;
@@ -375,8 +374,8 @@ Int_t spill_over(bool is_number = kTRUE){
 	     
 
       cout<<eta_proj_rebin[7][i][j]->GetName()<<endl;
-      llimiteta = eta_proj_rebin[7][i][j]->GetXaxis()->FindBin(-1.0+.0001);
-      rlimiteta = eta_proj_rebin[7][i][j]->GetXaxis()->FindBin(1.0-.0001);
+      llimiteta = eta_proj_rebin[7][i][j]->GetXaxis()->FindBin(-1.5+.0001);
+      rlimiteta = eta_proj_rebin[7][i][j]->GetXaxis()->FindBin(1.5-.0001);
 
 
       double Yield_eta = eta_proj_rebin[7][i][j]->Integral(llimiteta,rlimiteta,"width");	      
@@ -393,7 +392,7 @@ Int_t spill_over(bool is_number = kTRUE){
       gaus1d->ReleaseParameter(2);
 
       gaus1d->SetParameter(2,0.3);
-      gaus1d->SetParLimits(2,0.1,0.6);
+      //   gaus1d->SetParLimits(2,0.1,0.6);
 	   	    	      
 
       cout<<"ready to add"<<endl;
@@ -401,9 +400,7 @@ Int_t spill_over(bool is_number = kTRUE){
 
       cout<<"added"<<endl;
 
-      eta_proj_rebin[7][i][j]->Fit("gaus1d","","",-1.,1.);
-
-      if(i==0&&j==1)   eta_proj_rebin[7][i][j]->Fit("gaus1d","","",-1.,0.);
+      eta_proj_rebin[7][i][j]->Fit("gaus1d","","",-1.5,1.5);
 	      
       TString gaus_eta_name = "Eta_SpillOver_Fit_"; gaus_eta_name+= CBin_strs[j]; gaus_eta_name+="_"; gaus_eta_name+= CBin_strs[j+1]; gaus_eta_name+= "_Pt100_Pt300_"; gaus_eta_name+=TrkPtBin_strs[i]; gaus_eta_name+="_"; gaus_eta_name+=TrkPtBin_strs[i+1];
 
@@ -713,7 +710,7 @@ Int_t spill_over(bool is_number = kTRUE){
 
 
     Closure_integral_eta_pT[7][j]->SetMinimum(-2.);
-    Closure_integral_eta_pT[7][j]->SetMaximum(3.);
+    Closure_integral_eta_pT[7][j]->SetMaximum(5.);
 	    
     Closure_integral_eta_pT[7][j]->GetXaxis()->SetRangeUser(.5,20.);
     Closure_integral_eta_pT[7][j]->GetYaxis()->SetNdivisions(306);
@@ -850,7 +847,7 @@ Int_t spill_over(bool is_number = kTRUE){
 
 	
     blank[i]->SetMinimum(-2.);
-    blank[i]->SetMaximum(3.);
+    blank[i]->SetMaximum(5.);
     blank[i]->GetXaxis()->SetTitle("Centrality (%)");
     blank[i]->GetXaxis()->SetTitleOffset(1.1);
     blank[i]->GetXaxis()->CenterTitle(true);

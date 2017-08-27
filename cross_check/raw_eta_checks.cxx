@@ -31,7 +31,7 @@
 
 using namespace std;
 
-Int_t raw_eta_checks(){
+Int_t raw_eta_checks(bool spill_in_out = kFALSE){
 
   gROOT->ForceStyle();
   gStyle->SetOptStat(0);  
@@ -104,12 +104,12 @@ Int_t raw_eta_checks(){
   c_yields_eta = new TCanvas("yields_eta","",10,10,2000,2400);
   c_yields_eta->Divide(5,8,0,0);
 
- c_yields_eta_diff = new TCanvas("yields_eta_diff","",10,10,2000,2400);
+  c_yields_eta_diff = new TCanvas("yields_eta_diff","",10,10,2000,2400);
   c_yields_eta_diff->Divide(5,8,0,0);
 
 
 
- c_double_diff = new TCanvas("double_diff","",10,10,2000,2400);
+  c_double_diff = new TCanvas("double_diff","",10,10,2000,2400);
   c_double_diff->Divide(5,8,0,0);
 
   for(int i = 0; i<nTrkPtBins-1; i++){
@@ -156,7 +156,7 @@ Int_t raw_eta_checks(){
 	else if(g==2) 	spill_over_dEta[g][i][j] = (TH1D*)f_spill_over_qm->Get(spillover_name)->Clone(spillover_name);
 	else 	spill_over_dEta[g][i][j] = (TH1D*)f_spill_over->Get(spillover_name)->Clone(spillover_name);
 
-	signal_dEta[g][i][j]->Add(spill_over_dEta[g][i][j],-1.);
+	if(!spill_in_out)	signal_dEta[g][i][j]->Add(spill_over_dEta[g][i][j],-1.);
 
       }
     
@@ -235,11 +235,11 @@ Int_t raw_eta_checks(){
       jff_name.ReplaceAll("Pt1000","Pt300");
       jff_residual_dEta[1][i][4] = (TH1D*)f_jff_pyth_preapp->Get(jff_name)->Clone((TString)(jff_name+"pp_Preapp"));
 
-      cout<<"and here"<<endl;
+      /*
       jff_name+="Double_Diff";
       jff_residual_dEta[3][i][4]= (TH1D*)jff_residual_dEta[0][i][4]->Clone((TString)(jff_name+"Diff"));
       jff_residual_dEta[3][i][4]->Add(jff_residual_dEta[1][i][4],-1.);
-
+      */
 
     }
   
@@ -276,20 +276,20 @@ Int_t raw_eta_checks(){
       signal_dEta[2][i][j]->Draw("same");
       // if(j<4)  signal_dEta[3][i][j]->Draw("same");
 
+      if(!spill_in_out){
+	jff_residual_dEta[0][i][j]->SetMarkerStyle(10);
+	jff_residual_dEta[0][i][j]->SetMarkerSize(1);
+	jff_residual_dEta[0][i][j]->SetMarkerColor(kBlack);
+	jff_residual_dEta[0][i][j]->SetLineColor(kBlack);
+	jff_residual_dEta[0][i][j]->Draw("same");
 
-      jff_residual_dEta[0][i][j]->SetMarkerStyle(10);
-      jff_residual_dEta[0][i][j]->SetMarkerSize(1);
-      jff_residual_dEta[0][i][j]->SetMarkerColor(kBlack);
-      jff_residual_dEta[0][i][j]->SetLineColor(kBlack);
-      jff_residual_dEta[0][i][j]->Draw("same");
 
-
-      jff_residual_dEta[1][i][j]->SetMarkerStyle(10);
-      jff_residual_dEta[1][i][j]->SetMarkerSize(1);
-      jff_residual_dEta[1][i][j]->SetMarkerColor(kGreen);
-      jff_residual_dEta[1][i][j]->SetLineColor(kGreen);
-      jff_residual_dEta[1][i][j]->Draw("same");
-
+	jff_residual_dEta[1][i][j]->SetMarkerStyle(10);
+	jff_residual_dEta[1][i][j]->SetMarkerSize(1);
+	jff_residual_dEta[1][i][j]->SetMarkerColor(kGreen);
+	jff_residual_dEta[1][i][j]->SetLineColor(kGreen);
+	jff_residual_dEta[1][i][j]->Draw("same");
+      }
 
       TLine *zero = new TLine(-2.5,0.,2.5,0.);
       zero->SetLineStyle(2);
@@ -302,8 +302,8 @@ Int_t raw_eta_checks(){
 	l->AddEntry(signal_dEta[1][i][j],"Preapproval Data");
 	l->AddEntry(signal_dEta[2][i][j],"QM Data");
 	//  	l->AddEntry(signal_dEta[3][i][3],"Aug. Data, New MC");
-	l->AddEntry(jff_residual_dEta[0][i][j],"Latest JFF");
-	l->AddEntry(jff_residual_dEta[1][i][j],"JFF No JEC");
+	if(!spill_in_out)	l->AddEntry(jff_residual_dEta[0][i][j],"Latest JFF");
+	if(!spill_in_out)	l->AddEntry(jff_residual_dEta[1][i][j],"JFF No JEC");
 
 	l->SetLineColor(kWhite);
 	l->SetTextSize(0.05);
@@ -357,13 +357,13 @@ Int_t raw_eta_checks(){
       signal_dEta_diff[2][i][j]->Draw("same");
       if(j<4)  signal_dEta_diff[3][i][j]->Draw("same");
 
-
+      if(!spill_in_out){
       jff_residual_dEta[3][i][j]->SetMarkerStyle(10);
       jff_residual_dEta[3][i][j]->SetMarkerSize(1);
       jff_residual_dEta[3][i][j]->SetMarkerColor(kGreen);
       jff_residual_dEta[3][i][j]->SetLineColor(kGreen);
       jff_residual_dEta[3][i][j]->Draw("same");
-
+      }
       zero->Draw("same");
      
       if(i==0&&j==4){
@@ -371,7 +371,7 @@ Int_t raw_eta_checks(){
 
 	l->AddEntry(signal_dEta_diff[1][i][j],"Latest - Preapproval");
 	l->AddEntry(signal_dEta_diff[2][i][j],"QM - Preapproval");
-	l->AddEntry( jff_residual_dEta[3][i][j],"JFF Change");
+	if(!spill_in_out)	l->AddEntry( jff_residual_dEta[3][i][j],"JFF Change");
 	l->SetLineColor(kWhite);
 	l->SetTextSize(0.06);
 	l->Draw();
@@ -398,9 +398,14 @@ Int_t raw_eta_checks(){
       }
     }
   }
-  c_yields_eta->SaveAs("Raw_Eta_Overlay.png");
-  c_yields_eta_diff->SaveAs("Raw_Eta_Diffs.png");
-  //  c_double_diff->SaveAs("JFF_Double_Diffs.png");
+
+  if(spill_in_out){
+    c_yields_eta->SaveAs("Raw_Eta_Overlay_SpillIn_SpillOut.png");
+    c_yields_eta_diff->SaveAs("Raw_Eta_Diffs_SpillIn_SpillOut.png");
+  }else{
+    c_yields_eta->SaveAs("Raw_Eta_Overlay.png");
+    c_yields_eta_diff->SaveAs("Raw_Eta_Diffs.png");
+  }
   
   return 0;
 }

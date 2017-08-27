@@ -124,7 +124,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 
   double temp_cont, nextr, nextl, cos_weight,me00_range, mc_error,me_error, bg_error, me_error2, bg_error2;
   
-  TString stem, datalabel,me00_range_string,stem_mc;
+  TString stem, ref_stem, datalabel,me00_range_string,stem_mc;
  
   float norm;
  
@@ -244,6 +244,8 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   if(is_number) stem = "JetShape2_Yield_BkgSub_Inclusive_";
   else stem = "JetShape2_Yield_BkgSub_pTweightedInclusive_";
 
+  ref_stem = "Jet_Shape_SystErr_";
+
 
   for(int g=0; g<2; g++){
   
@@ -259,7 +261,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 	    JetShape[g][ibin][ibin3] = (TH1D*)f_in->Get((TString)(stem + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
 	    cout<<"0"<<ibin<<" "<<ibin3<<endl;
-	    if(do_ref)    JetShape_ref[g][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)(stem + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_Ref_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	    if(do_ref)    JetShape_ref[g][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)(ref_stem + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_Ref_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 		  
 	    JetShape_syst[g][ibin][ibin3] = (TH1D*)f_in->Get((TString)("Jet_Shape_SystErr_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Jet_Shape_SystErr_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
@@ -279,7 +281,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 
 	  
 	  }else{
-
+	  
 
 	    JetShape[g][ibin][ibin3] = (TH1D*)f_in->Get((TString)(stem +"pp_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 	    
@@ -287,7 +289,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 	    
 
 	    cout<<(TString)(stem +"pp_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1])<<endl;
-	    if(do_ref)	    JetShape_ref[g][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)(stem +"pp_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_Ref_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	    if(do_ref)	    JetShape_ref[g][ibin][ibin3] = (TH1D*)f_in_ref->Get((TString)("Jet_Shape_SystErr_pp_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + "_Ref_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 	    
 	    
 	    JetShape_syst[g][ibin][ibin3] = (TH1D*)f_in->Get((TString)("Jet_Shape_SystErr_pp_"+ TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) ("Jet_Shape_SystErr_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
@@ -307,7 +309,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 	  
 	    cout<<"2"<<endl;
 	  }
-
+	
 
 	  JetShape_syst[g][ibin][ibin3]->SetMarkerStyle(20);
 	  JetShape_syst[g][ibin][ibin3]->SetMarkerSize(1);
@@ -344,10 +346,16 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 	    JetShape_ref[g][ibin][ibin3]->SetMarkerSize(2);
 	    if(is_number)   JetShape_ref[g][ibin][ibin3]->SetLineColor(kRed);
 	    else    JetShape_ref[g][ibin][ibin3]->SetLineColor(kSpring);
+	    
 	    if(is_number)	    JetShape_ref[g][ibin][ibin3]->SetMarkerColor(kRed);
 	    else 	    JetShape_ref[g][ibin][ibin3]->SetMarkerColor(kSpring);
-	    JetShape_ref[g][ibin][ibin3]->SetMarkerStyle(34);
+       
+	    if(is_number)	    JetShape_ref[g][ibin][ibin3]->SetFillColor(kRed);
+	    else 	    JetShape_ref[g][ibin][ibin3]->SetFillColor(kSpring-1);
 	
+	    JetShape_ref[g][ibin][ibin3]->SetMarkerStyle(34);
+	    JetShape_ref[g][ibin][ibin3]->SetFillStyle(3005);
+	  
 	  }
 
 	  JetShape[g+3][ibin][ibin3] = (TH1D*) JetShape[g][ibin][ibin3]->Clone((TString) (stem + "_NormedJetShape_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
@@ -753,7 +761,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   cout<<"here"<<endl;
 
   if(do_ref){
-    JetShape_ref[1][0][9]->Draw("same");
+    JetShape_ref[1][0][9]->Draw("same e2");
   } 
   cout<<"and here"<<endl;
   labels = new TPaveText(0.28,0.8,0.45,.99,"NDC");
@@ -824,7 +832,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 
 
     if(do_ref){
-      JetShape_ref[0][ibin][9]->Draw("same");
+      JetShape_ref[0][ibin][9]->Draw("same e2 P");
     }
 
    
@@ -854,8 +862,10 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
       JetShape_diff[0][ibin][9]->SetMarkerStyle(24);
       JetShape_diff[0][ibin][9]->Draw("same");
 
-      if(!is_number&&do_ref){
-	JetShape_ref_diff[0][ibin][9]->Draw("same");
+      if(do_ref){
+	JetShape_ref[3][ibin][9] = (TH1D*)	JetShape_ref[0][ibin][9]->Clone(Form("JetShapeRefDiff%d",ibin));
+	JetShape_ref[3][ibin][9]->Add(JetShape_ref[1][0][9],-1.);
+	JetShape_ref[3][ibin][9]->Draw("same e2 P");
       }
 
     }else{
@@ -891,7 +901,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
       TLegend *legend_ratio = new TLegend(0.02,0.7,0.9,0.9);
       if(is_number)legend_ratio->AddEntry(JetShape_diff[0][ibin][9],"PbPb - pp");
       else legend_ratio->AddEntry(JetShape_ratio[0][ibin][9],"PbPb / pp");
-      if(!is_number&&do_ref) legend_ratio->AddEntry(JetShape_ref_ratio[0][ibin][9],"Results at QM");
+      if(!is_number&&do_ref) legend_ratio->AddEntry(JetShape_ref_ratio[0][ibin][9],"Results at QM","lpfe");
       legend_ratio->SetLineColor(kWhite);
       legend_ratio->SetFillColor(kWhite);
       legend_ratio->SetTextSize(0.07);
@@ -1942,7 +1952,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   JetShape[1][0][9]->Draw("same");
 
   if(do_ref){
-    JetShape_ref[1][0][9]->Draw("same");
+    JetShape_ref[1][0][9]->Draw("same e2 P");
   } 
  
   labels = new TPaveText(0.28,0.8,0.45,.99,"NDC");
@@ -2000,7 +2010,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
     JetShape[0][ibin][9]->Draw("same");
 
     if(do_ref){
-      JetShape_ref[0][ibin][9]->Draw("same");
+      JetShape_ref[0][ibin][9]->Draw("same e2");
     }  
 
 
@@ -2040,7 +2050,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
   JetShape[4][0][9]->Draw("same");
 
   if(do_ref){
-    JetShape_ref[4][0][9]->Draw("same");
+    JetShape_ref[4][0][9]->Draw("same e2");
     // JetShape_syst_ref[4][0][9]->Draw("same p e2");
   } 
  
@@ -2083,8 +2093,10 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
 
     if(do_ref){
       JetShape_ref[3][ibin][9]->SetMarkerColor(kSpring);
+      JetShape_ref[3][ibin][9]->SetFillColor(kSpring-1);
+      JetShape_ref[3][ibin][9]->SetFillStyle(3005);
       //  JetShape_syst_ref[3][ibin][9]->SetMarkerColor(kSpring);
-      JetShape_ref[3][ibin][9]->Draw("same");
+      JetShape_ref[3][ibin][9]->Draw("same e2");
       //   JetShape_syst_ref[3][ibin][9]->SetFillColor(kWhite);
       //JetShape_syst_ref[3][ibin][9]->Draw("same p e2");
     }  
@@ -2124,7 +2136,7 @@ Int_t results_plotting(bool is_number=0,bool do_ref=kFALSE){
  
     if(do_ref){
       //  JetShape_syst_ref[5][ibin][9]->Draw("same e2 P");
-      JetShape_ref_ratio[3][ibin][9]->Draw("same");
+      JetShape_ref_ratio[3][ibin][9]->Draw("same e2");
     }
     JetShape_syst[5][ibin][9]->Draw("same e2 P");
     JetShape_ratio[3][ibin][9]->Draw("same");

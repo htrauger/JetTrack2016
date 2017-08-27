@@ -94,6 +94,7 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 
    
   TH1D* JetShapeMC[6][nCBins][nTrkPtBins];
+  TH1D* JetShapeMC_reco[6][nCBins][nTrkPtBins];
 
   TH1D* JetShape[6][nCBins][nTrkPtBins];
   TH1D* JetShape2[6][nCBins][nTrkPtBins];
@@ -130,6 +131,7 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 
   TFile *f_deta_dphi = new TFile("../particle_yields/Particle_Yields.root","READ");
 
+  if(!is_number)f_deta_dphi = new TFile("../particle_yields/Particle_Yields_pTweighted.root","READ");
 
   TH2D *bg_err_pp = (TH2D*)f_deta_dphi->Get("bg_err_pp")->Clone("bg_err_pp");
   TH2D *bg_err_pbpb = (TH2D*)f_deta_dphi->Get("bg_err_PbPb")->Clone("bg_err_PbPb");
@@ -156,7 +158,7 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
   TFile *f_jff_hyd_reco_reco = new TFile("../me_correct/HydJet_RecoJet_RecoTrack_Inclusive_Correlations.root", "READ");
   
   TFile *f_spillover = new TFile("../spill_over/Inclusive_Hydjet_SpillOvers.root");
-  // if(!is_number) f_spillover = new TFile("../spill_over/Inclusive_Hydjet_SpillOvers_pTweighted.root");
+  if(!is_number) f_spillover = new TFile("../spill_over/Inclusive_Hydjet_SpillOvers_pTweighted.root");
 
  
   TH1D *Integral_Pt[12][5];
@@ -189,15 +191,20 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
     case 0:
       if(is_number) stem = "Yield_BkgSub_";
       else  stem = "Yield_BkgSub_pTweighted";
+      //   else  stem = "Yield_pTweighted_PbPb_";
       datalabel = "Inclusive";
       break;
     case 1:
       if(is_number) stem = "Yield_BkgSub_";
+      //   else stem = "Yield_pTweighted_pp_";
       else stem = "Yield_BkgSub_pTweighted";
       //stem = "Yield_BkgSub_";
       datalabel = "Inclusive";
       break;
     }
+
+    if(is_number) stem_mc = "Raw_Yield_";
+    else  stem_mc = "Raw_Yield_pTweighted";
 
     for (int ibin=0;ibin<nCBins;ibin++){
 
@@ -214,18 +221,15 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 
 	    result[g][ibin][ibin2][ibin3] = (TH2D*)fin_PbPb->Get((TString)(stem + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + datalabel+"_PbPb_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" +TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 	    cout<<"1"<<endl;
-	 
-	  
-	   
-	     
-	    resultMC_gen[g][ibin][0][ibin3] = (TH2D*)f_jff_hyd_gen->Get((TString)(stem+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)("Yield_BkgSub_GenGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-
-	    if(ibin3>6) resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_hyd_reco_reco->Get((TString)(stem + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)("Yield_BkgSub_RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-	    	    
-	    else resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_hyd_reco->Get((TString)(stem + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)("Yield_BkgSub_RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
-
 	    if(ibin3<4){
-	
+	 
+	      resultMC_gen[g][ibin][0][ibin3] = (TH2D*)f_jff_hyd_gen->Get((TString)(stem_mc+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)("Yield_BkgSub_GenGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+
+	      if(ibin3>6) resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_hyd_reco_reco->Get((TString)(stem_mc + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)("Yield_BkgSub_RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	    	    
+	      else resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_hyd_reco->Get((TString)(stem_mc + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)("Yield_BkgSub_RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+
+
 	      TString	spillover_name =(TString)("Eta_SpillOver_Points_"+CBin_strs[ibin]+"_"+CBin_strs[ibin+1]+"_Pt100_Pt300_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]);
 	      spill_over_dEta[g][ibin][ibin3] = (TH1D*)f_spillover->Get(spillover_name)->Clone(spillover_name);
 	    
@@ -261,6 +265,9 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 	    
 	      err = TMath::Sqrt(spill_over_dEta[g][ibin][ibin3]->GetBinError(1)*spill_over_dEta[g][ibin][ibin3]->GetBinError(1)+spill_over_dPhi[g][ibin][ibin3]->GetBinError(1)*spill_over_dPhi[g][ibin][ibin3]->GetBinError(1))*width_temp_x*width_temp_y/spill_over_dPhi[g][ibin][ibin3]->GetBinWidth(1)/spill_over_dEta[g][ibin][ibin3]->GetBinWidth(1);
 
+
+	      
+
 	      for(int k = 0; k< resultMC[g][ibin][0][ibin3]->GetNbinsX()+1; k++){
 		for(int m = 0; m< resultMC[g][ibin][0][ibin3]->GetNbinsY()+1; m++){
 
@@ -268,19 +275,37 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 		}
 	      }
 	    
-	    }
-	  	    
+	    }else{
+ 
+	    resultMC_gen[g][ibin][0][ibin3] = (TH2D*)f_jff_hyd_gen->Get((TString)(stem_mc+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)("Yield_BkgSub_GenGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+
+	    if(ibin3>6) resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_hyd_reco_reco->Get((TString)(stem_mc + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)("Yield_BkgSub_RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	    	    
+	    else resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_hyd_reco->Get((TString)(stem_mc + CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)("Yield_BkgSub_RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+
+
+
+	    }	  	    
 	  }else{
 	    
 	    result[g][ibin][ibin2][ibin3] = (TH2D*)fin_pp->Get((TString)(stem +"Cent0_Cent10_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs[ibin3] + "_" + TrkPtBin_strs[ibin3+1]))->Clone((TString) (stem + datalabel+"_pp_"+ "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 	    
-
-	    resultMC_gen[g][ibin][0][ibin3] = (TH2D*)f_jff_pyth_gen->Get((TString)(stem+ CBin_strs[0] + "_" + CBin_strs[1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)(stem+"GenGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	    if(ibin3<4){
+	      resultMC_gen[g][ibin][0][ibin3] = (TH2D*)f_jff_pyth_gen->Get((TString)(stem_mc+ CBin_strs[0] + "_" + CBin_strs[1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)(stem+"GenGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 	    
-	    if(ibin3>6) resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_pyth_reco_reco->Get((TString)(stem + CBin_strs[0] + "_" + CBin_strs[1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)(stem+"RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	      if(ibin3>6) resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_pyth_reco_reco->Get((TString)(stem_mc + CBin_strs[0] + "_" + CBin_strs[1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)(stem+"RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
-	    else  resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_pyth_reco->Get((TString)(stem + CBin_strs[0] + "_" + CBin_strs[1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)(stem+"RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	      else  resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_pyth_reco->Get((TString)(stem_mc + CBin_strs[0] + "_" + CBin_strs[1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)(stem+"RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	    }else{
+	      resultMC_gen[g][ibin][0][ibin3] = (TH2D*)f_jff_pyth_gen->Get((TString)(stem_mc+ CBin_strs[0] + "_" + CBin_strs[1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)(stem+"GenGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+	    
+	      if(ibin3>6) resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_pyth_reco_reco->Get((TString)(stem_mc + CBin_strs[0] + "_" + CBin_strs[1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)(stem+"RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
+	      else  resultMC_reco[g][ibin][0][ibin3] = (TH2D*)f_jff_pyth_reco->Get((TString)(stem_mc + CBin_strs[0] + "_" + CBin_strs[1] + "_Pt100_Pt1000_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]))->Clone((TString)(stem+"RecoGen_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
+
+
+
+	    }
 	  }
 	  
 	  resultMC_reco[g][ibin][0][ibin3]->Add(resultMC_gen[g][ibin][0][ibin3],-1.);
@@ -294,49 +319,64 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 	   
 	      r = TMath::Sqrt(deta*deta+dphi*dphi);
 	      
-	      /*
-	      if(r>0.5&&ibin3==8){
+	      
+	      if(r>0.5||(r>0.3&&ibin3>3)){
 		resultMC_reco[g][ibin][0][ibin3]->SetBinContent(k,m,0.);
 		resultMC_reco[g][ibin][0][ibin3]->SetBinError(k,m,0.);
 	      }
-	      */
+	      
 	    }
+	   
 	  }
 	  
-	 
+	
 	
 	  if(g==0&&ibin3<4){
 
-	    if(ibin3==0)resultMC[g][ibin][0][ibin3]->Scale(0.3); // The spill-overs are pre-scaled, but nothing else is.
+	    if(ibin3==0&&is_number)resultMC[g][ibin][0][ibin3]->Scale(0.3); // The spill-overs are pre-scaled for # correlations, but nothing else is.
 
-	    if(!is_number)resultMC[g][ibin][0][ibin3]->Scale(mean_pts[ibin3]); //we use unweighted spillovers and weight on average
+	 	    //	    if(!is_number)resultMC[g][ibin][0][ibin3]->Scale(mean_pts[ibin3]); //we use unweighted spillovers and weight on average
 	    resultMC_reco[g][ibin][ibin2][ibin3]->Add(resultMC[g][ibin][0][ibin3]);
 	  }
 	 
 
 	  result[g][ibin][ibin2][ibin3]->Add(resultMC_reco[g][ibin][0][ibin3],-1.); //applies correction
 
+
+
 	  if(is_number){                                            //this is the dpt step
 	    if(ibin3==0) result[g][ibin][ibin2][ibin3]->Scale(1./0.3);
 	    if(ibin3> 3&& ibin3<nTrkPtBins-1) result[g][ibin][ibin2][ibin3]->Scale(1./4);
+
+	    if(ibin3==0&&g==0)   resultMC[g][ibin][ibin2][ibin3]->Scale(1./0.3);
+	    if(ibin3==0)   resultMC_reco[g][ibin][ibin2][ibin3]->Scale(1./0.3);
+
+	    // if(ibin3> 3&& ibin3<nTrkPtBins-1) resultMC[g][ibin][ibin2][ibin3]->Scale(1./4);
+	    if(ibin3> 3&& ibin3<nTrkPtBins-1) resultMC_reco[g][ibin][ibin2][ibin3]->Scale(1./4);
 	    
 	  }
 
 	  if(ibin3==0){
 	    result[g][ibin][ibin2][9] = (TH2D*) result[g][ibin][ibin2][ibin3]->Clone(((TString) ("Summed_result_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])));
 	 
-	    resultMC_reco[g][ibin][ibin2][9] = (TH2D*) resultMC_reco[g][ibin][ibin2][ibin3]->Clone(((TString) ("Summed_result_MC_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+
+	    resultMC_reco[g][ibin][ibin2][9] = (TH2D*) resultMC_reco[g][ibin][ibin2][ibin3]->Clone(((TString) ("Summed_result_MC_reco_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+
+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])));
+
+
+	    if(g==0)  resultMC[g][ibin][ibin2][9] = (TH2D*) resultMC[g][ibin][ibin2][ibin3]->Clone(((TString) ("Summed_result_MC_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+
 1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1])));
 
 	  }else if(!is_number&&ibin3>0&&ibin3<nTrkPtBins-1){
 	    
 	    result[g][ibin][ibin2][9]->Add(result[g][ibin][ibin2][ibin3]);
 	    resultMC_reco[g][ibin][ibin2][9]->Add(resultMC_reco[g][ibin][ibin2][ibin3]);
+	    if(g==0&&ibin3<4) resultMC[g][ibin][ibin2][9]->Add(resultMC[g][ibin][ibin2][ibin3]);
 	 
 	  }else if(is_number&&ibin3>0&&ibin3<nTrkPtBins-2){
 	    
 	    result[g][ibin][ibin2][9]->Add(result[g][ibin][ibin2][ibin3]);
 	    resultMC_reco[g][ibin][ibin2][9]->Add(resultMC_reco[g][ibin][ibin2][ibin3]);
+	    if(g==0&&ibin3<4)resultMC[g][ibin][ibin2][9]->Add(resultMC[g][ibin][ibin2][ibin3]);
 	 
 	  }
 	  
@@ -351,10 +391,14 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
  
 	  JetShapeMC[g][ibin][ibin3] = new TH1D((TString)("JetShapeMC_"+stem+ datalabel+"_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]),"",19,RBins);  
 
+	  JetShapeMC_reco[g][ibin][ibin3] = new TH1D((TString)("JetShapeMC_reco_"+stem+ datalabel+"_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]),"",19,RBins);  
+
 	  JetShape2_geo[g][ibin][ibin3] = new TH1D((TString)("JetShape_Geometry_"+stem+ datalabel+"_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]),"",19,RBins);  
+	 
 	  }else{
 	    JetShape2[g][ibin][ibin3] = new TH1D((TString)("JetShape2_"+stem+ datalabel+"_pp_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]),"",19,RBins);  
 	    JetShapeMC[g][ibin][ibin3] = new TH1D((TString)("JetShapeMC_"+stem+ datalabel+"_pp_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]),"",19,RBins);  
+	    JetShapeMC_reco[g][ibin][ibin3] = new TH1D((TString)("JetShapeMC_reco_"+stem+ datalabel+"_pp_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]),"",19,RBins);  
 
 	    JetShape2_geo[g][ibin][ibin3] = new TH1D((TString)("JetShape_Geometry_"+stem+ datalabel+"_pp_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]),"",19,RBins);  
 
@@ -402,21 +446,36 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 	      JetShape2_geo[g][ibin][ibin3]->SetBinContent(rbin,temp2+1.);
 	      JetShape2_geo[g][ibin][ibin3]->SetBinError(rbin,0.);
 
-	      
+	   
+	      if(g==0&&(ibin3<4||ibin3==9)){
+   
+		bc = resultMC[g][ibin][0][ibin3]->GetBinContent(k,l);
+		err = resultMC[g][ibin][0][ibin3]->GetBinError(k,l);
+
+		temp1 = JetShapeMC[g][ibin][ibin3]->GetBinContent(rbin);
+		temperr = JetShapeMC[g][ibin][ibin3]->GetBinError(rbin);
+	  
+		JetShapeMC[g][ibin][ibin3]->SetBinContent(rbin,temp1+bc);
+		JetShapeMC[g][ibin][ibin3]->SetBinError(rbin,TMath::Sqrt(temperr*temperr+err*err));
+	      }
+
+
+
+   
 	      bc = resultMC_reco[g][ibin][0][ibin3]->GetBinContent(k,l);
 	      err = resultMC_reco[g][ibin][0][ibin3]->GetBinError(k,l);
 
-	      temp1 = JetShapeMC[g][ibin][ibin3]->GetBinContent(rbin);
-	      temperr = JetShapeMC[g][ibin][ibin3]->GetBinError(rbin);
+	      temp1 = JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(rbin);
+	      temperr = JetShapeMC_reco[g][ibin][ibin3]->GetBinError(rbin);
 	  
-	      JetShapeMC[g][ibin][ibin3]->SetBinContent(rbin,temp1+bc);
-	      JetShapeMC[g][ibin][ibin3]->SetBinError(rbin,TMath::Sqrt(temperr*temperr+err*err));
+	      JetShapeMC_reco[g][ibin][ibin3]->SetBinContent(rbin,temp1+bc);
+	      JetShapeMC_reco[g][ibin][ibin3]->SetBinError(rbin,TMath::Sqrt(temperr*temperr+err*err));
 
-	      	      
 	  	  
 	    }
 	  }
 
+	  if(g==0&&(ibin3<4||ibin3==9))	  JetShapeMC_reco[g][ibin][ibin3]->Add(JetShapeMC[g][ibin][ibin3],-1.);  //this step isolates jff correction in jet shape form for errors.
 		
 	  JetShape[g][ibin][ibin3] = (TH1D*)JetShape2[g][ibin][ibin3]->Clone((TString)("JetShape_"+stem+ datalabel+"_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 	
@@ -436,7 +495,15 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 	    err = JetShapeMC[g][ibin][ibin3]->GetBinError(k)/JetShapeMC[g][ibin][ibin3]->GetBinWidth(k);
 
 	    JetShapeMC[g][ibin][ibin3]->SetBinContent(k,temp);
-	    JetShapeMC[g][ibin][ibin3]->SetBinError(k,err);	    
+	    JetShapeMC[g][ibin][ibin3]->SetBinError(k,err);
+
+
+	    temp = JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)/JetShapeMC[g][ibin][ibin3]->GetBinWidth(k);
+	    err = JetShapeMC_reco[g][ibin][ibin3]->GetBinError(k)/JetShapeMC[g][ibin][ibin3]->GetBinWidth(k);
+
+	    JetShapeMC_reco[g][ibin][ibin3]->SetBinContent(k,temp);
+	    JetShapeMC_reco[g][ibin][ibin3]->SetBinError(k,err);	    
+	   
 
 	  }
 	  /*
@@ -460,69 +527,77 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 	  if(g==0)	  JetShape_syst[g][ibin][ibin3] = (TH1D*) JetShape2[g][ibin][ibin3]->Clone((TString)("Jet_Shape_SystErr_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 	  else 	  JetShape_syst[g][ibin][ibin3] = (TH1D*) JetShape2[g][ibin][ibin3]->Clone((TString)("Jet_Shape_SystErr_pp_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 	
+	  if(g==0)    me_error = me_err_pbpb->GetBinContent(ibin3+1,ibin+1);
+	  else   me_error = me_err_pp->GetBinContent(ibin3+1,ibin+1);
+
+	  if(g==0)    bg_error = bg_err_pbpb->GetBinContent(ibin3+1,ibin+1);
+	  else   bg_error = bg_err_pp->GetBinContent(ibin3+1,ibin+1);
+
+
+	  // if(is_number){
+	    if(ibin3==9){
+	      if(g==0)    me_error = me_err_pbpb->GetBinContent(1,ibin+1);
+	      else   me_error = me_err_pp->GetBinContent(1,ibin+1);
+
+	      if(g==0)    bg_error = bg_err_pbpb->GetBinContent(1,ibin+1);
+	      else   bg_error = bg_err_pp->GetBinContent(1,ibin+1);
+
+	      for(int i = 2; i<8; i++){
+		if(g==0)    me_error += me_err_pbpb->GetBinContent(i,ibin+1);
+		else   me_error += me_err_pp->GetBinContent(i,ibin+1);
+
+		if(g==0)    bg_error += bg_err_pbpb->GetBinContent(i,ibin+1);
+		else   bg_error += bg_err_pp->GetBinContent(i,ibin+1);
+	      }
+	    }
+
+	    //TURN ON TO TAKE BKG AND ME ERRORS FROM NON-PTWEIGHTED
+	    /*
+	  }else{
+
+	    if(ibin3==9){
+	      if(g==0)    me_error = me_err_pbpb->GetBinContent(1,ibin+1)*mean_pts[0];
+	      else   me_error = me_err_pp->GetBinContent(1,ibin+1)*mean_pts[0];
+		
+	      if(g==0)    bg_error = bg_err_pbpb->GetBinContent(1,ibin+1)*mean_pts[0];
+	      else   bg_error = bg_err_pp->GetBinContent(1,ibin+1)*mean_pts[0];
+
+	      for(int i = 2; i<9; i++){
+		if(g==0)    me_error += me_err_pbpb->GetBinContent(i,ibin+1)*mean_pts[i];
+		else   me_error += me_err_pp->GetBinContent(i,ibin+1)*mean_pts[i];
+
+		if(g==0)    bg_error += bg_err_pbpb->GetBinContent(i,ibin+1)*mean_pts[i];
+		else   bg_error += bg_err_pp->GetBinContent(i,ibin+1)*mean_pts[i];
+	      }
+	    }
+
+	  }
+	    */
 
 	  for(int k = 1; k<JetShape_syst[g][ibin][ibin3]->GetNbinsX()+1; k++){
 
 	    
 	    bc =JetShape_syst[g][ibin][ibin3]->GetBinContent(k);
 
-	    mc_error = JetShapeMC[g][ibin][ibin3]->GetBinContent(k)*.51;
+	    if(g==0)  mc_error = TMath::Sqrt((JetShapeMC[g][ibin][ibin3]->GetBinContent(k)*JetShapeMC[g][ibin][ibin3]->GetBinContent(k)*.18*.18)+(JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)*JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)*.5*.5));	 
+	    else   mc_error = JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)*.5;
+
+	    cout<<"MC ERRORS: "<<g<<" "<<ibin<<" "<<ibin3<<" "<<k<<" "<<JetShapeMC[g][ibin][ibin3]->GetBinContent(k)<<" "<<JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)<<" "<<mc_error<<endl;
    
-	    if(g==0)    me_error = me_err_pbpb->GetBinContent(ibin3+1,ibin+1);
-	    else   me_error = me_err_pp->GetBinContent(ibin3+1,ibin+1);
-
-	    if(g==0)    bg_error = bg_err_pbpb->GetBinContent(ibin3+1,ibin+1);
-	    else   bg_error = bg_err_pp->GetBinContent(ibin3+1,ibin+1);
-
-
-	    if(is_number){
-	      if(ibin3==9){
-		if(g==0)    me_error = me_err_pbpb->GetBinContent(1,ibin+1);
-		else   me_error = me_err_pp->GetBinContent(1,ibin+1);
-
-		if(g==0)    bg_error = bg_err_pbpb->GetBinContent(1,ibin+1);
-		else   bg_error = bg_err_pp->GetBinContent(1,ibin+1);
-
-		for(int i = 2; i<8; i++){
-		  if(g==0)    me_error += me_err_pbpb->GetBinContent(i,ibin+1);
-		  else   me_error += me_err_pp->GetBinContent(i,ibin+1);
-
-		  if(g==0)    bg_error += bg_err_pbpb->GetBinContent(i,ibin+1);
-		  else   bg_error += bg_err_pp->GetBinContent(i,ibin+1);
-		}
-	      }
-	    }else{
-
-	      if(ibin3==9){
-		if(g==0)    me_error = me_err_pbpb->GetBinContent(1,ibin+1)*mean_pts[0];
-		else   me_error = me_err_pp->GetBinContent(1,ibin+1)*mean_pts[0];
-		
-		if(g==0)    bg_error = bg_err_pbpb->GetBinContent(1,ibin+1)*mean_pts[0];
-		else   bg_error = bg_err_pp->GetBinContent(1,ibin+1)*mean_pts[0];
-
-		for(int i = 2; i<9; i++){
-		  if(g==0)    me_error += me_err_pbpb->GetBinContent(i,ibin+1)*mean_pts[i];
-		  else   me_error += me_err_pp->GetBinContent(i,ibin+1)*mean_pts[i];
-
-		  if(g==0)    bg_error += bg_err_pbpb->GetBinContent(i,ibin+1)*mean_pts[i];
-		  else   bg_error += bg_err_pp->GetBinContent(i,ibin+1)*mean_pts[i];
-		}
-	      }
-
-	    }
-
+	  
+	    //phase factor of the area of the dR ring is pi^r^2, divide by +/-1 integration range.
 	    bg_error2 = TMath::Pi()*((JetShape_syst[g][ibin][ibin3]->GetBinLowEdge(k+1)*JetShape_syst[g][ibin][ibin3]->GetBinLowEdge(k+1))-JetShape_syst[g][ibin][ibin3]->GetBinLowEdge(k)*JetShape_syst[g][ibin][ibin3]->GetBinLowEdge(k))*bg_error/2.;
 
 	    me_error2 = TMath::Pi()*((JetShape_syst[g][ibin][ibin3]->GetBinLowEdge(k+1)*JetShape_syst[g][ibin][ibin3]->GetBinLowEdge(k+1))-JetShape_syst[g][ibin][ibin3]->GetBinLowEdge(k)*JetShape_syst[g][ibin][ibin3]->GetBinLowEdge(k))*me_error/2.;
 	    
 	    //   cout<<"Error is: "<<bg_error<<" "<<me_error<<endl;
 
-	    if(g==0)	JetShape_syst[g][ibin][ibin3]->SetBinError(k,TMath::Sqrt(bc*bc*rel_err_pbpb*rel_err_pbpb+mc_error*mc_error*.58*.58+bg_error2*bg_error2+me_error2*me_error2)); 
-	    else   JetShape_syst[g][ibin][ibin3]->SetBinError(k,TMath::Sqrt(bc*bc*rel_err_pp*rel_err_pp+mc_error*mc_error*.58*.58+bg_error2*bg_error2+me_error2*me_error2)); 
+	    if(g==0)	JetShape_syst[g][ibin][ibin3]->SetBinError(k,TMath::Sqrt(bc*bc*rel_err_pbpb*rel_err_pbpb+mc_error*mc_error+bg_error2*bg_error2+me_error2*me_error2)); 
+	    else   JetShape_syst[g][ibin][ibin3]->SetBinError(k,TMath::Sqrt(bc*bc*rel_err_pp*rel_err_pp+mc_error*mc_error+bg_error2*bg_error2+me_error2*me_error2)); 
 
 	    //JetShape_syst[g][ibin][ibin3]->SetBinError(k,TMath::Sqrt(bc*bc*(.05*.05+0.04*0.04+0.03*0.03)+bg_error2*bg_error2+me_error2*me_error2)); 
 	 	      
-	  }
+  }
 
 	  cout<<"done"<<endl;
 
@@ -563,7 +638,7 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 	    for(int k = 0; k<10; k++){
 	      JetShape[g][ibin][k]->Scale(1./norm);  
 	      JetShape2[g][ibin][k]->Scale(1./norm);  
-	      JetShapeMC[g][ibin][k]->Scale(1./norm);  
+	      //  JetShapeMC[g][ibin][k]->Scale(1./norm);  
 	      JetShape_syst[g][ibin][k]->Scale(1./norm);  
 	  
 
@@ -600,11 +675,22 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 
 	  if(g==0)	  mc_canvas->cd(4*(ibin3+1)-ibin);
 
-	  JetShapeMC[g][ibin][ibin3]->SetMinimum(-5.);
-	  JetShapeMC[g][ibin][ibin3]->SetMaximum(5.);
+	
+	  JetShapeMC[g][ibin][ibin3]->SetMinimum(-10.);
+	  JetShapeMC[g][ibin][ibin3]->SetMaximum(15.);
+
 	  JetShapeMC[g][ibin][ibin3]->SetMarkerStyle(10);
 	  JetShapeMC[g][ibin][ibin3]->SetMarkerSize(1.);
+	  JetShapeMC[g][ibin][ibin3]->GetYaxis()->SetLabelSize(0.08);
+
+	  JetShapeMC[g][ibin][ibin3]->GetXaxis()->SetRangeUser(0.,1.);
 	  JetShapeMC[g][ibin][ibin3]->Draw();
+	
+	  JetShapeMC_reco[g][ibin][ibin3]->SetMarkerStyle(10);
+	  JetShapeMC_reco[g][ibin][ibin3]->SetMarkerSize(1);
+	  JetShapeMC_reco[g][ibin][ibin3]->SetMarkerColor(kRed);
+	  JetShapeMC_reco[g][ibin][ibin3]->SetLineColor(kRed);
+	  JetShapeMC_reco[g][ibin][ibin3]->Draw("same");
 
 	
 	  JetShape_graph[g][ibin][ibin3] = new TGraphAsymmErrors(JetShape_syst[g][ibin][ibin3]);
@@ -617,7 +703,7 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 	  JetShape_graph[g][ibin][ibin3]->SetName((TString)("Jet_Shape_SystErrGraph_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1]+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
 
-	  cout<<"and even here "<<g<<" "<<ibin<<" "<<ibin3<<endl;
+
 	
 	  JetShape_graph[g][ibin][ibin3]->SetMarkerStyle(20);
 	  JetShape_graph[g][ibin][ibin3]->SetMarkerSize(1);
@@ -626,7 +712,6 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 	  JetShape_graph[g][ibin][ibin3]->SetFillStyle(3004);
 
 	  if(g==1){
-
 
 	    for(int k = 0; k<nCBins; k++){
 	      JetShape_syst[g+1][k][ibin3] = (TH1D*) JetShape_syst[g-1][k][ibin3]->Clone((TString)("Jet_Shape_Syst_Ratio_"+ CBin_strs[k] + "_" + CBin_strs[k+1]+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
@@ -648,7 +733,7 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 
 	    }
 	  }
-	 
+	  cout<<"and done with loop"<<endl;
 	}
 
       }
@@ -656,7 +741,8 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
     }
   }
  
-  mc_canvas->SaveAs("MC_Corr_Test.png");
+  if(is_number) mc_canvas->SaveAs("MC_Corr_Test.png");
+  else  mc_canvas->SaveAs("MC_Corr_Test_pTweighted.png");
   cout<<"ready to draw"<<endl;
 
   for(int k = 0; k<nTrkPtBins; k++){
@@ -695,7 +781,7 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
       JetShape2[0][ibin][k]->GetYaxis()->SetTickLength(0.025);
       JetShape2[0][ibin][k]->GetYaxis()->SetTitleOffset(1.);
      
-      JetShape2[0][ibin][k]->SetMinimum(0.00000008);
+      JetShape2[0][ibin][k]->SetMinimum(0.000008);
       JetShape2[0][ibin][k]->SetMaximum(14.5);
 
       // JetShape2[0][ibin][k]->SetMinimum(0.5);
@@ -719,6 +805,7 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 
       gPad->SetLogy();
 
+      JetShape2[0][ibin][k]->GetXaxis()->SetRangeUser(0.,0.99);
       JetShape2[0][ibin][k]->Draw();
 
       
@@ -734,11 +821,11 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
   
 
       if(ibin==3){
-	TLegend *legend = new TLegend(0.4,0.75,0.95,0.85);
+	TLegend *legend = new TLegend(0.4,0.7,0.95,0.85);
 	//	if(((k>0&&k<5)||k==6)&&!is_subleading)	legend->AddEntry(JetShape_ref[0][ibin][k],"PbPb JetShapes");
-	legend->AddEntry(JetShape2[0][ibin][k],"PbPb Present Study");
+	legend->AddEntry(JetShape2[0][ibin][k],"PbPb");
 	//if(((k>0&&k<5)||k==6)&&!is_subleading)	legend->AddEntry(JetShape_ref[1][0][k],"pp JetShapes");
-	legend->AddEntry(JetShape2[1][0][k],"pp Present Study");
+	legend->AddEntry(JetShape2[1][0][k],"pp");
 	legend->SetLineColor(kWhite);
 	legend->SetFillColor(kWhite);
 	legend->SetTextSize(0.065);
@@ -874,7 +961,7 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
       if(ibin==3){
 	TLegend *legend = new TLegend(0.2,0.7,0.4,0.85);
 	//	if(((k>0&&k<5)||k==6)&&!is_subleading)	legend->AddEntry(JetShape_ref_ratio[0][ibin][k],"PbPb - pp JetShapes");
-	legend->AddEntry(JetShape_ratio2[0][ibin][k],"PbPb - pp Present Study");
+	legend->AddEntry(JetShape_ratio2[0][ibin][k],"PbPb / pp");
 	legend->SetLineColor(kWhite);
 	legend->SetFillColor(kWhite);
 	legend->SetTextSize(0.06);
@@ -1109,8 +1196,8 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
   
     }else{
 
-      JetShape_Stack_Up[0][ibin]->SetMaximum(34.);
-      JetShape_Stack_Up[1][0]->SetMaximum(34.);
+      JetShape_Stack_Up[0][ibin]->SetMaximum(40.);
+      JetShape_Stack_Up[1][0]->SetMaximum(40.);
       JetShape_Stack_Up[0][ibin]->SetMinimum(-1.);
       JetShape_Stack_Up[1][0]->SetMinimum(-1.);
   
@@ -1295,7 +1382,7 @@ TLatex *prelim_tex_dphi = new TLatex(0.4,0.8,"Preliminary");
 
     if(is_number){
       JetShape_ratio[0][ibin][9]->SetMinimum(-5.);
-      JetShape_ratio[0][ibin][9]->SetMaximum(15.);
+      JetShape_ratio[0][ibin][9]->SetMaximum(20.);
 
     }else{
       JetShape_ratio[0][ibin][9]->SetMinimum(0.);
@@ -1393,13 +1480,6 @@ TLatex *prelim_tex_dphi = new TLatex(0.4,0.8,"Preliminary");
     }
     */
 
-
-    TLatex  *label_ratio = new TLatex(0.05,0.9,"");
-    label_ratio->SetTextSize(0.09);
-    label_ratio->SetLineColor(kWhite);
-    label_ratio->SetNDC();
-    label_ratio->Draw();
-
     if(ibin==3){
       TLegend *legend_ratio = new TLegend(0.02,0.7,0.9,0.9);
       if(is_number)legend_ratio->AddEntry(JetShape_ratio[0][ibin][9],"PbPb - pp");
@@ -1412,7 +1492,7 @@ TLatex *prelim_tex_dphi = new TLatex(0.4,0.8,"Preliminary");
     }
 
 
-    if(ibin < 2){
+    if(ibin < 2&&do_ref){
       TLegend *legend_ratio = new TLegend(0.02,0.8,0.9,0.9);
     
       if(do_ref) legend_ratio->AddEntry(JetShape_ref_ratio[0][ibin][9],"2.76 TeV 0-30%");
@@ -1453,7 +1533,7 @@ TLatex *prelim_tex_dphi = new TLatex(0.4,0.8,"Preliminary");
 
    PAS_plot->cd(6);
    if(is_number){
-     TGaxis *dummy_axis_jetshape = new TGaxis(1.,0.13,1.0,.975,-5.,14.);
+     TGaxis *dummy_axis_jetshape = new TGaxis(1.,0.13,1.0,.975,-5.,20.);
 
      dummy_axis_jetshape->ImportAxisAttributes( JetShape_ratio[0][0][9]->GetYaxis());
      dummy_axis_jetshape->SetTitleOffset(1.);

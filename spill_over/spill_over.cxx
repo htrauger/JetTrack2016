@@ -24,7 +24,16 @@
 #include "../../HIN-14-016/HIN_14_016_functions.h"
 
 
-Int_t spill_over(bool is_number = kTRUE){
+Int_t spill_over(bool is_number = kTRUE, bool quark_gluon = kFALSE, bool rx_plane = kFALSE, bool show_errs = kFALSE){
+
+
+
+  if(quark_gluon&&rx_plane){
+
+    cerr<<"this code is only good for one comparison at a time"<<endl;
+    return -1;
+
+  }
 
 
   gROOT->ForceStyle();
@@ -65,7 +74,7 @@ Int_t spill_over(bool is_number = kTRUE){
   TString TrkPtBin_labels[nTrkPtBins] = {"0.7<pT<1","1<pT<2","2<pT<3","3<pT<4","4<pT<8","8<pT<12","12<pT<16","16<pT<20","pT>20"};
 
   float x, offset, value;
-  TF1 *do_offset = new TF1("do_offset","-1.*[0]+x-x",-3.,3.);
+  TF1 *do_offset = new TF1("do_offset","1.*[0]+x-x",-3.,3.);
 
   TPaveText *labels;
 
@@ -92,10 +101,12 @@ Int_t spill_over(bool is_number = kTRUE){
 
   TH1D *phi_proj[12][nTrkPtBins][4];
   TH1D *phi_proj_rebin[12][nTrkPtBins][4];
-  TH1D *phi_proj_rebin2[12][nTrkPtBins][4];
+  TH1D *phi_proj_syst[12][nTrkPtBins][4];
+
   TH1D *eta_proj[12][nTrkPtBins][4];
   TH1D *eta_proj_rebin[12][nTrkPtBins][4];
-  TH1D *eta_proj_rebin2[12][nTrkPtBins][4];
+  TH1D *eta_proj_syst[12][nTrkPtBins][4];
+
 
   TH1D *eta_proj_ref[12][nTrkPtBins][4];
   TH1D *phi_proj_ref[12][nTrkPtBins][4];
@@ -123,8 +134,7 @@ Int_t spill_over(bool is_number = kTRUE){
   pTbin_centers.push_back(22.0);
   
   vector<float> pTbin_errors;
-  pTbin_errors.push_back(0.075);
- 
+  pTbin_errors.push_back(0.15);
   pTbin_errors.push_back(.5);
   pTbin_errors.push_back(.5);
   pTbin_errors.push_back(.5);
@@ -154,7 +164,7 @@ Int_t spill_over(bool is_number = kTRUE){
   TGraphErrors *Closure_integral_eta_pT2[12][4];
  
 
-  vector<float> closure_integral_values, closure_integral_errors;
+  vector<float> closure_integral_values, closure_integral_errors_all, closure_integral_errors0,  closure_integral_errors1,  closure_integral_errors2,  closure_integral_errors3;
 
   TH1D *Closure_integral_eta_cent[12][nTrkPtBins];
   TH1D *Closure_integral_eta_cent2[12][nTrkPtBins];
@@ -169,6 +179,9 @@ Int_t spill_over(bool is_number = kTRUE){
   TCanvas *cintegral_phi_cent[12];
 
 
+  float me_err[12][6][5];
+  float bg_err[12][6][5];
+
   
   TString in_name, plotname, outname, funcname, centlabel, datalabel, jettype,jettype2, pTlabel;
 
@@ -178,7 +191,18 @@ Int_t spill_over(bool is_number = kTRUE){
 
   TF1 *gaus_phi[12][nTrkPtBins][4];
   TF1 *gaus_eta[12][nTrkPtBins][4];
+
+  TF1 *gaus_phi_up[12][nTrkPtBins][4];
+  TF1 *gaus_eta_up[12][nTrkPtBins][4];
+  
+  TF1 *gaus_phi_down[12][nTrkPtBins][4];
+  TF1 *gaus_eta_down[12][nTrkPtBins][4];
  
+
+
+  TF1 *fit_line_left = new TF1("fit_line_left","[0]");
+  TF1 *fit_line_right = new TF1("fit_line_right","[0]");
+
   TLegend *lcheck, *leta, *lHminusP;
   
   TLine *linePhi, *lineEta;
@@ -197,7 +221,7 @@ Int_t spill_over(bool is_number = kTRUE){
   // Open data and output files
   //-------------------------------------------------
  
-  int gstart = 7; 
+  int gstart = 5; 
   int gend = 8;
 
   TCanvas *dummy = new TCanvas("toy_canvas");
@@ -229,8 +253,18 @@ Int_t spill_over(bool is_number = kTRUE){
     
 	switch(g){
  
+
+	case 5:
+	  if(rx_plane)	  fin[g] = new TFile("../me_correct/HydJet_RecoJet_GenTrack_NoSube0_Inclusive_Correlations_InRxPlaneOnly.root","READ");
+	  else	  fin[g] = new TFile("../me_correct/HydJet_RecoJet_GenTrack_NoSube0_Inclusive_Correlations_QuarkOnly.root","READ");
+	  jettype = "";
+	  if(!is_number) jettype = "pTweighted";
+	  jettype2 = "Inclusive";
+	  break;
+
 	case 6:
-	  fin[g] = new TFile("../me_correct/HydJet_GenJet_GenTrack_NoSube0_Inclusive_Correlations.root","READ");
+	  if(rx_plane)  fin[g] = new TFile("../me_correct/HydJet_RecoJet_GenTrack_NoSube0_Inclusive_Correlations_OutRxPlaneOnly.root","READ");
+	  fin[g] = new TFile("../me_correct/HydJet_RecoJet_GenTrack_NoSube0_Inclusive_Correlations_GluonOnly.root","READ");
 	  jettype = "";
 	  if(!is_number) jettype = "pTweighted";
 	  jettype2 = "Inclusive";
@@ -277,11 +311,11 @@ Int_t spill_over(bool is_number = kTRUE){
 	eta_proj_name.ReplaceAll("hJetTrackSignalBackground","Eta_Proj");
 	eta_proj_name.ReplaceAll("Yield","Eta_Proj");
 	    
-	llimiteta = result[g][i][j]->GetXaxis()->FindBin(-etalim+.001);
-	rlimiteta = result[g][i][j]->GetXaxis()->FindBin(etalim-.001);
+	llimiteta = result[g][i][j]->GetXaxis()->FindBin(-1.5+.001);
+	rlimiteta = result[g][i][j]->GetXaxis()->FindBin(1.5-.001);
 
-	llimitphi = result[g][i][j]->GetYaxis()->FindBin(-philim+.001);
-	rlimitphi = result[g][i][j]->GetYaxis()->FindBin(philim-.001);
+	llimitphi = result[g][i][j]->GetYaxis()->FindBin(-TMath::Pi()/2.+.001);
+	rlimitphi = result[g][i][j]->GetYaxis()->FindBin(TMath::Pi()/2.-.001);
 	    
 
 	eta_proj[g][i][j] = result[g][i][j]->ProjectionX(eta_proj_name,llimitphi,rlimitphi);
@@ -291,9 +325,14 @@ Int_t spill_over(bool is_number = kTRUE){
 
 	TString eta_proj_name_rebin = eta_proj_name;
 	eta_proj_name_rebin.ReplaceAll("Eta_Proj","Eta_Proj_Rebin");
+
 	 
 	eta_proj_rebin[g][i][j] = (TH1D*)Rebin_dEta(eta_proj[g][i][j]);
 	eta_proj_rebin[g][i][j]->SetName(eta_proj_name_rebin);
+
+
+	eta_proj_name_rebin.ReplaceAll("Eta_Proj","Eta_Proj_Syst");
+	eta_proj_syst[g][i][j] = (TH1D*)eta_proj_rebin[g][i][j]->Clone(eta_proj_name_rebin);
 
 
 	//-------------------------------
@@ -315,21 +354,50 @@ Int_t spill_over(bool is_number = kTRUE){
 	phi_proj_rebin[g][i][j] = (TH1D*)Rebin_dPhi(phi_proj[g][i][j]);
 	phi_proj_rebin[g][i][j]->SetName(phi_proj_name_rebin);
 
+	phi_proj_name_rebin.ReplaceAll("Phi_Proj","Phi_Proj_Syst");
+	phi_proj_syst[g][i][j] = (TH1D*)phi_proj_rebin[g][i][j]->Clone(phi_proj_name_rebin);
 
 
 	float totbins = eta_proj_rebin[g][i][j]->GetNbinsX();
 		
-	//offset= (eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(1.001))+eta_proj_rebin[g][i][j]->GetBinContent(eta_proj_rebin[g][i][j]->FindBin(-1.01)))/2.;
+	//	offset= -(phi_proj_rebin[g][i][j]->GetBinContent(phi_proj_rebin[g][i][j]->FindBin(1.001))+phi_proj_rebin[g][i][j]->GetBinContent(phi_proj_rebin[g][i][j]->FindBin(-1.01)))/2.;
      
-	offset= (eta_proj_rebin[g][i][j]->GetBinContent(2)+eta_proj_rebin[g][i][j]->GetBinContent(3)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-3)+eta_proj_rebin[g][i][j]->GetBinContent(totbins-2))/4.;
 
-
-	do_offset->SetParameter(0, offset);
+	//	do_offset->SetParameter(0, offset);
 	//	eta_proj_rebin[g][i][j]->Add(do_offset);
 	//	phi_proj_rebin[g][i][j]->Add(do_offset);
 	
 	check_ymax  = 4.;
 	check_ymin = -1.;
+
+
+	eta_proj_rebin[g][i][j]->SetMarkerStyle(20);
+	eta_proj_rebin[g][i][j]->SetMarkerSize(1);
+	phi_proj_rebin[g][i][j]->SetMarkerStyle(20);
+	phi_proj_rebin[g][i][j]->SetMarkerSize(1);
+
+	//SYSTEMATIC UNCERTAINTY SET-UP // 
+
+	bg_err[g][i][j] =TMath::Abs( (  eta_proj_rebin[g][i][j] ->GetBinContent(  eta_proj_rebin[g][i][j]->FindBin(-1.51))- eta_proj_rebin[g][i][j] ->GetBinContent(  eta_proj_rebin[g][i][j]->FindBin(-2.01)))+(eta_proj_rebin[g][i][j] ->GetBinContent(  eta_proj_rebin[g][i][j]->FindBin(1.51))- eta_proj_rebin[g][i][j] ->GetBinContent(  eta_proj_rebin[g][i][j]->FindBin(2.01))))/2.;
+
+	float line_left, line_right; 
+	/*
+
+	dummy->cd(0);
+       	eta_proj_rebin[g][i][j]->Fit("fit_line_left","q","",-2.5,-1.5);
+
+      	line_left = fit_line_left->GetParameter(0);
+
+	eta_proj_rebin[g][i][j]->Fit("fit_line_right","q","",1.5,2.5);
+	
+	line_right = fit_line_right->GetParameter(0);
+
+	me_err[g][i][j] = TMath::Abs(line_left - line_right);
+
+	*/
+	me_err[g][i][j] = 0.;
+
+
 
 
       } // g loop
@@ -357,25 +425,110 @@ Int_t spill_over(bool is_number = kTRUE){
       phi_proj_rebin[7][i][j]->Add(phi_proj_rebin[1][i][j],-1.);
  
       */
+    
+      eta_proj_rebin[5][i][j]->SetLineColor(kBlue);
+      eta_proj_rebin[5][i][j]->SetMarkerColor(kBlue);
+
+      eta_proj_rebin[6][i][j]->SetLineColor(kRed);
+      eta_proj_rebin[6][i][j]->SetMarkerColor(kRed);
+      
       eta_proj_rebin[7][i][j]->SetLineColor(kBlack);
       eta_proj_rebin[7][i][j]->SetMarkerColor(kBlack);
-      eta_proj_rebin[7][i][j]->SetMarkerStyle(24);
-      eta_proj_rebin[7][i][j]->SetMarkerSize(1);
+   
       eta_proj_rebin[7][i][j]->SetMinimum(check_ymin);
       eta_proj_rebin[7][i][j]->SetMaximum(check_ymax);
 
       phi_proj_rebin[7][i][j]->SetLineColor(kBlack);
       phi_proj_rebin[7][i][j]->SetMarkerColor(kBlack);
-      phi_proj_rebin[7][i][j]->SetMarkerStyle(24);
-      phi_proj_rebin[7][i][j]->SetMarkerSize(1);
+
+      phi_proj_rebin[5][i][j]->SetLineColor(kBlue);
+      phi_proj_rebin[5][i][j]->SetMarkerColor(kBlue);
+
+      phi_proj_rebin[6][i][j]->SetLineColor(kRed);
+      phi_proj_rebin[6][i][j]->SetMarkerColor(kRed);
+
+     
       phi_proj_rebin[7][i][j]->SetMinimum(check_ymin);
       phi_proj_rebin[7][i][j]->SetMaximum(check_ymax);
-
 	     
 
       cout<<eta_proj_rebin[7][i][j]->GetName()<<endl;
-      llimiteta = eta_proj_rebin[7][i][j]->GetXaxis()->FindBin(-1.5+.0001);
-      rlimiteta = eta_proj_rebin[7][i][j]->GetXaxis()->FindBin(1.5-.0001);
+
+      if(j<2&&i<3){
+	llimiteta = eta_proj_rebin[7][i][j]->GetXaxis()->FindBin(-1.5+.0001);
+	rlimiteta = eta_proj_rebin[7][i][j]->GetXaxis()->FindBin(1.5-.0001);
+      }else{
+	llimiteta = eta_proj_rebin[7][i][j]->GetXaxis()->FindBin(-1.+.0001);
+	rlimiteta = eta_proj_rebin[7][i][j]->GetXaxis()->FindBin(1.-.0001);
+
+      }
+
+      //FIRST VARY AND FIT FOR SYST ERR
+
+      
+      do_offset->SetParameter(0,bg_err[7][i][j]+me_err[7][i][j]);
+
+      eta_proj_syst[7][i][j]->Add(do_offset);
+
+      double Yield_eta_up = eta_proj_syst[7][i][j]->Integral(llimiteta,rlimiteta,"width");	      
+     	      
+      if(Yield_eta_up < 0.) Yield_eta_up = 0.;
+
+      gaus1d->FixParameter(0,0.);
+      gaus1d->FixParameter(1,Yield_eta_up);
+      //      gaus1d->ReleaseParameter(2);
+      gaus1d->SetParameter(2,0.3);
+
+
+      eta_proj_syst[7][i][j]->Fit("gaus1d","","",-1.5,1.5);
+
+   TString   gaus_eta_name = "Eta_SpillOver_Fit_Up_"; gaus_eta_name+= CBin_strs[j]; gaus_eta_name+="_"; gaus_eta_name+= CBin_strs[j+1]; gaus_eta_name+= "_Pt100_Pt300_"; gaus_eta_name+=TrkPtBin_strs[i]; gaus_eta_name+="_"; gaus_eta_name+=TrkPtBin_strs[i+1];
+
+      gaus_eta_up[7][i][j] = new TF1(gaus_eta_name,"[0]+[1]/TMath::Sqrt(2*TMath::Pi())/[2]*TMath::Exp(-0.5*TMath::Power((TMath::Abs(x)/[2]),2.))",-2.,2.);
+
+      for(int k= 0; k<3; k++){
+	
+	double temp = gaus1d->GetParameter(k);
+	gaus_eta_up[7][i][j]->SetParameter(k, temp);
+
+      }
+
+
+
+   
+      
+      do_offset->SetParameter(0,-2*bg_err[7][i][j]-2*me_err[7][i][j]);
+
+      eta_proj_syst[7][i][j]->Add(do_offset);
+
+      double Yield_eta_down = eta_proj_syst[7][i][j]->Integral(llimiteta,rlimiteta,"width");	      
+     	      
+      if(Yield_eta_down < 0.) Yield_eta_down = 0.;
+
+      gaus1d->FixParameter(1,Yield_eta_down);
+      //      gaus1d->ReleaseParameter(2);
+      gaus1d->SetParameter(2,0.3);
+
+
+      eta_proj_syst[7][i][j]->Fit("gaus1d","","",-1.5,1.5);
+
+      gaus_eta_name = "Eta_SpillOver_Fit_Down_"; gaus_eta_name+= CBin_strs[j]; gaus_eta_name+="_"; gaus_eta_name+= CBin_strs[j+1]; gaus_eta_name+= "_Pt100_Pt300_"; gaus_eta_name+=TrkPtBin_strs[i]; gaus_eta_name+="_"; gaus_eta_name+=TrkPtBin_strs[i+1];
+
+      gaus_eta_down[7][i][j] = new TF1(gaus_eta_name,"[0]+[1]/TMath::Sqrt(2*TMath::Pi())/[2]*TMath::Exp(-0.5*TMath::Power((TMath::Abs(x)/[2]),2.))",-2.,2.);
+
+      for(int k= 0; k<3; k++){
+	
+	double temp = gaus1d->GetParameter(k);
+	gaus_eta_down[7][i][j]->SetParameter(k, temp);
+
+      }
+
+      for(int k = 0; k<eta_proj_syst[7][i][j]->GetNbinsX()+1; k++){
+
+	err_temp = (gaus_eta_up[7][i][j]->Eval(eta_proj_syst[7][i][j]->GetBinCenter(k))-gaus_eta_down[7][i][j]->Eval(eta_proj_syst[7][i][j]->GetBinCenter(k)))/2.;
+	eta_proj_syst[7][i][j]->SetBinContent(k,err_temp);
+	eta_proj_syst[7][i][j]->SetBinError(k,0.);
+      }
 
 
       double Yield_eta = eta_proj_rebin[7][i][j]->Integral(llimiteta,rlimiteta,"width");	      
@@ -386,23 +539,16 @@ Int_t spill_over(bool is_number = kTRUE){
       if(Yield_eta<0.){Yield_eta=0.;}
 
 	      
-      gaus1d->FixParameter(0,0.);
       gaus1d->FixParameter(1,Yield_eta);
 	      
-      gaus1d->ReleaseParameter(2);
+      //      gaus1d->ReleaseParameter(2);
 
       gaus1d->SetParameter(2,0.3);
-      //   gaus1d->SetParLimits(2,0.1,0.6);
-	   	    	      
+ 
 
-      cout<<"ready to add"<<endl;
-    
-
-      cout<<"added"<<endl;
-
-      eta_proj_rebin[7][i][j]->Fit("gaus1d","","",-1.5,1.5);
+      if(i<5)  eta_proj_rebin[7][i][j]->Fit("gaus1d","","",-1.5,1.5);
 	      
-      TString gaus_eta_name = "Eta_SpillOver_Fit_"; gaus_eta_name+= CBin_strs[j]; gaus_eta_name+="_"; gaus_eta_name+= CBin_strs[j+1]; gaus_eta_name+= "_Pt100_Pt300_"; gaus_eta_name+=TrkPtBin_strs[i]; gaus_eta_name+="_"; gaus_eta_name+=TrkPtBin_strs[i+1];
+      gaus_eta_name = "Eta_SpillOver_Fit_"; gaus_eta_name+= CBin_strs[j]; gaus_eta_name+="_"; gaus_eta_name+= CBin_strs[j+1]; gaus_eta_name+= "_Pt100_Pt300_"; gaus_eta_name+=TrkPtBin_strs[i]; gaus_eta_name+="_"; gaus_eta_name+=TrkPtBin_strs[i+1];
 
       gaus_eta[7][i][j] = new TF1(gaus_eta_name,"[0]+[1]/TMath::Sqrt(2*TMath::Pi())/[2]*TMath::Exp(-0.5*TMath::Power((TMath::Abs(x)/[2]),2.))",-2.,2.);
 
@@ -413,9 +559,12 @@ Int_t spill_over(bool is_number = kTRUE){
 
       }
 
+   
+      //THEN DO NOMINAL
+
       err_temp = gaus1d->GetParError(2);
 
-      gaus_eta_name.ReplaceAll("Fit","Points");
+      gaus_eta_name = "Eta_SpillOver_Points_"; gaus_eta_name+= CBin_strs[j]; gaus_eta_name+="_"; gaus_eta_name+= CBin_strs[j+1]; gaus_eta_name+= "_Pt100_Pt300_"; gaus_eta_name+=TrkPtBin_strs[i]; gaus_eta_name+="_"; gaus_eta_name+=TrkPtBin_strs[i+1];
 
       eta_spill_over[7][i][j] = (TH1D*)eta_proj_rebin[7][i][j]->Clone(gaus_eta_name);
       
@@ -441,22 +590,109 @@ Int_t spill_over(bool is_number = kTRUE){
 	
 
 
-	      
-      gaus1d->FixParameter(0,0.);
       gaus1d->FixParameter(1,Yield_eta);
 	      
-      gaus1d->ReleaseParameter(2);
+      //      gaus1d->ReleaseParameter(2);
 
       gaus1d->SetParameter(2,0.4);
-      gaus1d->SetParLimits(2,0.3,0.6);
+      gaus1d->SetParLimits(2,0.2,1.);
+
+        //FIRST VARY AND FIT FOR SYST ERR
 
       
+      do_offset->SetParameter(0,bg_err[7][i][j]+me_err[7][i][j]);
 
-      phi_proj_rebin[7][i][j]->Fit("gaus1d");
+      phi_proj_syst[7][i][j]->Add(do_offset);
+
+      double Yield_phi_up = phi_proj_syst[7][i][j]->Integral(llimitphi,rlimitphi,"width");	      
+     	      
+        gaus1d->FixParameter(1,Yield_phi_up);
+       gaus1d->SetParameter(2,0.3);
+
+
+      phi_proj_syst[7][i][j]->Fit("gaus1d","","",-1.5,1.5);
+
+      TString   gaus_phi_name = "Phi_SpillOver_Fit_Up_"; gaus_phi_name+= CBin_strs[j]; gaus_phi_name+="_"; gaus_phi_name+= CBin_strs[j+1]; gaus_phi_name+= "_Pt100_Pt300_"; gaus_phi_name+=TrkPtBin_strs[i]; gaus_phi_name+="_"; gaus_phi_name+=TrkPtBin_strs[i+1];
+
+      gaus_phi_up[7][i][j] = new TF1(gaus_phi_name,"[0]+[1]/TMath::Sqrt(2*TMath::Pi())/[2]*TMath::Exp(-0.5*TMath::Power((TMath::Abs(x)/[2]),2.))",-2.,2.);
+
+      for(int k= 0; k<3; k++){
+	
+	double temp = gaus1d->GetParameter(k);
+	gaus_phi_up[7][i][j]->SetParameter(k, temp);
+
+      }
 
 
 
-      TString gaus_phi_name = "Phi_SpillOver_Fit_"; gaus_phi_name+= CBin_strs[j]; gaus_phi_name+="_"; gaus_phi_name+= CBin_strs[j+1]; gaus_phi_name+= "_Pt100_Pt300_"; gaus_phi_name+=TrkPtBin_strs[i]; gaus_phi_name+="_"; gaus_phi_name+=TrkPtBin_strs[i+1];
+   
+      
+      do_offset->SetParameter(0,-2*bg_err[7][i][j]-2*me_err[7][i][j]);
+
+      phi_proj_syst[7][i][j]->Add(do_offset);
+
+      double Yield_phi_down = phi_proj_syst[7][i][j]->Integral(llimitphi,rlimitphi,"width");	      
+     	      
+      gaus1d->FixParameter(1,Yield_phi_down);
+      //      gaus1d->ReleaseParameter(2);
+      gaus1d->SetParameter(2,0.3);
+
+
+      phi_proj_syst[7][i][j]->Fit("gaus1d","","",-1.5,1.5);
+
+      gaus_phi_name = "Phi_SpillOver_Fit_Down_"; gaus_phi_name+= CBin_strs[j]; gaus_phi_name+="_"; gaus_phi_name+= CBin_strs[j+1]; gaus_phi_name+= "_Pt100_Pt300_"; gaus_phi_name+=TrkPtBin_strs[i]; gaus_phi_name+="_"; gaus_phi_name+=TrkPtBin_strs[i+1];
+
+      gaus_phi_down[7][i][j] = new TF1(gaus_phi_name,"[0]+[1]/TMath::Sqrt(2*TMath::Pi())/[2]*TMath::Exp(-0.5*TMath::Power((TMath::Abs(x)/[2]),2.))",-2.,2.);
+
+      for(int k= 0; k<3; k++){
+	
+	double temp = gaus1d->GetParameter(k);
+	gaus_phi_down[7][i][j]->SetParameter(k, temp);
+
+      }
+
+      for(int k = 0; k<phi_proj_syst[7][i][j]->GetNbinsX()+1; k++){
+
+	err_temp = (gaus_phi_up[7][i][j]->Eval(phi_proj_syst[7][i][j]->GetBinCenter(k))-gaus_phi_down[7][i][j]->Eval(phi_proj_syst[7][i][j]->GetBinCenter(k)))/2.;
+	phi_proj_syst[7][i][j]->SetBinContent(k,err_temp);
+	phi_proj_syst[7][i][j]->SetBinError(k,0.);
+      }
+
+
+      double Yield_phi = phi_proj_rebin[7][i][j]->Integral(llimitphi,rlimitphi,"width");	      
+      
+      cout<<Yield_phi<<endl;
+	     	     
+	    
+      if(Yield_phi<0.){Yield_phi=0.;}
+
+	      
+      gaus1d->FixParameter(1,Yield_phi);
+	      
+      //      gaus1d->ReleaseParameter(2);
+
+      gaus1d->SetParameter(2,0.3);
+ 
+
+      if(i<5)  phi_proj_rebin[7][i][j]->Fit("gaus1d","","",-1.5,1.5);
+	      
+      gaus_phi_name = "Phi_SpillOver_Fit_"; gaus_phi_name+= CBin_strs[j]; gaus_phi_name+="_"; gaus_phi_name+= CBin_strs[j+1]; gaus_phi_name+= "_Pt100_Pt300_"; gaus_phi_name+=TrkPtBin_strs[i]; gaus_phi_name+="_"; gaus_phi_name+=TrkPtBin_strs[i+1];
+
+      gaus_phi[7][i][j] = new TF1(gaus_phi_name,"[0]+[1]/TMath::Sqrt(2*TMath::Pi())/[2]*TMath::Exp(-0.5*TMath::Power((TMath::Abs(x)/[2]),2.))",-2.,2.);
+
+      for(int k= 0; k<3; k++){
+	
+	double temp = gaus1d->GetParameter(k);
+	gaus_phi[7][i][j]->SetParameter(k, temp);
+
+      }
+
+
+      if(i<5)  phi_proj_rebin[7][i][j]->Fit("gaus1d","","",-1.5,1.5);
+
+
+
+      gaus_phi_name = "Phi_SpillOver_Fit_"; gaus_phi_name+= CBin_strs[j]; gaus_phi_name+="_"; gaus_phi_name+= CBin_strs[j+1]; gaus_phi_name+= "_Pt100_Pt300_"; gaus_phi_name+=TrkPtBin_strs[i]; gaus_phi_name+="_"; gaus_phi_name+=TrkPtBin_strs[i+1];
 
 
 	    
@@ -487,14 +723,22 @@ Int_t spill_over(bool is_number = kTRUE){
 	phi_spill_over[7][i][j]->SetBinError(k,err_temp);
       }
 
+      //WRITE STUFF OUT
+
       fout[7]->cd();
 
       eta_spill_over[7][i][j]->Write();
+      eta_proj_syst[7][i][j]->Write();
 
       gaus_eta[7][i][j]->Write();
+      gaus_eta_up[7][i][j]->Write();
+      gaus_eta_down[7][i][j]->Write();
 
       phi_spill_over[7][i][j]->Write();
+      phi_proj_syst[7][i][j]->Write();
       gaus_phi[7][i][j]->Write();
+      gaus_phi_up[7][i][j]->Write();
+      gaus_phi_down[7][i][j]->Write();
 
       /*
       	      
@@ -515,19 +759,23 @@ Int_t spill_over(bool is_number = kTRUE){
       switch(j){
       case 0:
 	Closure_integral_eta0.push_back(Yield_eta);
-	Closure_integral_phi0.push_back(Yield_eta);
+	//	closure_integral_errors0.push_back((Yield_eta_up - Yield_eta_down)/2.);
+	closure_integral_errors0.push_back(Yield_eta*.18);
 	break;
       case 1:
 	Closure_integral_eta1.push_back(Yield_eta);
-	Closure_integral_phi1.push_back(Yield_eta);
+	closure_integral_errors1.push_back(Yield_eta*.18);
+	//closure_integral_errors1.push_back((Yield_eta_up - Yield_eta_down)/2.);
 	break;
       case 2:
 	Closure_integral_eta2.push_back(Yield_eta);
-	Closure_integral_phi2.push_back(Yield_eta);
+	closure_integral_errors2.push_back(Yield_eta*.18);
+	//	closure_integral_errors2.push_back((Yield_eta_up - Yield_eta_down)/2.);
 	break;
       case 3:
 	Closure_integral_eta3.push_back(Yield_eta);
-	Closure_integral_phi3.push_back(Yield_eta);
+	closure_integral_errors3.push_back(Yield_eta*.18);
+	//	closure_integral_errors3.push_back((Yield_eta_up - Yield_eta_down)/2.);
 	break;
       }
       
@@ -537,7 +785,6 @@ Int_t spill_over(bool is_number = kTRUE){
       corr_canvas_eta[7]->cd(4*(i+1)-j);
 
 
-      eta_proj_rebin[7][i][j]->SetMarkerStyle(20);
       if(j==3) eta_proj_rebin[7][i][j]->GetYaxis()->SetLabelSize(0.06);
       else eta_proj_rebin[7][i][j]->GetYaxis()->SetLabelSize(0.0);
 	
@@ -547,8 +794,21 @@ Int_t spill_over(bool is_number = kTRUE){
       eta_proj_rebin[7][i][j]->GetXaxis()->SetLabelSize(0.06);
 
 
-      eta_proj_rebin[7][i][j]->GetXaxis()->SetRangeUser(-1.49,1.49);
+      eta_proj_rebin[7][i][j]->GetXaxis()->SetRangeUser(-2.49,2.49);
       eta_proj_rebin[7][i][j]->Draw();
+  
+      if(quark_gluon || rx_plane)   eta_proj_rebin[5][i][j]->Draw("same");
+      if(quark_gluon || rx_plane)  eta_proj_rebin[6][i][j]->Draw("same");
+
+      if(show_errs){
+	  eta_proj_syst[7][i][j]->SetLineColor(kYellow);
+	  eta_proj_syst[7][i][j]->SetLineWidth(4);
+
+	  eta_proj_syst[7][i][j]->Draw("C same");
+	  gaus_eta_up[7][i][j]->Draw("same");
+	  gaus_eta_down[7][i][j]->Draw("same");
+	}
+      eta_proj_rebin[7][i][j]->Draw("same");
 
 
 
@@ -580,7 +840,12 @@ Int_t spill_over(bool is_number = kTRUE){
 	  
       TLegend *legend = new TLegend(0.2,0.5,0.9,0.7);
       //      legend->AddEntry( eta_proj_rebin[6][i][0],"Pythia+Hydjet RecoGen - GenGen");
-      legend->AddEntry( eta_proj_rebin[7][i][j],"Pythia+Hydjet RecoGen - GenGen (excluding JFF)");
+      legend->AddEntry( eta_proj_rebin[7][i][j],"Nominal RecoGen Sube>0");
+      if(quark_gluon)   legend->AddEntry( eta_proj_rebin[5][i][j],"Quark Only");
+      if(quark_gluon)      legend->AddEntry( eta_proj_rebin[6][i][j],"Gluon Only");
+
+      if(rx_plane)   legend->AddEntry( eta_proj_rebin[5][i][j],"In Rx-Plane Jets");
+      if(rx_plane)      legend->AddEntry( eta_proj_rebin[6][i][j],"Out Rx-Plane Jets");
 
       legend->SetTextSize(0.06);
       legend->SetLineColor(kWhite);
@@ -590,7 +855,6 @@ Int_t spill_over(bool is_number = kTRUE){
 
       corr_canvas_phi[7]->cd(4*(i+1)-j);
 
-      phi_proj_rebin[7][i][j]->SetMarkerStyle(20);
       if(j==3) phi_proj_rebin[7][i][j]->GetYaxis()->SetLabelSize(0.06);
       else phi_proj_rebin[7][i][j]->GetYaxis()->SetLabelSize(0.0);
 
@@ -601,6 +865,22 @@ Int_t spill_over(bool is_number = kTRUE){
       phi_proj_rebin[7][i][j]->GetXaxis()->SetLabelSize(0.06);
 
       phi_proj_rebin[7][i][j]->Draw();
+
+      if(quark_gluon || rx_plane)   phi_proj_rebin[5][i][j]->Draw("same");
+      if(quark_gluon || rx_plane)   phi_proj_rebin[6][i][j]->Draw("same");
+
+
+
+	if(show_errs){
+	  phi_proj_syst[7][i][j]->SetLineColor(kYellow);
+	  phi_proj_syst[7][i][j]->SetLineWidth(4);
+
+	  phi_proj_syst[7][i][j]->Draw("C same");
+	  gaus_phi_up[7][i][j]->Draw("same");
+	  gaus_phi_down[7][i][j]->Draw("same");
+	}
+
+      phi_proj_rebin[7][i][j]->Draw("same");
 
 
 	  
@@ -633,12 +913,17 @@ Int_t spill_over(bool is_number = kTRUE){
     }
     dummy->cd();   
        
+
+
     
   }//i
   
   TString save_name_eta = "SpillOver_Corrections_Eta";
   if(!is_number) save_name_eta+="_";
   save_name_eta+=jettype;
+
+  if(quark_gluon)   save_name_eta+="_QG_Comparison";
+  if(rx_plane)   save_name_eta+="_RXplane_Comparison";
   //   save_name_eta+=TrkPtBin_strs[i]; save_name_eta+="_"; save_name_eta+=TrkPtBin_strs[i+1];
   save_name_eta+=".png";
   corr_canvas_eta[7]->SaveAs(save_name_eta);
@@ -648,6 +933,10 @@ Int_t spill_over(bool is_number = kTRUE){
   TString save_name_phi = "SpillOver_Corrections_Phi";
   if(!is_number) save_name_phi+="_";
   save_name_phi+=jettype;
+
+  if(quark_gluon)   save_name_phi+="_QG_Comparison";
+  if(rx_plane)   save_name_phi+="_RXplane_Comparison";
+
   //    save_name_phi+=TrkPtBin_strs[i]; save_name_phi+="_"; save_name_phi+=TrkPtBin_strs[i+1];
   save_name_phi+=".png";
   corr_canvas_phi[7]->SaveAs(save_name_phi);
@@ -686,16 +975,16 @@ Int_t spill_over(bool is_number = kTRUE){
 
     switch(j){
     case 0:
-      Closure_integral_eta_pT[7][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta0[0],&pTbin_errors[0],&closure_integral_errors[0]);
+      Closure_integral_eta_pT[7][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta0[0],&pTbin_errors[0],&closure_integral_errors0[0]);
       break;
     case 1:
-      Closure_integral_eta_pT[7][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta1[0],&pTbin_errors[0],&closure_integral_errors[0]);
+      Closure_integral_eta_pT[7][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta1[0],&pTbin_errors[0],&closure_integral_errors1[0]);
       break;
     case 2:
-      Closure_integral_eta_pT[7][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta2[0],&pTbin_errors[0],&closure_integral_errors[0]);
+      Closure_integral_eta_pT[7][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta2[0],&pTbin_errors[0],&closure_integral_errors2[0]);
       break;
     case 3:
-      Closure_integral_eta_pT[7][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta3[0],&pTbin_errors[0],&closure_integral_errors[0]);
+      Closure_integral_eta_pT[7][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta3[0],&pTbin_errors[0],&closure_integral_errors3[0]);
       break;
 
     }
@@ -707,6 +996,7 @@ Int_t spill_over(bool is_number = kTRUE){
     Closure_integral_eta_pT[7][j]->SetMarkerSize(1);
     Closure_integral_eta_pT[7][j]->SetLineColor(1);
     Closure_integral_eta_pT[7][j]->SetMarkerStyle(10);
+    Closure_integral_eta_pT[7][j]->SetFillColor(kGreen);
 
 
     Closure_integral_eta_pT[7][j]->SetMinimum(-2.);
@@ -714,7 +1004,9 @@ Int_t spill_over(bool is_number = kTRUE){
 	    
     Closure_integral_eta_pT[7][j]->GetXaxis()->SetRangeUser(.5,20.);
     Closure_integral_eta_pT[7][j]->GetYaxis()->SetNdivisions(306);
-    Closure_integral_eta_pT[7][j]->Draw("p X A");
+    Closure_integral_eta_pT[7][j]->Draw("p e2 A");
+
+    Closure_integral_eta_pT[7][j]->Draw("same p X");
 	 
 
     Closure_integral_eta_pT[7][j]->GetYaxis()->SetLabelSize(0.07);
@@ -748,7 +1040,7 @@ Int_t spill_over(bool is_number = kTRUE){
 
 
 
-    Closure_integral_eta_pT[7][j]->SetMarkerSize(2);
+    Closure_integral_eta_pT[7][j]->SetMarkerSize(1.5);
 
 
 
@@ -758,14 +1050,15 @@ Int_t spill_over(bool is_number = kTRUE){
     linePt->Draw("same");
 	
     closure_integral_values.clear();
-    closure_integral_errors.clear();
-	
+    closure_integral_errors_all.clear();
+  	
     for(int k = 0; k<4; k++){
       double pt_val, x_val;
 	  
       Closure_integral_eta_pT[7][j]->GetPoint(k,x_val,pt_val);
+      Closure_integral_eta_pT[7][j]->GetPoint(k,x_val,pt_val);
       closure_integral_values.push_back(pt_val);
-      closure_integral_errors.push_back(pt_val/2.);
+      closure_integral_errors_all.push_back(pt_val/2.);
 
 	  
     }
@@ -773,7 +1066,7 @@ Int_t spill_over(bool is_number = kTRUE){
 
       
 	 	  
-    Closure_integral_eta_pT2[7][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&closure_integral_values[0],&pTbin_errors[0],&closure_integral_errors[0]);
+    Closure_integral_eta_pT2[7][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&closure_integral_values[0],&pTbin_errors[0],&closure_integral_errors_all[0]);
 
   
     if(j==3){ 
@@ -826,7 +1119,7 @@ Int_t spill_over(bool is_number = kTRUE){
     Closure_integral_eta_cent[7][i]->SetMarkerStyle(10);
     
 
-    Closure_integral_eta_cent[7][i]->SetMarkerSize(2);
+    Closure_integral_eta_cent[7][i]->SetMarkerSize(1.5);
     Closure_integral_eta_cent[7][i]->SetLineColor(kBlack);
 
     Closure_integral_eta_cent[7][i]->SetLineColor(kBlack);
@@ -948,6 +1241,9 @@ Int_t spill_over(bool is_number = kTRUE){
 
     if(i==0)	l40->Draw("same");
 
+
+  
+    cout<<TrkPtBin_strs[i]<<" "<<Closure_integral_eta0.at(i)<<" "<<closure_integral_errors0.at(i)<<" "<<Closure_integral_eta1.at(i)<<" "<<closure_integral_errors1.at(i)<<" "<<Closure_integral_eta2.at(i)<<" "<<closure_integral_errors2.at(i)<<" "<<Closure_integral_eta3.at(i)<<" "<<closure_integral_errors3.at(i)<<" "<<endl;
   }
 
 			       

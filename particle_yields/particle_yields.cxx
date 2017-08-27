@@ -39,7 +39,7 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
   gStyle->SetPadTopMargin   (0.25);
   gStyle->SetPadLeftMargin  (0.15);
   gStyle->SetPadRightMargin (0.05);
-    
+      
   gStyle->SetPadTickX       (1);
   gStyle->SetPadTickY       (1);
 
@@ -128,7 +128,8 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 
   TFile *f_in_ref = new TFile("../HIN_14_016_comparison/Inclusive_Data_AllPlots.root");
   TFile *f_in_ref2 = new TFile("../FROZEN_QM/particle_yields/Particle_Yields.root");
-  /*
+
+    /*
     if(!is_number){
     cout<<"We don't study weighted correlations by dPhi"<<endl;
     return -1;
@@ -148,7 +149,7 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
   if(!is_number){
     f_jff_pyth = new TFile("../jff_residual/Inclusive_Pythia_JFFResiduals_pTweighted.root");
     f_jff_hyd = new TFile("../jff_residual/Inclusive_Hydjet_JFFResiduals_pTweighted.root");
- 
+    f_spillover = new TFile("../spill_over/Inclusive_Hydjet_SpillOvers_pTweighted.root");
 
   }
 
@@ -321,22 +322,27 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 	if(g==1){
 	  
 	  
-	  TString jff_name =(TString)("JFF_Residual_Eta_Cent0_Cent10_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
-	  if(!is_number) jff_name =(TString)("JFF_Residual_Eta_pTweightedCent0_Cent10_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
+	  TString jff_name =(TString)("Raw_JFF_Residual_Eta_Cent0_Cent10_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
+	  if(!is_number) jff_name =(TString)("Raw_JFF_Residual_Eta_pTweightedCent0_Cent10_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
 	   
+	  //  if(i<4)jff_name.ReplaceAll("Raw_","");
+
 	  jff_residual_dEta[g][i][j] = (TH1D*)f_jff_pyth->Get(jff_name)->Clone(jff_name);
 
 	  jff_name.ReplaceAll("Eta","Phi");
 	  jff_residual_dPhi[g][i][j] = (TH1D*)f_jff_pyth->Get(jff_name)->Clone(jff_name);
 	    
-	  signal_dEta_rebin[g][i][j]->Add(jff_residual_dEta[g][i][0],-1.);
-	  signal_dPhi_rebin[g][i][j]->Add(jff_residual_dPhi[g][i][0],-1.);
+	  	  signal_dEta_rebin[g][i][j]->Add(jff_residual_dEta[g][i][0],-1.);
+	   signal_dPhi_rebin[g][i][j]->Add(jff_residual_dPhi[g][i][0],-1.);
 
 	}else{
 	  cout<<"here"<<endl;
 	  
-	  TString	jff_name =(TString)("JFF_Residual_Eta_"+CBin_strs[j]+"_"+CBin_strs[j+1]+"_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
-	  if(!is_number) jff_name =(TString)("JFF_Residual_Eta_pTweighted"+CBin_strs[j]+"_"+CBin_strs[j+1]+"_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
+	  TString	jff_name =(TString)("Raw_JFF_Residual_Eta_"+CBin_strs[j]+"_"+CBin_strs[j+1]+"_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
+	  if(!is_number) jff_name =(TString)("Raw_JFF_Residual_Eta_pTweighted"+CBin_strs[j]+"_"+CBin_strs[j+1]+"_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]);
+
+
+	  //	  if(i<4)jff_name.ReplaceAll("Raw_","");
 
 	  jff_residual_dEta[g][i][j] = (TH1D*)f_jff_hyd->Get(jff_name)->Clone(jff_name);
 
@@ -345,7 +351,7 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 	  
 
 	  signal_dEta_rebin[g][i][j]->Add(jff_residual_dEta[g][i][j],-1.);
-	  signal_dPhi_rebin[g][i][j]->Add(jff_residual_dPhi[g][i][j],-1.);
+	   signal_dPhi_rebin[g][i][j]->Add(jff_residual_dPhi[g][i][j],-1.);
 
 	  cout<<"and here"<<endl; 
 	}
@@ -359,14 +365,17 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 	  spillover_name.ReplaceAll("Eta","Phi");
 	  spill_over_dPhi[g][i][j] = (TH1D*)f_spillover->Get(spillover_name)->Clone(spillover_name);
 	  spill_over_dPhi2[g][i][j] = (TH1D*)f_spillover2->Get(spillover_name)->Clone((TString)(spillover_name+"old"));
+
+	  cout<<"and here"<<endl;
 	  
 	  if(!is_number){
+	    /*
 	    spill_over_dEta[g][i][j]->Scale(mean_pts[i]);
 	    spill_over_dPhi[g][i][j]->Scale(mean_pts[i]);
 
 	    spill_over_dEta2[g][i][j]->Scale(mean_pts[i]);
 	    spill_over_dPhi2[g][i][j]->Scale(mean_pts[i]);
-
+	    
 	    if(i==0){
 	      spill_over_dEta[g][i][j]->Scale(.3);
 	      spill_over_dPhi[g][i][j]->Scale(.3);
@@ -375,6 +384,7 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 	      spill_over_dPhi2[g][i][j]->Scale(.3);
 
 	    }
+	    */
 	  }
 
 	
@@ -427,9 +437,10 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 	  else  result[g][i][j] = (TH2D*)f_in_pp->Get((TString)("Yield_pTweighted_pp_Cent0_Cent10_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_pp_pTweightedCent0_Cent10_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 	}
 
-	  
-	if(i==0) result[g][i][j]->Scale(1./.3);
-	if(i> 3&& i<nTrkPtBins) result[g][i][j]->Scale(1./4);
+	if(is_number){
+	  if(i==0) result[g][i][j]->Scale(1./.3);
+	  if(i> 3&& i<nTrkPtBins) result[g][i][j]->Scale(1./4);
+	}
 
 	lbin = result[g][i][j]->GetXaxis()->FindBin(-etalim+.0001);
 	rbin = result[g][i][j]->GetXaxis()->FindBin(etalim-.0001);
@@ -510,7 +521,7 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 
 	bc =  signal_dPhi_syst[0][i][j]->GetBinContent(k);
 
-	if(i<4) err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dPhi[0][i][j]->GetBinContent(k)*jff_residual_dPhi[0][i][j]->GetBinContent(k)/4.+spill_over_dPhi2[0][i][j]->GetBinContent(k)*spill_over_dPhi2[0][i][j]->GetBinContent(k)*.51*.51+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
+	if(i<4) err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dPhi[0][i][j]->GetBinContent(k)*jff_residual_dPhi[0][i][j]->GetBinContent(k)/4.+spill_over_dPhi2[0][i][j]->GetBinContent(k)*spill_over_dPhi2[0][i][j]->GetBinContent(k)*.18*.18+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
 
 	else   err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dPhi[0][i][j]->GetBinContent(k)*jff_residual_dPhi[0][i][j]->GetBinContent(k)/4.+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
 
@@ -531,7 +542,7 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 
 	bc =  signal_dEta_syst[0][i][j]->GetBinContent(k);
 	  
-	if(i<4)	  err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dEta[0][i][j]->GetBinError(1)*jff_residual_dEta[0][i][j]->GetBinError(1)/4.+spill_over_dEta[0][i][j]->GetBinError(1)*spill_over_dEta[0][i][j]->GetBinError(1)*.51*.51+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
+	if(i<4)	  err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dEta[0][i][j]->GetBinError(1)*jff_residual_dEta[0][i][j]->GetBinError(1)/4.+spill_over_dEta[0][i][j]->GetBinContent(k)*spill_over_dEta[0][i][j]->GetBinContent(k)*.18*.18+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
 	else  err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dEta[0][i][j]->GetBinError(1)*jff_residual_dEta[0][i][j]->GetBinError(1)/4.+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
 
 	signal_dEta_syst[0][i][j]->SetBinError(k,err);
@@ -635,9 +646,6 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 	  break;
 	}
 
-	signal_max = 1.;
-	signal_min = -.5;
-	 
       }
 
       stacked_min = -3.;
@@ -1766,20 +1774,22 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
     }
 
 
-    bg_err_pbpb->Write();
-    bg_err_pp->Write();
- 
-    me_err_pbpb->Write();
-    me_err_pp->Write();
-
-
-
     c_integral->SaveAs("Integral_Yield.png");
     c_integral->SaveAs("Integral_Yield.pdf");
 
 
 
   }
+
+
+  bg_err_pbpb->Write();
+  bg_err_pp->Write();
+ 
+  me_err_pbpb->Write();
+  me_err_pp->Write();
+
+
+
   
   return 0;
 }

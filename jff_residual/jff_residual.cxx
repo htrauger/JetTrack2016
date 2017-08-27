@@ -24,7 +24,7 @@
 #include "../../HIN-14-016/HIN_14_016_functions.h"
 
 
-Int_t jff_residual(bool is_number = kTRUE){
+Int_t jff_residual(bool is_number = kTRUE, bool quark_gluon = kFALSE){
 
 
   gROOT->ForceStyle();
@@ -43,7 +43,7 @@ Int_t jff_residual(bool is_number = kTRUE){
 
 
 
-  const int nCBins= 4;
+  const int nCBins= 5;
   const int nPtBins=1;
   const int nTrkPtBins=9;
 
@@ -59,7 +59,8 @@ Int_t jff_residual(bool is_number = kTRUE){
   TString PtBin_strs[nPtBins+1] = {"Pt100", "Pt300"};
 
   float CBins[nCBins+1] = {0, 20, 60, 100, 200};
-  TString CBin_strs[nCBins+1] = {"Cent0", "Cent10", "Cent30","Cent50", "Cent100"};
+  TString CBin_strs[nCBins+1] = {"Cent0", "Cent10", "Cent30","Cent50", "Cent100","Cent100"};
+  TString CBin_strs2[nCBins+1] = {"Cent0", "Cent10", "Cent30","Cent50", "Cent70","Cent100"};
  TString CBin_labels[nCBins] = {"Cent. 0-10%", "Cent. 10-30%","Cent. 30-50%","Cent. 50-100%"};
 
   float TrkPtBins[nTrkPtBins+1] = {0.7, 1, 2, 3, 4, 8, 12, 16, 20, 300};
@@ -151,6 +152,18 @@ Int_t jff_residual(bool is_number = kTRUE){
   vector<float> Closure_integral_eta3;
   vector<float> Closure_integral_phi3;
  
+
+
+  vector<float> Closure_integral_eta_mc0;
+  vector<float> Closure_integral_eta_mc1;
+  vector<float> Closure_integral_eta_mc2;
+  vector<float> Closure_integral_eta_mc3;
+
+  vector<float> Closure_integral_eta_data0;
+  vector<float> Closure_integral_eta_data1;
+  vector<float> Closure_integral_eta_data2;
+  vector<float> Closure_integral_eta_data3;
+   
  
   TGraphErrors *Closure_integral_eta_pT[12][4];
   TGraphErrors *Closure_integral_phi_pT[12][4];
@@ -195,6 +208,28 @@ Int_t jff_residual(bool is_number = kTRUE){
   int llimiteta1, rlimiteta1,llimiteta2, rlimiteta2; 
   Double_t check_ymax, check_ymin, dx_eta, dx_phi, bc, err, evalpt, temp1, err1;
 
+
+  double quark_fraction_mc_gen[5];
+  double quark_fraction_data_gen[5];
+  double quark_fraction_mc_reco[5];
+  double quark_fraction_data_reco[5];
+
+
+
+  TFile *f_in_quark_spectra_gen = TFile::Open("../mc_raw_correlations/PbPb_5TeVMC_GenGenSube0_QuarkJets_fixMatch_fineBinTrkCorrs_withTrkCorrEtaSymmV2_finalJFF_noMix.root");
+  TFile *f_in_gluon_spectra_gen = TFile::Open("../mc_raw_correlations/PbPb_5TeVMC_GenGenSube0_GluonJets_fixMatch_fineBinTrkCorrs_withTrkCorrEtaSymmV2_finalJFF_noMix.root");
+  TFile *f_in_quark_spectra_reco = TFile::Open("../mc_raw_correlations/PbPb_5TeVMC_RecoGen_sube0_QuarkOnly_noMix_finalJFFs.root");
+  TFile *f_in_gluon_spectra_reco = TFile::Open("../mc_raw_correlations/PbPb_5TeVMC_RecoGen_sube0_GluonOnly_noMix_finalJFFs.root");
+
+
+  TH1D *q_spectrum_gen[5];
+  TH1D *g_spectrum_gen[5];
+
+
+  TH1D *q_spectrum_reco[5];
+  TH1D *g_spectrum_reco[5];
+
+
   /////////////////////////
 
   etalim = 1.;
@@ -208,13 +243,63 @@ Int_t jff_residual(bool is_number = kTRUE){
   int gend = 8;
 
 
+  for(int j = 0; j<5; j++){
+  
+    q_spectrum_gen[j] = (TH1D*)f_in_quark_spectra_gen->Get((TString) ("GenJet_GenTrack_all_jets_corrpT"+ CBin_strs2[j] + "_" + CBin_strs2[j+1] + "_Pt100_Pt1000"))->Clone((TString) ("Quark_Gen_all_jets_corrpT"+ CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000"));    
+    cout<<"got one"<<endl;
+    g_spectrum_gen[j] = (TH1D*)f_in_gluon_spectra_gen->Get((TString) ("GenJet_GenTrack_all_jets_corrpT"+ CBin_strs2[j] + "_" + CBin_strs2[j+1] + "_Pt100_Pt1000"))->Clone((TString) ("Gluon_Gen_all_jets_corrpT"+ CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000"));    
+
+
+
+    q_spectrum_reco[j] = (TH1D*)f_in_quark_spectra_reco->Get((TString) ("RecoJet_GenTrack_all_jets_corrpT"+ CBin_strs2[j] + "_" + CBin_strs2[j+1] + "_Pt100_Pt1000"))->Clone((TString) ("Quark_Reco_all_jets_corrpT"+ CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000"));    
+
+    g_spectrum_reco[j] = (TH1D*)f_in_gluon_spectra_reco->Get((TString) ("RecoJet_GenTrack_all_jets_corrpT"+ CBin_strs2[j] + "_" + CBin_strs2[j+1] + "_Pt100_Pt1000"))->Clone((TString) ("Gluon_Reco_all_jets_corrpT"+ CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000"));    
+
+    quark_fraction_mc_gen[j] = q_spectrum_gen[j]->Integral()/(q_spectrum_gen[j]->Integral()+g_spectrum_gen[j]->Integral());
+
+    quark_fraction_data_gen[j] = quark_fraction_mc_gen[j]*1.28;
+        
+    quark_fraction_mc_reco[j] = q_spectrum_reco[j]->Integral()/(q_spectrum_reco[j]->Integral()+g_spectrum_reco[j]->Integral());
+
+    quark_fraction_data_reco[j] = quark_fraction_mc_reco[j]*1.28;
+ 
+    if(j==4){
+      q_spectrum_gen[j]->Add(q_spectrum_gen[j-1]);
+      g_spectrum_gen[j]->Add(q_spectrum_gen[j-1]);
+      quark_fraction_mc_gen[j-1] = q_spectrum_gen[j]->Integral()/(q_spectrum_gen[j]->Integral()+g_spectrum_gen[j]->Integral());
+      quark_fraction_data_gen[j-1] = quark_fraction_mc_gen[j]*1.28;
+
+      q_spectrum_reco[j]->Add(q_spectrum_reco[j-1]);
+      g_spectrum_reco[j]->Add(q_spectrum_reco[j-1]);
+      quark_fraction_mc_reco[j-1] = q_spectrum_reco[j]->Integral()/(q_spectrum_reco[j]->Integral()+g_spectrum_reco[j]->Integral());
+      quark_fraction_data_reco[j-1] = quark_fraction_mc_reco[j]*1.28;
+  
+    }
+
+    cout<<j<<" "<<quark_fraction_mc_gen[j]<<" "<<quark_fraction_mc_reco[j]<<" "<<quark_fraction_data_gen[j]<<" "<<quark_fraction_data_reco[j]<<endl;
+     
+  }
+  /*
+  for(int j = 0; j<4; j++){
+
+    quark_fraction_mc_gen[j] = 0.;
+    
+    quark_fraction_mc_reco[j] = 0;
+    quark_fraction_data_gen[j] = 0;
+    quark_fraction_data_reco[j] = 0;
+
+  }
+
+  */
+
+  //return -1;
+
   for(int g=gstart; g<gend; g++){
 
 
     cout<<"starting "<<g<<endl;
     //  There will only be one big "g-loop".
     
-    if(g>1&&g<6)continue;
     switch(g){
 
     case 0:
@@ -238,6 +323,47 @@ Int_t jff_residual(bool is_number = kTRUE){
       else   fout[g] = new TFile("Inclusive_Pythia_JFFResiduals_pTweighted.root", "RECREATE");
       break; 
 
+ 
+    case 2:
+      fin[g] = new TFile("../me_correct/HydJet_RecoJet_GenTrack_Sube0_Inclusive_Correlations_QuarkOnly.root","READ");
+      // fin[g] = new TFile("../me_correct/HydJet_GenJet_GenTrack_Inclusive_Correlations.root","READ");
+           
+      mc_type_code = 4;
+      if(is_number)  jettype = "";
+      else jettype = "pTweighted";
+      break;
+
+    case 3:
+      fin[g] = new TFile("../me_correct/HydJet_GenJet_GenTrack_Sube0_Inclusive_Correlations_QuarkOnly.root","READ");
+      // fin[g] = new TFile("../me_correct/HydJet_RecoJet_RecoTrack_Inclusive_Correlations.root","READ");
+           
+      mc_type_code = 2;
+      if(is_number)  jettype = "";
+      else jettype = "pTweighted";
+      jettype2 = "Inclusive";
+      break;
+  
+  case 4:
+      fin[g] = new TFile("../me_correct/HydJet_RecoJet_GenTrack_Sube0_Inclusive_Correlations_GluonOnly.root","READ");
+      // fin[g] = new TFile("../me_correct/HydJet_RecoJet_RecoTrack_Inclusive_Correlations.root","READ");
+           
+      mc_type_code = 2;
+      if(is_number)  jettype = "";
+      else jettype = "pTweighted";
+      jettype2 = "Inclusive";
+      break;
+    case 5:
+      fin[g] = new TFile("../me_correct/HydJet_GenJet_GenTrack_Sube0_Inclusive_Correlations_GluonOnly.root","READ");
+      // fin[g] = new TFile("../me_correct/HydJet_GenJet_GenTrack_Inclusive_Correlations.root","READ");
+           
+      mc_type_code = 4;
+      if(is_number)  jettype = "";
+      else jettype = "pTweighted";
+
+      jettype2 = "Inclusive_";
+   
+      break;
+
     case 6:
       fin[g] = new TFile("../me_correct/HydJet_RecoJet_GenTrack_Sube0_Inclusive_Correlations.root","READ");
       // fin[g] = new TFile("../me_correct/HydJet_RecoJet_RecoTrack_Inclusive_Correlations.root","READ");
@@ -247,6 +373,7 @@ Int_t jff_residual(bool is_number = kTRUE){
       else jettype = "pTweighted";
       jettype2 = "Inclusive";
       break;
+
     case 7:
       fin[g] = new TFile("../me_correct/HydJet_GenJet_GenTrack_Sube0_Inclusive_Correlations.root","READ");
       // fin[g] = new TFile("../me_correct/HydJet_GenJet_GenTrack_Inclusive_Correlations.root","READ");
@@ -259,6 +386,10 @@ Int_t jff_residual(bool is_number = kTRUE){
       if(is_number)   fout[g] = new TFile("Inclusive_Hydjet_JFFResiduals.root", "RECREATE");
       else    fout[g] = new TFile("Inclusive_Hydjet_JFFResiduals_pTweighted.root", "RECREATE");
       break;
+
+
+
+
  
     default: 
       cout<<"Invalid input code for inclusive studies<<endl"<<endl;
@@ -287,13 +418,19 @@ Int_t jff_residual(bool is_number = kTRUE){
 
       for (int j=0; j<4; j++){
 
-	if(g<6&&j>0)continue;
+	if(g<2&&j>0)continue;
        
 
-	TString in_name = "Yield_BkgSub_"; in_name+=jettype;in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; 
-	//TString in_name = "Raw_Yield_"; in_name+=jettype;in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; 
-	if(g==1)	in_name+= "_Pt100_Pt1000_"; 
-	else in_name+= "_Pt100_Pt1000_"; 
+	TString in_name = "Raw_Yield_"; 
+	//	if(i>3) in_name = "Raw_Yield_";
+	if(g==3||g==5){	
+	  in_name+=jettype;in_name+= CBin_strs[2]; in_name+="_"; in_name+= CBin_strs[3]; 
+	}else{
+	  in_name+=jettype;in_name+= CBin_strs[j]; in_name+="_"; in_name+= CBin_strs[j+1]; 
+	}
+
+	in_name+= "_Pt100_Pt1000_"; 
+
 	in_name+=TrkPtBin_strs[i]; in_name+="_"; in_name+=TrkPtBin_strs[i+1]; 
 
 
@@ -311,6 +448,22 @@ Int_t jff_residual(bool is_number = kTRUE){
 	    result[g][i][j]->Scale(1/.3);
 	  }
 	}
+
+	/*
+	if(g==4){
+	  if(j==0){
+	    result[g][i][j]->Scale(0.62);
+	    result[g][i][j]->Add( result[g-2][i][j],0.38);
+	  }else{
+	    result[g][i][j]->Scale(0.56);
+	    result[g][i][j]->Add( result[g-2][i][j],0.44);
+	  }
+	}	else if(g==5){
+	  result[g][i][j]->Scale(0.71);
+	  result[g][i][j]->Add( result[g-2][i][j],0.29);
+
+	}
+	*/
 	//-------------------------------
 	//dEta projection
 	//------------------------
@@ -411,19 +564,37 @@ Int_t jff_residual(bool is_number = kTRUE){
 	
 	eta_proj_rebin[g][i][j]->SetLineColor(kBlack);
 	eta_proj_rebin[g][i][j]->SetMarkerColor(kBlack);
-	eta_proj_rebin[g][i][j]->SetMarkerStyle(20);
+	if(g%2==0)	eta_proj_rebin[g][i][j]->SetMarkerStyle(20);
+	else 	eta_proj_rebin[g][i][j]->SetMarkerStyle(4);
 	eta_proj_rebin[g][i][j]->SetMarkerSize(1);
 	eta_proj_rebin[g][i][j]->SetMinimum(check_ymin);
 	eta_proj_rebin[g][i][j]->SetMaximum(check_ymax);
 
 	phi_proj_rebin[g][i][j]->SetLineColor(kBlack);
 	phi_proj_rebin[g][i][j]->SetMarkerColor(kBlack);
-	phi_proj_rebin[g][i][j]->SetMarkerStyle(20);
+	if(g%2==0)	phi_proj_rebin[g][i][j]->SetMarkerStyle(20);
+	else 	phi_proj_rebin[g][i][j]->SetMarkerStyle(4);
 	phi_proj_rebin[g][i][j]->SetMarkerSize(1);
 	phi_proj_rebin[g][i][j]->SetMinimum(check_ymin);
 	phi_proj_rebin[g][i][j]->SetMaximum(check_ymax);
 
-	if(g<6){
+	if(g<2){
+	  phi_proj_rebin[g][i][j]->SetLineColor(kGreen);
+	  phi_proj_rebin[g][i][j]->SetMarkerColor(kGreen);
+	  eta_proj_rebin[g][i][j]->SetLineColor(kGreen);
+	  eta_proj_rebin[g][i][j]->SetMarkerColor(kGreen);
+	}
+
+
+	if(g>1&&g<4){
+	  phi_proj_rebin[g][i][j]->SetLineColor(kBlue);
+	  phi_proj_rebin[g][i][j]->SetMarkerColor(kBlue);
+	  eta_proj_rebin[g][i][j]->SetLineColor(kBlue);
+	  eta_proj_rebin[g][i][j]->SetMarkerColor(kBlue);
+	}
+
+
+	if(g>3&&g<6){
 	  phi_proj_rebin[g][i][j]->SetLineColor(kRed);
 	  phi_proj_rebin[g][i][j]->SetMarkerColor(kRed);
 	  eta_proj_rebin[g][i][j]->SetLineColor(kRed);
@@ -450,7 +621,7 @@ Int_t jff_residual(bool is_number = kTRUE){
 	jff_residual_eta[g][i][j]->SetMinimum(check_ymin-1.);
 	jff_residual_eta[g][i][j]->SetMaximum(check_ymax-1.);
 
-	if(i>3){
+	if(!is_number&&i>3){
 	  jff_residual_eta[g][i][j]->SetMinimum(-10.);
 	  jff_residual_eta[g][i][j]->SetMaximum(11.);
 	}
@@ -458,7 +629,7 @@ Int_t jff_residual(bool is_number = kTRUE){
 
 	if(is_number){
 	  jff_residual_eta[g][i][j]->SetMinimum(-1.);
-	  jff_residual_eta[g][i][j]->SetMaximum(1.);
+	  jff_residual_eta[g][i][j]->SetMaximum(1.5);
 	}
 	eta_proj_rebin[g-1][i][j]->Write();
 	eta_proj_rebin[g][i][j]->Write();
@@ -477,15 +648,15 @@ Int_t jff_residual(bool is_number = kTRUE){
 	jff_residual_phi[g][i][j]->SetMinimum(check_ymin-1.);
 	jff_residual_phi[g][i][j]->SetMaximum(check_ymax-1.);
 	
-	if(i>3){
+	if(!is_number&&i>3){
 	  jff_residual_phi[g][i][j]->SetMinimum(-10.);
 	  jff_residual_phi[g][i][j]->SetMaximum(11.);
 	}
 
 
 	if(is_number){
-	  jff_residual_eta[g][i][j]->SetMinimum(-1.);
-	  jff_residual_eta[g][i][j]->SetMaximum(1.);
+	  jff_residual_phi[g][i][j]->SetMinimum(-1.);
+	  jff_residual_phi[g][i][j]->SetMaximum(1.5);
 	}
 
 
@@ -494,7 +665,7 @@ Int_t jff_residual(bool is_number = kTRUE){
 	jff_residual_phi[g][i][j]->Write();
 
       	      
-	if((i==0&&j==0)||(g%2!=0&&i==0)){
+	if((i==0&&j==0)||(g<2&&i==0)){
 	  Closure_integral_eta0.clear();
 	  Closure_integral_phi0.clear();
 	  Closure_integral_eta1.clear();
@@ -510,7 +681,8 @@ Int_t jff_residual(bool is_number = kTRUE){
 	     
 	double Yield_eta = jff_residual_eta[g][i][j]->Integral(llimiteta,rlimiteta,"width");	      
 
-	//	    if(Yield_eta<0.){Yield_eta=0.;}
+
+	cout<<"Yield_eta"<<" "<<g<<" "<<i<<" "<<j<<" "<<Yield_eta<<endl;
 
 	switch(j){
 	case 0:
@@ -532,11 +704,95 @@ Int_t jff_residual(bool is_number = kTRUE){
 	}
       
 
-	cout<<g<<" "<<i<<" "<<j<<" "<<Yield_eta<<endl;
-
-	if(g==7){
-	
+	if(g==7){   	
 	  corr_canvas_eta[g][i]->cd(4-j);
+
+
+	  eta_proj_rebin[g+2][i][j] = (TH1D*)eta_proj_rebin[g-4][i][j]->Clone(Form("QuarkPlusGluonGen%d%d",i,j));
+	  eta_proj_rebin[g+1][i][j] = (TH1D*)eta_proj_rebin[g-5][i][j]->Clone(Form("QuarkPlusGluonReco%d%d",i,j));
+
+	  eta_proj_rebin[g+2][i][j]->Scale(quark_fraction_mc_gen[j]);
+	  eta_proj_rebin[g+2][i][j]->Add( eta_proj_rebin[g-2][i][j],(1-quark_fraction_mc_gen[j]));
+	 
+	  eta_proj_rebin[g+1][i][j]->Scale(quark_fraction_mc_reco[j]);
+	  eta_proj_rebin[g+1][i][j]->Add( eta_proj_rebin[g-3][i][j],(1-quark_fraction_mc_reco[j]));
+	  
+	  jff_residual_eta[g+2][i][j] = (TH1D*)eta_proj_rebin[g+1][i][j]->Clone(Form("JFFMC%d%d",i,j));
+	  jff_residual_eta[g+2][i][j]->Add(eta_proj_rebin[g+2][i][j],-1.);
+
+
+
+	  eta_proj_rebin[g+4][i][j] = (TH1D*)eta_proj_rebin[g-4][i][j]->Clone(Form("QuarkPlusGluonGenData%d%d",i,j));
+	  eta_proj_rebin[g+3][i][j] = (TH1D*)eta_proj_rebin[g-5][i][j]->Clone(Form("QuarkPlusGluonRecoData%d%d",i,j));
+	 
+	  eta_proj_rebin[g+4][i][j]->Scale(quark_fraction_data_gen[j]);
+	  eta_proj_rebin[g+4][i][j]->Add( eta_proj_rebin[g-2][i][j],(1-quark_fraction_data_gen[j]));
+	
+	  eta_proj_rebin[g+3][i][j]->Scale(quark_fraction_data_reco[j]);
+	  eta_proj_rebin[g+3][i][j]->Add( eta_proj_rebin[g-3][i][j],(1-quark_fraction_data_reco[j]));
+
+	  jff_residual_eta[g+4][i][j] = (TH1D*)eta_proj_rebin[g+3][i][j]->Clone(Form("JFFData%d%d",i,j));
+	  jff_residual_eta[g+4][i][j]->Add(eta_proj_rebin[g+4][i][j],-1.);
+
+	  eta_proj_rebin[g+2][i][j]->SetMarkerColor(kViolet);
+	  eta_proj_rebin[g+2][i][j]->SetLineColor(kViolet);
+	  eta_proj_rebin[g+1][i][j]->SetMarkerColor(kViolet);
+	  eta_proj_rebin[g+1][i][j]->SetLineColor(kViolet);
+	  jff_residual_eta[g+2][i][j]->SetMarkerColor(kViolet);
+	  jff_residual_eta[g+2][i][j]->SetLineColor(kViolet);
+
+	  eta_proj_rebin[g+4][i][j]->SetMarkerColor(kOrange);
+	  eta_proj_rebin[g+4][i][j]->SetLineColor(kOrange);
+	  eta_proj_rebin[g+3][i][j]->SetMarkerColor(kOrange);
+	  eta_proj_rebin[g+3][i][j]->SetLineColor(kOrange);
+	  jff_residual_eta[g+4][i][j]->SetMarkerColor(kOrange);
+	  jff_residual_eta[g+4][i][j]->SetLineColor(kOrange);
+
+
+
+
+	  Yield_eta = jff_residual_eta[g+2][i][j]->Integral(llimiteta,rlimiteta,"width");	      
+
+
+	  cout<<"Yield_eta"<<" "<<g<<" "<<i<<" "<<j<<" "<<Yield_eta<<endl;
+
+	  switch(j){
+	  case 0:
+	    Closure_integral_eta_mc0.push_back(Yield_eta);
+	    break;
+	  case 1:
+	    Closure_integral_eta_mc1.push_back(Yield_eta);
+	    break;
+	  case 2:
+	    Closure_integral_eta_mc2.push_back(Yield_eta);
+	    break;
+	  case 3:
+	    Closure_integral_eta_mc3.push_back(Yield_eta);
+	    break;
+	  }
+
+	  Yield_eta = jff_residual_eta[g+4][i][j]->Integral(llimiteta,rlimiteta,"width");	      
+
+
+	  cout<<"Yield_eta"<<" "<<g<<" "<<i<<" "<<j<<" "<<Yield_eta<<endl;
+
+	  switch(j){
+	  case 0:
+	    Closure_integral_eta_data0.push_back(Yield_eta);
+	    break;
+	  case 1:
+	    Closure_integral_eta_data1.push_back(Yield_eta);
+	    break;
+	  case 2:
+	    Closure_integral_eta_data2.push_back(Yield_eta);
+	    break;
+	  case 3:
+	    Closure_integral_eta_data3.push_back(Yield_eta);
+	    break;
+	  }
+      
+
+
 
 
 	  eta_proj_rebin[g][i][j]->SetMarkerStyle(4);
@@ -549,12 +805,22 @@ Int_t jff_residual(bool is_number = kTRUE){
 	  
 	  eta_proj_rebin[g-1][i][j]->Draw("same");
 
-	  eta_proj_rebin[g-7][i][0]->Draw("same");
-	  eta_proj_rebin[g-6][i][0]->SetMarkerStyle(4);
-	  eta_proj_rebin[g-6][i][0]->Draw("same");
+	  // eta_proj_rebin[g-7][i][0]->Draw("same");
+	  // eta_proj_rebin[g-6][i][0]->SetMarkerStyle(4);
+	  //eta_proj_rebin[g-6][i][0]->Draw("same");
 
 	  //	  drawlabels(g,i,j);
+	  if(quark_gluon){
+	    eta_proj_rebin[2][i][j]->Draw("same");
+	    eta_proj_rebin[3][i][j]->Draw("same");
+	    eta_proj_rebin[4][i][j]->Draw("same");
+	    eta_proj_rebin[5][i][j]->Draw("same");
+	    eta_proj_rebin[8][i][j]->Draw("same");
+	    eta_proj_rebin[9][i][j]->Draw("same");
+	    eta_proj_rebin[10][i][j]->Draw("same");
+	    eta_proj_rebin[11][i][j]->Draw("same");
 
+	  }
 
 	  if(j==3){
 	    labels = new TPaveText(0.18,0.75,0.45,0.95,"NDC");
@@ -584,14 +850,26 @@ Int_t jff_residual(bool is_number = kTRUE){
 	  jff_residual_eta[g][i][j]->GetXaxis()->CenterTitle();
 	  
 	  jff_residual_eta[g][i][j]->Draw();
-	  jff_residual_eta[g-6][i][0]->Draw("same");
+	  //  jff_residual_eta[g-6][i][0]->Draw("same");
+
+	  if(quark_gluon){
+	    //    jff_residual_eta[3][i][j]->Draw("same");
+	    //jff_residual_eta[5][i][j]->Draw("same");  
+	    jff_residual_eta[9][i][j]->Draw("same");
+	    jff_residual_eta[11][i][j]->Draw("same");
+
+
+	  }
 	  l_eta->Draw();
 	  
-	  TLegend *legend = new TLegend(0.2,0.75,0.9,0.95);
-	  legend->AddEntry( eta_proj_rebin[g-1][i][j],"P+H RecoGen");
-	  legend->AddEntry( eta_proj_rebin[g][i][j],"P+H GenGen");
-	  legend->AddEntry( eta_proj_rebin[g-7][i][0],"Pythia RecoGen");
-	  legend->AddEntry( eta_proj_rebin[g-6][i][0],"Pythia GenGen");
+	  TLegend *legend = new TLegend(0.2,0.7,0.9,0.99);
+	  legend->AddEntry( eta_proj_rebin[g-1][i][j],"Nominal RecoGen");
+	  legend->AddEntry( eta_proj_rebin[g][i][j],"Nominal GenGen");
+	  //  legend->AddEntry( eta_proj_rebin[g-7][i][0],"Pythia");
+	  // legend->AddEntry( eta_proj_rebin[2][i][0],"Quark Jets");
+	  // legend->AddEntry( eta_proj_rebin[4][i][0],"Gluon Jets");
+	  legend->AddEntry( eta_proj_rebin[8][i][0],"Q+G MC weights");
+	  legend->AddEntry( eta_proj_rebin[10][i][0],"Q+G Data weights");
 
 	  legend->SetTextSize(0.05);
 	  legend->SetLineColor(kWhite);
@@ -603,6 +881,50 @@ Int_t jff_residual(bool is_number = kTRUE){
 
 	  corr_canvas_phi[g][i]->cd(4-j);
 
+
+
+	  phi_proj_rebin[g+2][i][j] = (TH1D*)phi_proj_rebin[g-4][i][j]->Clone(Form("QuarkPlusGluonGen%d%d",i,j));
+	  phi_proj_rebin[g+1][i][j] = (TH1D*)phi_proj_rebin[g-5][i][j]->Clone(Form("QuarkPlusGluonReco%d%d",i,j));
+
+	  phi_proj_rebin[g+2][i][j]->Scale(quark_fraction_mc_gen[j]);
+	  phi_proj_rebin[g+2][i][j]->Add( phi_proj_rebin[g-2][i][j],(1-quark_fraction_mc_gen[j]));
+	 
+	  phi_proj_rebin[g+1][i][j]->Scale(quark_fraction_mc_reco[j]);
+	  phi_proj_rebin[g+1][i][j]->Add( phi_proj_rebin[g-3][i][j],(1-quark_fraction_mc_reco[j]));
+	  
+
+	  jff_residual_phi[g+2][i][j] = (TH1D*)phi_proj_rebin[g+1][i][j]->Clone(Form("JFFMC%d%d",i,j));
+	  jff_residual_phi[g+2][i][j]->Add(phi_proj_rebin[g+2][i][j],-1.);
+
+	  phi_proj_rebin[g+4][i][j] = (TH1D*)phi_proj_rebin[g-4][i][j]->Clone(Form("QuarkPlusGluonGenData%d%d",i,j));
+	  phi_proj_rebin[g+3][i][j] = (TH1D*)phi_proj_rebin[g-5][i][j]->Clone(Form("QuarkPlusGluonRecoData%d%d",i,j));
+	 
+	  phi_proj_rebin[g+4][i][j]->Scale(quark_fraction_data_gen[j]);
+	  phi_proj_rebin[g+4][i][j]->Add( phi_proj_rebin[g-2][i][j],(1-quark_fraction_data_gen[j]));
+	 
+	  phi_proj_rebin[g+3][i][j]->Scale(quark_fraction_data_reco[j]);
+	  phi_proj_rebin[g+3][i][j]->Add( phi_proj_rebin[g-3][i][j],(1-quark_fraction_data_reco[j]));
+
+	  
+	  jff_residual_phi[g+4][i][j] = (TH1D*)phi_proj_rebin[g+3][i][j]->Clone(Form("JFFData%d%d",i,j));
+	  jff_residual_phi[g+4][i][j]->Add(phi_proj_rebin[g+4][i][j],-1.);
+
+	  phi_proj_rebin[g+2][i][j]->SetMarkerColor(kViolet);
+	  phi_proj_rebin[g+2][i][j]->SetLineColor(kViolet);
+	  phi_proj_rebin[g+1][i][j]->SetMarkerColor(kViolet);
+	  phi_proj_rebin[g+1][i][j]->SetLineColor(kViolet);
+	  jff_residual_phi[g+2][i][j]->SetMarkerColor(kViolet);
+	  jff_residual_phi[g+2][i][j]->SetLineColor(kViolet);
+
+	  phi_proj_rebin[g+4][i][j]->SetMarkerColor(kOrange);
+	  phi_proj_rebin[g+4][i][j]->SetLineColor(kOrange);
+	  phi_proj_rebin[g+3][i][j]->SetMarkerColor(kOrange);
+	  phi_proj_rebin[g+3][i][j]->SetLineColor(kOrange);
+	  jff_residual_phi[g+4][i][j]->SetMarkerColor(kOrange);
+	  jff_residual_phi[g+4][i][j]->SetLineColor(kOrange);
+
+
+
 	  phi_proj_rebin[g][i][j]->SetMarkerStyle(4);
 	  if(j==3) phi_proj_rebin[g][i][j]->GetYaxis()->SetLabelSize(0.06);
 	  else phi_proj_rebin[g][i][j]->GetYaxis()->SetLabelSize(0.0);
@@ -612,9 +934,22 @@ Int_t jff_residual(bool is_number = kTRUE){
 	  
 	  phi_proj_rebin[g-1][i][j]->Draw("same");
 
-	  phi_proj_rebin[g-7][i][0]->Draw("same");
-	  phi_proj_rebin[g-6][i][0]->SetMarkerStyle(4);
-	  phi_proj_rebin[g-6][i][0]->Draw("same");
+	  //	  phi_proj_rebin[g-7][i][0]->Draw("same");
+	  // phi_proj_rebin[g-6][i][0]->SetMarkerStyle(4);
+	  // phi_proj_rebin[g-6][i][0]->Draw("same");
+
+	  if(quark_gluon){
+	    // phi_proj_rebin[2][i][j]->Draw("same");
+	    //    phi_proj_rebin[3][i][j]->Draw("same");
+	    //phi_proj_rebin[4][i][j]->Draw("same");
+	    //phi_proj_rebin[5][i][j]->Draw("same");
+	    phi_proj_rebin[8][i][j]->Draw("same");
+	    phi_proj_rebin[9][i][j]->Draw("same");
+	    phi_proj_rebin[10][i][j]->Draw("same");
+	    phi_proj_rebin[11][i][j]->Draw("same");
+	    
+
+	  }
 
 	  //	  drawlabels(g,i,j);
 
@@ -646,398 +981,476 @@ Int_t jff_residual(bool is_number = kTRUE){
 	  jff_residual_phi[g][i][j]->GetXaxis()->CenterTitle();
 	  
 	  jff_residual_phi[g][i][j]->Draw();
-	  jff_residual_phi[g-6][i][0]->Draw("same");
+	  //	  jff_residual_phi[g-6][i][0]->Draw("same");
+
+
+	  if(quark_gluon){
+	    //	    jff_residual_phi[3][i][j]->Draw("same");
+	    // jff_residual_phi[5][i][j]->Draw("same");
+	    jff_residual_phi[9][i][j]->Draw("same");
+	    jff_residual_phi[11][i][j]->Draw("same");
+
+
+
+	  }
+
 	  l_phi->Draw();
 	
 	  if(j==3)legend->Draw();
 
-	}
-     
+	  if(g==7){
+
+	    TString save_name_eta = "JFF_Residual_Corrections_Eta_";
+	    save_name_eta+=jettype2;
+	    save_name_eta+=jettype;
+	    save_name_eta+=TrkPtBin_strs[i]; save_name_eta+="_"; save_name_eta+=TrkPtBin_strs[i+1];
+	    if(!is_number)save_name_eta+="_pTweighted";
+	    save_name_eta+=".png";
+	    corr_canvas_eta[g][i]->SaveAs(save_name_eta);
+	    save_name_eta.ReplaceAll(".png",".pdf");
+	    corr_canvas_eta[g][i]->SaveAs(save_name_eta);
+
+	    TString save_name_phi = "JFF_Residual_Corrections_Phi_";
+	    save_name_phi+=jettype2;
+	    save_name_phi+=jettype;
+	    save_name_phi+=TrkPtBin_strs[i]; save_name_phi+="_"; save_name_phi+=TrkPtBin_strs[i+1];
+	    if(!is_number)save_name_phi+="_pTweighted";
+	    save_name_phi+=".png";
+	    corr_canvas_phi[g][i]->SaveAs(save_name_phi);
+	    save_name_phi.ReplaceAll(".png",".pdf");
+	    corr_canvas_phi[g][i]->SaveAs(save_name_phi);
+
+	  }
+
+	}//i
       }
+    }
+      // if(is_number){
+
+    cout<<"starting integrals"<<endl;
+    TString integral_eta_pT_name = "integral_eta_pT";
+    integral_eta_pT_name+=g;
+  
+    cintegral_eta_pT[g] = new TCanvas(integral_eta_pT_name,"",10,10,1500,500);
+    cintegral_eta_pT[g]->Divide(4,1,0.,0.);
+
+
+    TString integral_eta_cent_name = "integral_eta_cent";
+    integral_eta_cent_name+=g;
+
+    cintegral_eta_cent[g] = new TCanvas(integral_eta_cent_name,"",10,10,3000,500);
+    cintegral_eta_cent[g]->Divide(8,1,0.,0.);
+
+  
+
+    for(int j = 0; j<4; j++){
+
+      cout<<"here "<<j<<endl;
+
+      if(g<2&&j>0)continue;
+
+      //    in_name = make_name("Result_",g,3,j,0,centlabel,pTlabel);
+
+
+      cintegral_eta_pT[g]->cd(4-j);
+
+      TString ClosureIntegralEtaPt_name = in_name;
+      ClosureIntegralEtaPt_name.ReplaceAll("Yield_BkgSub","Closure_Integral_Eta");
+      ClosureIntegralEtaPt_name.ReplaceAll("_TrkPt4_TrkPt8","");
+      ClosureIntegralEtaPt_name.ReplaceAll("_Pt100_Pt1000",jettype);
+      ClosureIntegralEtaPt_name+=g;
  
-      if(g==7){
+      /*
+	cout<<"Sizes: "<<pTbin_centers.size()<<" "<<Closure_integral_eta0.size()<<endl;
 
-	TString save_name_eta = "JFF_Residual_Corrections_Eta_";
-	save_name_eta+=jettype2;
-	save_name_eta+=jettype;
-	save_name_eta+=TrkPtBin_strs[i]; save_name_eta+="_"; save_name_eta+=TrkPtBin_strs[i+1];
-	if(!is_number)save_name_eta+="_pTweighted";
-	save_name_eta+=".png";
-	corr_canvas_eta[g][i]->SaveAs(save_name_eta);
-	save_name_eta.ReplaceAll(".png",".pdf");
-	corr_canvas_eta[g][i]->SaveAs(save_name_eta);
+	if(g>5){
+	for(int k = 0; k<Closure_integral_eta0.size(); k++){
+	cout<<Closure_integral_eta0.at(k)<<endl;
+	}
+	}
+      */
+      switch(j){
+      case 0:
+	Closure_integral_eta_pT[g][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta0[0],&pTbin_errors[0],&closure_integral_errors[0]);
+	Closure_integral_eta_pT[g+2][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta_mc0[0],&pTbin_errors[0],&closure_integral_errors[0]);
+	Closure_integral_eta_pT[g+4][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta_data0[0],&pTbin_errors[0],&closure_integral_errors[0]);
+	break;
+      case 1:
+	Closure_integral_eta_pT[g][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta1[0],&pTbin_errors[0],&closure_integral_errors[0]);
+	Closure_integral_eta_pT[g+2][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta_mc1[0],&pTbin_errors[0],&closure_integral_errors[0]);
+	Closure_integral_eta_pT[g+4][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta_data1[0],&pTbin_errors[0],&closure_integral_errors[0]);
 
-	TString save_name_phi = "JFF_Residual_Corrections_Phi_";
-	save_name_phi+=jettype2;
-	save_name_phi+=jettype;
-	save_name_phi+=TrkPtBin_strs[i]; save_name_phi+="_"; save_name_phi+=TrkPtBin_strs[i+1];
-	if(!is_number)save_name_phi+="_pTweighted";
-	save_name_phi+=".png";
-	corr_canvas_phi[g][i]->SaveAs(save_name_phi);
-	save_name_phi.ReplaceAll(".png",".pdf");
-	corr_canvas_phi[g][i]->SaveAs(save_name_phi);
+	break;
+      case 2:
+	Closure_integral_eta_pT[g][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta2[0],&pTbin_errors[0],&closure_integral_errors[0]);
+	Closure_integral_eta_pT[g+2][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta_mc2[0],&pTbin_errors[0],&closure_integral_errors[0]);
+	Closure_integral_eta_pT[g+4][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta_data2[0],&pTbin_errors[0],&closure_integral_errors[0]);
+
+	break;
+      case 3:
+	Closure_integral_eta_pT[g][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta3[0],&pTbin_errors[0],&closure_integral_errors[0]);
+	Closure_integral_eta_pT[g+2][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta_mc3[0],&pTbin_errors[0],&closure_integral_errors[0]);
+	Closure_integral_eta_pT[g+4][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta_data3[0],&pTbin_errors[0],&closure_integral_errors[0]);
+
+	break;
 
       }
 
-    }//i
-  
-
-    if(is_number){
-
-      cout<<"starting integrals"<<endl;
-      TString integral_eta_pT_name = "integral_eta_pT";
-      integral_eta_pT_name+=g;
-  
-      cintegral_eta_pT[g] = new TCanvas(integral_eta_pT_name,"",10,10,1500,500);
-      cintegral_eta_pT[g]->Divide(4,1,0.,0.);
-
-
-      TString integral_eta_cent_name = "integral_eta_cent";
-      integral_eta_cent_name+=g;
-
-      cintegral_eta_cent[g] = new TCanvas(integral_eta_cent_name,"",10,10,3000,500);
-      cintegral_eta_cent[g]->Divide(8,1,0.,0.);
-
-  
-  
-      for(int j = 0; j<4; j++){
-
-	cout<<"here "<<j<<endl;
-
-	if(g<6&&j>0)continue;
-
-	//    in_name = make_name("Result_",g,3,j,0,centlabel,pTlabel);
-
-
-	cintegral_eta_pT[g]->cd(4-j);
-
-	TString ClosureIntegralEtaPt_name = in_name;
-	ClosureIntegralEtaPt_name.ReplaceAll("Yield_BkgSub","Closure_Integral_Eta");
-	ClosureIntegralEtaPt_name.ReplaceAll("_TrkPt4_TrkPt8","");
-	ClosureIntegralEtaPt_name.ReplaceAll("_Pt100_Pt1000",jettype);
-	ClosureIntegralEtaPt_name+=g;
- 
-
-	cout<<"Sizes: "<<pTbin_centers.size()<<" "<<Closure_integral_eta3.size()<<endl;
-
-	switch(j){
-	case 0:
-	  Closure_integral_eta_pT[g][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta0[0],&pTbin_errors[0],&closure_integral_errors[0]);
-	  break;
-	case 1:
-	  Closure_integral_eta_pT[g][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta1[0],&pTbin_errors[0],&closure_integral_errors[0]);
-	  break;
-	case 2:
-	  Closure_integral_eta_pT[g][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta2[0],&pTbin_errors[0],&closure_integral_errors[0]);
-	  break;
-	case 3:
-	  Closure_integral_eta_pT[g][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&Closure_integral_eta3[0],&pTbin_errors[0],&closure_integral_errors[0]);
-	  break;
-
-	}
-
-	Closure_integral_eta_pT[g][j]->SetName(ClosureIntegralEtaPt_name);
-	cout<<g<<ClosureIntegralEtaPt_name<<endl;
+      Closure_integral_eta_pT[g][j]->SetName(ClosureIntegralEtaPt_name);
+      cout<<g<<ClosureIntegralEtaPt_name<<endl;
       
 
-	Closure_integral_eta_pT[g][j]->SetMarkerColor(1);
-	Closure_integral_eta_pT[g][j]->SetMarkerSize(1);
-	Closure_integral_eta_pT[g][j]->SetLineColor(1);
-	Closure_integral_eta_pT[g][j]->SetMarkerStyle(10);
+      Closure_integral_eta_pT[g][j]->SetMarkerColor(1);
+      Closure_integral_eta_pT[g][j]->SetMarkerSize(1);
+      Closure_integral_eta_pT[g][j]->SetLineColor(1);
+      Closure_integral_eta_pT[g][j]->SetMarkerStyle(10);
+
+      Closure_integral_eta_pT[g+2][j]->SetMarkerColor(kViolet);
+      Closure_integral_eta_pT[g+2][j]->SetLineColor(kViolet);
+      Closure_integral_eta_pT[g+2][j]->SetMarkerSize(1);
+      Closure_integral_eta_pT[g+2][j]->SetLineColor(1);
+      Closure_integral_eta_pT[g+2][j]->SetMarkerStyle(10);
+
+      Closure_integral_eta_pT[g+4][j]->SetMarkerColor(kOrange);
+      Closure_integral_eta_pT[g+4][j]->SetLineColor(kOrange);
+      Closure_integral_eta_pT[g+4][j]->SetMarkerSize(1);
+      Closure_integral_eta_pT[g+4][j]->SetLineColor(1);
+      Closure_integral_eta_pT[g+4][j]->SetMarkerStyle(10);
 
 
-	Closure_integral_eta_pT[g][j]->SetMinimum(-.5);
-	Closure_integral_eta_pT[g][j]->SetMaximum(.5);
+
+      Closure_integral_eta_pT[g][j]->SetMinimum(-1.5);
+      Closure_integral_eta_pT[g][j]->SetMaximum(1.5);
+
+      if(!is_number){
+
+	Closure_integral_eta_pT[g][j]->SetMinimum(-2.5);
+	Closure_integral_eta_pT[g][j]->SetMaximum(2.5);
+
+
+
+      }
 	    
-	Closure_integral_eta_pT[g][j]->GetXaxis()->SetRangeUser(.5,20.);
-	Closure_integral_eta_pT[g][j]->GetYaxis()->SetNdivisions(306);
-	Closure_integral_eta_pT[g][j]->Draw("p X A");
+      Closure_integral_eta_pT[g][j]->GetXaxis()->SetRangeUser(.5,24.);
+      Closure_integral_eta_pT[g][j]->GetYaxis()->SetNdivisions(306);
+      Closure_integral_eta_pT[g][j]->Draw("p X A");
 	 
 
-	Closure_integral_eta_pT[g][j]->GetYaxis()->SetLabelSize(0.07);
+      Closure_integral_eta_pT[g][j]->GetYaxis()->SetLabelSize(0.07);
 	   
 
 
-	Closure_integral_eta_pT[g][j]->GetXaxis()->SetTitle("Track p_{T} (GeV/c)");
-	Closure_integral_eta_pT[g][j]->GetXaxis()->SetTitleSize(0.06);
-	Closure_integral_eta_pT[g][j]->GetXaxis()->SetTitleOffset(xoffset+0.2);
-	Closure_integral_eta_pT[g][j]->GetYaxis()->SetTitle("(dN/dp_{T})_{P+H} - (dN/dp_{T})_{PYTH} (GeV/c)^{-1}");
+      Closure_integral_eta_pT[g][j]->GetXaxis()->SetTitle("Track p_{T} (GeV/c)");
+      Closure_integral_eta_pT[g][j]->GetXaxis()->SetTitleSize(0.06);
+      Closure_integral_eta_pT[g][j]->GetXaxis()->SetTitleOffset(xoffset+0.2);
+      Closure_integral_eta_pT[g][j]->GetYaxis()->SetTitle("(dN/dp_{T})_{P+H} - (dN/dp_{T})_{PYTH} (GeV/c)^{-1}");
 
-	Closure_integral_eta_pT[g][j]->GetXaxis()->SetNdivisions(8);
+      Closure_integral_eta_pT[g][j]->GetXaxis()->SetNdivisions(8);
    
 	
-	Closure_integral_eta_pT[g][j]->GetXaxis()->CenterTitle();
-	Closure_integral_eta_pT[g][j]->GetYaxis()->CenterTitle();
+      Closure_integral_eta_pT[g][j]->GetXaxis()->CenterTitle();
+      Closure_integral_eta_pT[g][j]->GetYaxis()->CenterTitle();
 	   
-	if(j<3){
-	  Closure_integral_eta_pT[g][j]->GetYaxis()->SetTitleSize(0.0);
-	  Closure_integral_eta_pT[g][j]->GetYaxis()->SetLabelSize(0.0);
-	  Closure_integral_eta_pT[g][j]->GetXaxis()->SetTitleSize(0.07);
-	  Closure_integral_eta_pT[g][j]->GetXaxis()->SetLabelSize(0.07);
-	  Closure_integral_eta_pT[g][j]->GetXaxis()->SetTitleOffset(xoffset+0.15);
-	}else{
-	  Closure_integral_eta_pT[g][j]->GetXaxis()->SetLabelSize(ts3);
-	  Closure_integral_eta_pT[g][j]->GetXaxis()->SetLabelOffset(0.015);
-	  Closure_integral_eta_pT[g][j]->GetYaxis()->SetTitleOffset(1.);
-	  Closure_integral_eta_pT[g][j]->GetYaxis()->SetTitleSize(0.06);
-	  Closure_integral_eta_pT[g][j]->GetYaxis()->SetLabelSize(0.06);
-	}
+      if(j<3){
+	Closure_integral_eta_pT[g][j]->GetYaxis()->SetTitleSize(0.0);
+	Closure_integral_eta_pT[g][j]->GetYaxis()->SetLabelSize(0.0);
+	Closure_integral_eta_pT[g][j]->GetXaxis()->SetTitleSize(0.07);
+	Closure_integral_eta_pT[g][j]->GetXaxis()->SetLabelSize(0.07);
+	Closure_integral_eta_pT[g][j]->GetXaxis()->SetTitleOffset(xoffset+0.15);
+      }else{
+	Closure_integral_eta_pT[g][j]->GetXaxis()->SetLabelSize(ts3);
+	Closure_integral_eta_pT[g][j]->GetXaxis()->SetLabelOffset(0.015);
+	Closure_integral_eta_pT[g][j]->GetYaxis()->SetTitleOffset(1.);
+	Closure_integral_eta_pT[g][j]->GetYaxis()->SetTitleSize(0.06);
+	Closure_integral_eta_pT[g][j]->GetYaxis()->SetLabelSize(0.06);
+      }
 
 
 
-	Closure_integral_eta_pT[g][j]->SetMarkerSize(2);
+      Closure_integral_eta_pT[g][j]->SetMarkerSize(2);
 
 
 
-	linePt = new TLine(.5,0,20.,0);
-	linePt->SetLineStyle(2);
-	linePt->SetLineWidth(1);
-	linePt->Draw("same");
+      linePt = new TLine(.5,0,24.,0);
+      linePt->SetLineStyle(2);
+      linePt->SetLineWidth(1);
+      linePt->Draw("same");
 
-	cout<<"here "<<g<<endl;
+      cout<<"here "<<g<<endl;
     
-	if(g!=7)continue;
+      if(g!=7)continue;
 
 	
-	closure_integral_values.clear();
-	closure_integral_errors.clear();
+      closure_integral_values.clear();
+      closure_integral_errors.clear();
 	
-	for(int k = 0; k<4; k++){
-	  double pt_val, x_val;
+      for(int k = 0; k<4; k++){
+	double pt_val, x_val;
 	  
-	  Closure_integral_eta_pT[g][j]->GetPoint(k,x_val,pt_val);
-	  closure_integral_values.push_back(pt_val);
-	  closure_integral_errors.push_back(pt_val/2.);
+	Closure_integral_eta_pT[g][j]->GetPoint(k,x_val,pt_val);
+	closure_integral_values.push_back(pt_val);
+	closure_integral_errors.push_back(pt_val/2.);
 
-	  cout<<pt_val<<endl;
+	cout<<pt_val<<endl;
 	  
-	}
+      }
 
-
-      
+  
+    
 	 	  
-	Closure_integral_eta_pT2[g][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&closure_integral_values[0],&pTbin_errors[0],&closure_integral_errors[0]);
+      Closure_integral_eta_pT2[g][j] = new TGraphErrors(pTbin_centers.size(),&pTbin_centers[0],&closure_integral_values[0],&pTbin_errors[0],&closure_integral_errors[0]);
 
   
-	Closure_integral_eta_pT[1][0]->SetMarkerColor(kRed);
-	Closure_integral_eta_pT[1][0]->SetLineColor(kRed);
-	Closure_integral_eta_pT[1][0]->Draw("same p X");
-
-
-	if(g==7&&j==3){ 
-	  l40 = new TLegend(0.2,0.7,0.8,0.8);
-	  l40->SetName("l40");
-	  l40->SetTextFont(43);
-	  l40->SetTextSizePixels(tspixels);
-	  l40->SetFillColor(kWhite);
-	  l40->SetLineColor(kWhite);
-
-
-	  l40->AddEntry(Closure_integral_eta_pT[7][j],"Inclusive P+H","p");
-
-	  l40->AddEntry(Closure_integral_eta_pT[1][0],"Inclusive PYTHIA","p");
-
-	  l40->Draw("same");
-
-	}
+      Closure_integral_eta_pT[1][0]->SetMarkerColor(kGreen);      Closure_integral_eta_pT[1][0]->SetLineColor(kGreen);
+      Closure_integral_eta_pT[3][j]->SetMarkerColor(kBlue);      Closure_integral_eta_pT[3][j]->SetLineColor(kBlue);
+      Closure_integral_eta_pT[5][j]->SetMarkerColor(kRed);      Closure_integral_eta_pT[5][j]->SetLineColor(kRed);
+      //     Closure_integral_eta_pT[1][0]->Draw("same p X");
       
-	//     drawlabels_int_pt2(g,j);
-      
-	if(j==0){
-	  labels = new TPaveText(0.18,0.85,0.45,0.95,"NDC");
-	}else{
-	  labels = new TPaveText(0.05,0.85,0.45,0.95,"NDC");
-	}  
-	labels->SetName("labels");
-	labels->SetFillColor(0);
-	labels->SetLineColor(0);
-	labels->SetTextAlign(11);
-	labels->AddText(CBin_labels[j]);
-	labels->SetTextSize(0.06);
-	labels->Draw("same");
+      //Closure_integral_eta_pT[3][j]->Draw("same p X");
+      //   Closure_integral_eta_pT[5][j]->Draw("same p X");
 
-      
+      Closure_integral_eta_pT[9][j]->Draw("same p X");
+      Closure_integral_eta_pT[11][j]->Draw("same p X");
+
+
+      if(g==7&&j==3){ 
+	l40 = new TLegend(0.2,0.7,0.8,0.8);
+	l40->SetName("l40");
+	l40->SetTextFont(43);
+	l40->SetTextSizePixels(tspixels);
+	l40->SetFillColor(kWhite);
+	l40->SetLineColor(kWhite);
+
+
+	l40->AddEntry(Closure_integral_eta_pT[7][j],"Inclusive P+H","p");
+
+	l40->AddEntry(Closure_integral_eta_pT[1][0],"Inclusive PYTHIA","p");
+
+	l40->Draw("same");
+
       }
-      cout<<"and here"<<endl;
+      
+      //     drawlabels_int_pt2(g,j);
+      
+      if(j==0){
+	labels = new TPaveText(0.18,0.85,0.45,0.95,"NDC");
+      }else{
+	labels = new TPaveText(0.05,0.85,0.45,0.95,"NDC");
+      }  
+      labels->SetName("labels");
+      labels->SetFillColor(0);
+      labels->SetLineColor(0);
+      labels->SetTextAlign(11);
+      labels->AddText(CBin_labels[j]);
+      labels->SetTextSize(0.06);
+      labels->Draw("same");
 
-      if(g%2==0)continue;
+    }
   
-      for(int i = 0; i<nTrkPtBins; i++){
+      
+    cout<<"and here"<<endl;
+    
+    if(g%2==0)continue;
+  
+    for(int i = 0; i<nTrkPtBins; i++){
 	
-	TString ClosureIntegralEtaCent_name = "ClosureIntegralEtaCent";
-	ClosureIntegralEtaCent_name+=g;
-	ClosureIntegralEtaCent_name+=i;
-	Closure_integral_eta_cent[g][i] = new TH1D(ClosureIntegralEtaCent_name,"",4,xAxis);
+      TString ClosureIntegralEtaCent_name = "ClosureIntegralEtaCent";
+      ClosureIntegralEtaCent_name+=g;
+      ClosureIntegralEtaCent_name+=i;
+      Closure_integral_eta_cent[g][i] = new TH1D(ClosureIntegralEtaCent_name,"",4,xAxis);
 
-	for(int k=0; k<4; k++){
-	  evalpt = pTbin_centers.at(i);
-	  if(g<6) value = Closure_integral_eta_pT[g][0]->Eval(evalpt);
-	  else	value = Closure_integral_eta_pT[g][k]->Eval(evalpt);
-	  Closure_integral_eta_cent[g][i]->SetBinContent(4-k,value);
-	}
+      for(int k=0; k<4; k++){
+	evalpt = pTbin_centers.at(i);
+	if(g<2) value = Closure_integral_eta_pT[g][0]->Eval(evalpt);
+	else	value = Closure_integral_eta_pT[g][k]->Eval(evalpt);
+	Closure_integral_eta_cent[g][i]->SetBinContent(4-k,value);
+
+	cout<<g<<" "<<evalpt<<" "<<i<<" "<<k<<" "<<value<<endl;
+      }
   
-	switch(g){
-	case 1: 
-	  Closure_integral_eta_cent[g][i]->SetMarkerStyle(10);
-	  break;
+      switch(g){
+      case 1: 
+	Closure_integral_eta_cent[g][i]->SetMarkerStyle(10);
+	break;
  
-	case 7: 
-	  Closure_integral_eta_cent[g][i]->SetMarkerStyle(10);
-	  break;
+      case 7: 
+	Closure_integral_eta_cent[g][i]->SetMarkerStyle(10);
+	break;
   
+      default:
+	Closure_integral_eta_cent[g][i]->SetMarkerStyle(10);
+	break;
+      }
+
+
+      Closure_integral_eta_cent[g][i]->SetMarkerSize(2);
+      Closure_integral_eta_cent[g][i]->SetLineColor(kBlack);
+
+      Closure_integral_eta_cent[g][i]->SetLineColor(kBlack);
+      Closure_integral_eta_cent[g][i]->SetLineColor(kBlack);
+      Closure_integral_eta_cent[g][i]->GetYaxis()->SetNdivisions(306);
+
+   
+      if(g==7){
+
+
+	cintegral_eta_cent[g]->cd(i+1);
+
+
+	TString histnameblank = "blank_hist";
+	histnameblank+=g;
+	histnameblank+=i;
+
+	blank[i] = new TH1D(histnameblank,"",4,xAxis);
+
+	
+	TString histnameblank2 = "blank_hist2";
+	histnameblank2+=g;
+	histnameblank2+=i;
+
+	if(is_number){
+	  blank[i]->SetMinimum(-1.5);
+	  blank[i]->SetMaximum(1.5);
+
+	  if(i>3){
+	    blank[i]->SetMinimum(-.1);
+	    blank[i]->SetMaximum(.1);
+
+	  }
+
+	}else{
+	  blank[i]->SetMinimum(-2.5);
+	  blank[i]->SetMaximum(2.5);
+
+
+	}
+	blank[i]->GetXaxis()->SetTitle("Centrality (%)");
+	blank[i]->GetXaxis()->SetTitleOffset(1.1);
+	blank[i]->GetXaxis()->CenterTitle(true);
+	blank[i]->GetXaxis()->SetTitleSize(0.07);
+
+	blank[i]->GetYaxis()->SetTitle("(dN/dp_{T})_{PbPb}- (dN/dp_{T})_{pp} (GeV/c)^{-1}");
+	blank[i]->GetYaxis()->SetTitleSize(0.);
+	blank[i]->GetYaxis()->CenterTitle(true);
+	//	blank[i]->GetYaxis()->SetLabelOffset(yoffset);
+	//	blank[i]->GetYaxis()->SetLabelSize(0.);
+   
+	blank[i]->GetYaxis()->SetTickLength(0.025);
+
+	blank[i]->GetXaxis()->SetBinLabel(1,"50-100");
+	blank[i]->GetXaxis()->SetBinLabel(2,"30-50");
+	blank[i]->GetXaxis()->SetBinLabel(3,"10-30");
+	blank[i]->GetXaxis()->SetBinLabel(4," 0-10");
+    
+	blank[i]->GetXaxis()->SetLabelSize(0.08);
+	blank[i]->GetXaxis()->SetLabelOffset(0.015);
+	
+	blank[i]->GetXaxis()->LabelsOption("h");
+	blank[i]->GetXaxis()->SetTickLength(0.0);
+
+
+
+	switch(i){
+	case 0: 
+	  //  gPad->SetLeftMargin(0.2);
+	  blank[i]->GetYaxis()->SetTitleSize(0.07);
+	  blank[i]->GetXaxis()->SetTitleOffset(1.1);
+	  blank[i]->GetXaxis()->SetTitleSize(0.07);
+	  blank[i]->SetLabelSize(0.95*blank[i]->GetXaxis()->GetLabelSize());
+	  blank[i]->GetYaxis()->SetLabelSize(0.06);
+	  break;
+	case 3:
+	  // gPad->SetRightMargin(0.02);
+	  break;
 	default:
-	  Closure_integral_eta_cent[g][i]->SetMarkerStyle(10);
+	  break;
+	}
+
+	//----------------------------------
+
+	blank[i]->GetXaxis()->SetTitle("Centrality (%)");
+	blank[i]->GetXaxis()->SetTitleOffset(1.1);
+	blank[i]->GetXaxis()->CenterTitle(true);
+	blank[i]->GetXaxis()->SetTitleSize(0.07);
+
+	blank[i]->GetYaxis()->SetTitle("(dN/dp_{T})_{PbPb}- (dN/dp_{T})_{pp} (GeV/c)^{-1}");
+	blank[i]->GetYaxis()->SetTitleSize(0.);
+	blank[i]->GetYaxis()->CenterTitle(true);
+	//	blank[i]->GetYaxis()->SetLabelOffset(yoffset);
+	//	blank[i]->GetYaxis()->SetLabelSize(0.);
+   
+	blank[i]->GetYaxis()->SetTickLength(0.025);
+
+	blank[i]->GetXaxis()->SetBinLabel(1,"50-100");
+	blank[i]->GetXaxis()->SetBinLabel(2,"30-50");
+	blank[i]->GetXaxis()->SetBinLabel(3,"10-30");
+	blank[i]->GetXaxis()->SetBinLabel(4," 0-10");
+    
+	blank[i]->GetXaxis()->SetLabelSize(0.08);
+	blank[i]->GetXaxis()->SetLabelOffset(0.015);
+	
+	blank[i]->GetXaxis()->LabelsOption("h");
+	blank[i]->GetXaxis()->SetTickLength(0.0);
+
+	switch(i){
+	case 0: 
+	  //  gPad->SetLeftMargin(0.2);
+	  blank[i]->GetYaxis()->SetTitleSize(0.07);
+	  blank[i]->GetXaxis()->SetTitleOffset(1.1);
+	  blank[i]->GetXaxis()->SetTitleSize(0.07);
+	  blank[i]->SetLabelSize(0.95*blank[i]->GetXaxis()->GetLabelSize());
+	  blank[i]->GetYaxis()->SetLabelSize(0.06);
+	  break;
+	default:
+	  //    blank[i]->GetYaxis()->SetLabelSize(0.);
 	  break;
 	}
 
 
-	Closure_integral_eta_cent[g][i]->SetMarkerSize(2);
-	Closure_integral_eta_cent[g][i]->SetLineColor(kBlack);
 
-	Closure_integral_eta_cent[g][i]->SetLineColor(kBlack);
-	Closure_integral_eta_cent[g][i]->SetLineColor(kBlack);
-	Closure_integral_eta_cent[g][i]->GetYaxis()->SetNdivisions(306);
+	blank[i]->Draw();
 
-   
-	if(g==7){
+	Closure_integral_eta_cent[1][i]->SetMarkerColor(kGreen);
+	Closure_integral_eta_cent[1][i]->Draw("same p X");
 
-
-	  cintegral_eta_cent[g]->cd(i+1);
+	Closure_integral_eta_cent[7][i]->SetMarkerColor(kBlack);
+	Closure_integral_eta_cent[7][i]->Draw("same p X");
 
 
-	  TString histnameblank = "blank_hist";
-	  histnameblank+=g;
-	  histnameblank+=i;
-
-	  blank[i] = new TH1D(histnameblank,"",4,xAxis);
-
-	
-	  TString histnameblank2 = "blank_hist2";
-	  histnameblank2+=g;
-	  histnameblank2+=i;
-
-	
-	  blank[i]->SetMinimum(-.5);
-	  blank[i]->SetMaximum(.5);
-	  blank[i]->GetXaxis()->SetTitle("Centrality (%)");
-	  blank[i]->GetXaxis()->SetTitleOffset(1.1);
-	  blank[i]->GetXaxis()->CenterTitle(true);
-	  blank[i]->GetXaxis()->SetTitleSize(0.07);
-
-	  blank[i]->GetYaxis()->SetTitle("(dN/dp_{T})_{PbPb}- (dN/dp_{T})_{pp} (GeV/c)^{-1}");
-	  blank[i]->GetYaxis()->SetTitleSize(0.);
-	  blank[i]->GetYaxis()->CenterTitle(true);
-	  //	blank[i]->GetYaxis()->SetLabelOffset(yoffset);
-	  //	blank[i]->GetYaxis()->SetLabelSize(0.);
-   
-	  blank[i]->GetYaxis()->SetTickLength(0.025);
-
-	  blank[i]->GetXaxis()->SetBinLabel(1,"50-100");
-	  blank[i]->GetXaxis()->SetBinLabel(2,"30-50");
-	  blank[i]->GetXaxis()->SetBinLabel(3,"10-30");
-	  blank[i]->GetXaxis()->SetBinLabel(4," 0-10");
-    
-	  blank[i]->GetXaxis()->SetLabelSize(0.08);
-	  blank[i]->GetXaxis()->SetLabelOffset(0.015);
-	
-	  blank[i]->GetXaxis()->LabelsOption("h");
-	  blank[i]->GetXaxis()->SetTickLength(0.0);
+	Closure_integral_eta_cent[3][i]->SetMarkerColor(kBlue);
+	Closure_integral_eta_cent[3][i]->Draw("same p X");
 
 
+	Closure_integral_eta_cent[5][i]->SetMarkerColor(kRed);
+	Closure_integral_eta_cent[5][i]->Draw("same p X");
 
-	  switch(i){
-	  case 0: 
-	    //  gPad->SetLeftMargin(0.2);
-	    blank[i]->GetYaxis()->SetTitleSize(0.07);
-	    blank[i]->GetXaxis()->SetTitleOffset(1.1);
-	    blank[i]->GetXaxis()->SetTitleSize(0.07);
-	    blank[i]->SetLabelSize(0.95*blank[i]->GetXaxis()->GetLabelSize());
-	    blank[i]->GetYaxis()->SetLabelSize(0.06);
-	    break;
-	  case 3:
-	    // gPad->SetRightMargin(0.02);
-	    break;
-	  default:
-	    break;
-	  }
+	Closure_integral_eta_cent[1][i]->Write();
 
-	  //----------------------------------
+	TLatex *pt_label = new TLatex(0.2,0.95, TrkPtBin_labels[i]);
+	pt_label->SetNDC();
+	pt_label->SetTextSizePixels(tspixels);
+	pt_label->Draw();
 
-	  blank[i]->GetXaxis()->SetTitle("Centrality (%)");
-	  blank[i]->GetXaxis()->SetTitleOffset(1.1);
-	  blank[i]->GetXaxis()->CenterTitle(true);
-	  blank[i]->GetXaxis()->SetTitleSize(0.07);
-
-	  blank[i]->GetYaxis()->SetTitle("(dN/dp_{T})_{PbPb}- (dN/dp_{T})_{pp} (GeV/c)^{-1}");
-	  blank[i]->GetYaxis()->SetTitleSize(0.);
-	  blank[i]->GetYaxis()->CenterTitle(true);
-	  //	blank[i]->GetYaxis()->SetLabelOffset(yoffset);
-	  //	blank[i]->GetYaxis()->SetLabelSize(0.);
-   
-	  blank[i]->GetYaxis()->SetTickLength(0.025);
-
-	  blank[i]->GetXaxis()->SetBinLabel(1,"50-100");
-	  blank[i]->GetXaxis()->SetBinLabel(2,"30-50");
-	  blank[i]->GetXaxis()->SetBinLabel(3,"10-30");
-	  blank[i]->GetXaxis()->SetBinLabel(4," 0-10");
-    
-	  blank[i]->GetXaxis()->SetLabelSize(0.08);
-	  blank[i]->GetXaxis()->SetLabelOffset(0.015);
-	
-	  blank[i]->GetXaxis()->LabelsOption("h");
-	  blank[i]->GetXaxis()->SetTickLength(0.0);
-
-	  switch(i){
-	  case 0: 
-	    //  gPad->SetLeftMargin(0.2);
-	    blank[i]->GetYaxis()->SetTitleSize(0.07);
-	    blank[i]->GetXaxis()->SetTitleOffset(1.1);
-	    blank[i]->GetXaxis()->SetTitleSize(0.07);
-	    blank[i]->SetLabelSize(0.95*blank[i]->GetXaxis()->GetLabelSize());
-	    blank[i]->GetYaxis()->SetLabelSize(0.06);
-	    break;
-	  default:
-	    blank[i]->GetYaxis()->SetLabelSize(0.);
-	    break;
-	  }
-
-
-
-	  blank[i]->Draw();
-
-	  Closure_integral_eta_cent[1][i]->SetMarkerColor(kRed);
-	  Closure_integral_eta_cent[1][i]->Draw("same p X");
-
-	  Closure_integral_eta_cent[7][i]->SetMarkerColor(kBlack);
-	  Closure_integral_eta_cent[7][i]->Draw("same p X");
-
-	  Closure_integral_eta_cent[1][i]->Write();
-
-	  TLatex *pt_label = new TLatex(0.2,0.95, TrkPtBin_labels[i]);
-	  pt_label->SetNDC();
-	  pt_label->SetTextSizePixels(tspixels);
-	  pt_label->Draw();
-
-	  if(i==0)	l40->Draw("same");
-
-	}
+	if(i==0)	l40->Draw("same");
 
       }
   
-   			       
-      cintegral_eta_pT[g]->cd(0);
+    }
+  
+			       
+    cintegral_eta_pT[g]->cd(0);
 								      
-      TLatex *canvas_title = new TLatex(0.06,0.9,"CMS Preliminary Simulation");
-      canvas_title->SetTextSizePixels(tspixels);
-      canvas_title->SetTextFont(63);
-      canvas_title->Draw();
+    TLatex *canvas_title = new TLatex(0.06,0.9,"CMS Preliminary Simulation");
+    canvas_title->SetTextSizePixels(tspixels);
+    canvas_title->SetTextFont(63);
+    canvas_title->Draw();
 
-      TLatex *canvas_title2 = new TLatex(0.295,0.9,"PYTHIA+HYDJET");
-      canvas_title2->SetTextSizePixels(tspixels);
-      canvas_title2->Draw();
+    TLatex *canvas_title2 = new TLatex(0.295,0.9,"PYTHIA+HYDJET");
+    canvas_title2->SetTextSizePixels(tspixels);
+    canvas_title2->Draw();
 
 
-
+    if(g==7){
       cintegral_eta_cent[g]->cd(0);
 
       canvas_title->Draw();
@@ -1045,12 +1458,12 @@ Int_t jff_residual(bool is_number = kTRUE){
       canvas_title2->Draw();
 
       if(is_number){
-      cintegral_eta_pT[g]->SaveAs("Integral_JFFResidual_pT.pdf");
-      cintegral_eta_pT[g]->SaveAs("Integral_JFFResidual_pT.png");
+	cintegral_eta_pT[g]->SaveAs("Integral_JFFResidual_pT.pdf");
+	cintegral_eta_pT[g]->SaveAs("Integral_JFFResidual_pT.png");
 
 
-      cintegral_eta_cent[g]->SaveAs("Integral_JFFResidual_Cent.png");
-      cintegral_eta_cent[g]->SaveAs("Integral_JFFResidual_Cent.pdf");
+	cintegral_eta_cent[g]->SaveAs("Integral_JFFResidual_Cent.png");
+	cintegral_eta_cent[g]->SaveAs("Integral_JFFResidual_Cent.pdf");
       }else{
 
 	cintegral_eta_pT[g]->SaveAs("Integral_JFFResidual_pTweighted_pT.pdf");
@@ -1061,9 +1474,17 @@ Int_t jff_residual(bool is_number = kTRUE){
 	cintegral_eta_cent[g]->SaveAs("Integral_JFFResidual_pTweighted_Cent.pdf");
 
       }
-    }
+      
+      cout<<"JFF ERROR: "<<endl;
 
-  }//g
-   
+      for(int j = 0; j<4; j++){
+	for(int i = 0; i<nTrkPtBins; i++){
+
+	evalpt = pTbin_centers.at(i);
+	cout<<j<<" "<<i<<" "<<evalpt<<" "<<Closure_integral_eta_pT[g][j]->Eval(evalpt)<<" "<<(TMath::Max(TMath::Abs(Closure_integral_eta_pT[g+2][j]->Eval(evalpt)-Closure_integral_eta_pT[g][j]->Eval(evalpt)), TMath::Abs(Closure_integral_eta_pT[g+4][j]->Eval(evalpt)-Closure_integral_eta_pT[g][j]->Eval(evalpt))))/Closure_integral_eta_pT[g][j]->Eval(evalpt)<<endl;
+	  }
+      }
+    }
+  }
   return 0;
 }

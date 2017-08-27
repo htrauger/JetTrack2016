@@ -31,7 +31,7 @@
 
 using namespace std;
 
-Int_t spill_jet_studies(){
+Int_t spill_jet_studies(bool do_corr = kTRUE){
 
   gROOT->ForceStyle();
   gStyle->SetOptStat(0);  
@@ -57,6 +57,7 @@ Int_t spill_jet_studies(){
   TH1D *signal_dPhi[12][nTrkPtBins][nCBins];
   
   TH1D *signal_dEta[12][nTrkPtBins][nCBins];
+  TH1D *spill_over_dPhi[12][nTrkPtBins][nCBins];
   TH1D *spill_over_dEta[12][nTrkPtBins][nCBins];
   TH1D *signal_dEta_diff[12][nTrkPtBins][nCBins];
 
@@ -77,23 +78,29 @@ Int_t spill_jet_studies(){
   TFile *f_in_pbpb_out_e5 = new TFile("../me_correct/PbPb_Inclusive_Correlations_SpilledOut_Eta0p5.root");
   TFile *f_in_pbpb_out = new TFile("../me_correct/PbPb_Inclusive_Correlations_SpilledOut.root");
  
+  TFile *f_in_sube0 = new TFile("../me_correct/Hydjet_RecoJet_GenTrack_NoSube0_Inclusive_Correlations.root");
+  TFile *f_in_sube0_in = new TFile("../me_correct/Hydjet_RecoJet_GenTrack_NoSube0_Inclusive_Correlations_SpillInOnly.root");
+  TFile *f_in_sube0_out = new TFile("../me_correct/Hydjet_RecoJet_GenTrack_NoSube0_Inclusive_Correlations_SpillOutOnly.root");
+
 
   TFile *f_spill_over = new TFile("../spill_over/Inclusive_Hydjet_SpillOvers.root");
+ 
+  /*
   TFile *f_spill_over_preapp = new TFile("../FROZEN_PREAPPROVAL/spill_over/Inclusive_Hydjet_SpillOvers.root");
   TFile *f_spill_over_qm = new TFile("../FROZEN_QM/spill_over/Inclusive_Hydjet_SpillOvers.root");
 
-
+  */
   TString in_name, pTlabel,centlabel,Ajlabel;
 
   int lbin, rbin;
 
   double bin_width_phi, bin_width_eta, diff_max, diff_min, signal_min, signal_max, stacked_max, stacked_max_diff, stacked_min_diff, stacked_min, bc, err;
     
-  c_yields_phi = new TCanvas("yields_phi","",10,10,3200,2400);
+  c_yields_phi = new TCanvas("yields_phi","",10,10,3200,3200);
   c_yields_phi->Divide(4,8,0,0);
 
    
-  c_yields_eta = new TCanvas("yields_eta","",10,10,3200,2400);
+  c_yields_eta = new TCanvas("yields_eta","",10,10,3200,3200);
   c_yields_eta->Divide(4,8,0,0);
 
 
@@ -101,24 +108,44 @@ Int_t spill_jet_studies(){
 
     for(int j = 0; j<4; j++){
 
-      for(int g = 0; g<4; g++){
+      for(int g = 0; g<3; g++){
 
 	
 	cout<<g<<" "<<i<<" "<<j<<endl;
 
-	if(g==0) result[g][i][j] = (TH2D*)f_in_pbpb->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	if(g==0){
+	  result[g][i][j] = (TH2D*)f_in_pbpb->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 
-	if(g==1) result[g][i][j] = (TH2D*)f_in_pbpb_in->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_SpillIn_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	  result2[g][i][j] = (TH2D*)f_in_sube0->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_Sube0_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	
+	}else if(g==1){
+	  
+	  result[g][i][j] = (TH2D*)f_in_pbpb_in->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_SpillIn_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 
-	if(g==2) result[g][i][j] = (TH2D*)f_in_pbpb_out->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_SpillOut_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	  result2[g][i][j] = (TH2D*)f_in_sube0_in->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_SpillInSube0_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 
-	if(g==3) result[g][i][j] = (TH2D*)f_in_pbpb_out_e5->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_SpillIn_Etap5_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	}else if(g==2){
+	  
+	  result[g][i][j] = (TH2D*)f_in_pbpb_out->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_SpillOut_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
 
+	  result2[g][i][j] = (TH2D*)f_in_sube0_out->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_SpillOutSube0_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+
+	}else if(g==3){
+	    
+	    result[g][i][j] = (TH2D*)f_in_pbpb_out_e5->Get((TString)("Yield_BkgSub_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]))->Clone((TString)("Yield_BkgSub_SpillIn_Etap5_" + CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]));
+	}else{
+
+	  cout<<"not a sample!"<<endl;
+
+	  return -1;
+	}
 
 	if(i>3){
 	  result[g][i][j]->Scale(1./4.);
+	  result2[g][i][j]->Scale(1./4.);
 	}else if(i==0){
 	  result[g][i][j]->Scale(1/.3);
+	  result2[g][i][j]->Scale(1/.3);
 	}
 
 	int lbin = result[g][i][j]->GetXaxis()->FindBin(-.99);
@@ -131,10 +158,18 @@ Int_t spill_jet_studies(){
 
 	signal_dPhi[g][i][j]->Rebin(5);
 
+	spill_over_dPhi[g][i][j] = (TH1D*)result2[g][i][j]->ProjectionY((TString)("SpillOver_dPhi_" +Type_strs[g]+"_"+ CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
+
+	spill_over_dPhi[g][i][j]->SetMarkerStyle(4);
+	spill_over_dPhi[g][i][j]->SetMarkerSize(1);
+
+	spill_over_dPhi[g][i][j]->Rebin(5);
+
+
 	float norm = 	signal_dPhi[g][i][j]->GetBinWidth(1);
 
 	signal_dPhi[g][i][j]->Scale(1./norm);
-
+	spill_over_dPhi[g][i][j]->Scale(1./norm);
 
 
 	lbin = result[g][i][j]->GetYaxis()->FindBin(-.99);
@@ -142,15 +177,30 @@ Int_t spill_jet_studies(){
 
 	signal_dEta[g][i][j] = (TH1D*)result[g][i][j]->ProjectionX((TString)("Proj_dEta_" +Type_strs[g]+"_"+ CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
 
+	spill_over_dEta[g][i][j] = (TH1D*)result2[g][i][j]->ProjectionX((TString)("SpillOver_dEta_" +Type_strs[g]+"_"+ CBin_strs[j] + "_" + CBin_strs[j+1] + "_Pt100_Pt1000_" + TrkPtBin_strs[i] + "_" + TrkPtBin_strs[i+1]),lbin,rbin);
+
 	signal_dEta[g][i][j]->SetMarkerStyle(10);
 	signal_dEta[g][i][j]->SetMarkerSize(1);
 
 	signal_dEta[g][i][j]->Rebin(5);
 
+	spill_over_dEta[g][i][j]->SetMarkerStyle(4);
+	spill_over_dEta[g][i][j]->SetMarkerSize(1);
+
+	spill_over_dEta[g][i][j]->Rebin(5);
+
+
 	norm = 	signal_dEta[g][i][j]->GetBinWidth(1);
 
 	signal_dEta[g][i][j]->Scale(1./norm);
+	spill_over_dEta[g][i][j]->Scale(1./norm);
 
+
+	if(do_corr){
+
+	  signal_dEta[g][i][j]->Add(spill_over_dEta[g][i][j],-1.);
+	  signal_dPhi[g][i][j]->Add(spill_over_dPhi[g][i][j],-1.);
+	}
 
       }
       
@@ -169,8 +219,18 @@ Int_t spill_jet_studies(){
       signal_dPhi[2][i][j]->SetLineColor(kBlue);
       signal_dPhi[2][i][j]->SetMarkerColor(kBlue);
 
-      signal_dPhi[3][i][j]->SetLineColor(kGreen);
-      signal_dPhi[3][i][j]->SetMarkerColor(kGreen);
+      //    signal_dPhi[3][i][j]->SetLineColor(kGreen);
+      // signal_dPhi[3][i][j]->SetMarkerColor(kGreen);
+
+      spill_over_dPhi[0][i][j]->SetLineColor(kViolet);
+      spill_over_dPhi[0][i][j]->SetMarkerColor(kViolet);
+
+      spill_over_dPhi[1][i][j]->SetLineColor(kRed);
+      spill_over_dPhi[1][i][j]->SetMarkerColor(kRed);
+
+      spill_over_dPhi[2][i][j]->SetLineColor(kBlue);
+      spill_over_dPhi[2][i][j]->SetMarkerColor(kBlue);
+
 
 
       double ymax = 23.;
@@ -193,15 +253,21 @@ Int_t spill_jet_studies(){
 
       signal_dPhi[0][i][j]->GetXaxis()->SetRangeUser(-TMath::Pi()/2., 3.*TMath::Pi()/2.);
      
-      if(j==3)  signal_dPhi[0][i][j]->GetYaxis()->SetLabelSize(0.06);
+      if(j==3)  signal_dPhi[0][i][j]->GetYaxis()->SetLabelSize(0.1);
       else   signal_dPhi[0][i][j]->GetYaxis()->SetLabelSize(0.);
+
+      signal_dPhi[0][i][j]->GetXaxis()->SetLabelSize(0.1);
 
       
       signal_dPhi[0][i][j]->Draw();
       signal_dPhi[1][i][j]->Draw("same");
       signal_dPhi[2][i][j]->Draw("same");
-      signal_dPhi[3][i][j]->Draw("same");
-
+      /*
+      spill_over_dPhi[0][i][j]->Draw("same");
+      spill_over_dPhi[1][i][j]->Draw("same");
+      spill_over_dPhi[2][i][j]->Draw("same");
+      //signal_dPhi[3][i][j]->Draw("same");
+      */
       TLine *zero = new TLine(-TMath::Pi()/2.,0.,3.*TMath::Pi()/2.,0.);
       zero->SetLineStyle(2);
       zero->Draw("same");
@@ -211,7 +277,7 @@ Int_t spill_jet_studies(){
 	l->AddEntry(signal_dPhi[0][i][j],"Nominal");
 	l->AddEntry(signal_dPhi[1][i][j],"Spilled In");
 	l->AddEntry(signal_dPhi[2][i][j],"Spilled Out");
-	l->AddEntry(signal_dPhi[3][i][j],"Spilled Out |#eta_{jet}|<0.5");
+	//	l->AddEntry(signal_dPhi[3][i][j],"Spilled Out |#eta_{jet}|<0.5");
 	l->SetLineColor(kWhite);
 	l->SetTextSize(0.08);
 	l->Draw();
@@ -250,23 +316,39 @@ Int_t spill_jet_studies(){
       signal_dEta[2][i][j]->SetLineColor(kBlue);
       signal_dEta[2][i][j]->SetMarkerColor(kBlue);
 
-      signal_dEta[3][i][j]->SetLineColor(kGreen);
-      signal_dEta[3][i][j]->SetMarkerColor(kGreen);
+
+      spill_over_dEta[0][i][j]->SetLineColor(kViolet);
+      spill_over_dEta[0][i][j]->SetMarkerColor(kViolet);
+
+      spill_over_dEta[1][i][j]->SetLineColor(kRed);
+      spill_over_dEta[1][i][j]->SetMarkerColor(kRed);
+
+      spill_over_dEta[2][i][j]->SetLineColor(kBlue);
+      spill_over_dEta[2][i][j]->SetMarkerColor(kBlue);
+
+      //   signal_dEta[3][i][j]->SetLineColor(kGreen);
+      // signal_dEta[3][i][j]->SetMarkerColor(kGreen);
 
       signal_dEta[0][i][j]->SetMaximum(ymax);
       signal_dEta[0][i][j]->SetMinimum(ymin);
 
       signal_dEta[0][i][j]->GetXaxis()->SetRangeUser(-2.5,2.5);
      
-      if(j==3)  signal_dEta[0][i][j]->GetYaxis()->SetLabelSize(0.06);
+      if(j==3)  signal_dEta[0][i][j]->GetYaxis()->SetLabelSize(0.1);
       else   signal_dEta[0][i][j]->GetYaxis()->SetLabelSize(0.);
 
+
+      signal_dEta[0][i][j]->GetXaxis()->SetLabelSize(0.1);
       
       signal_dEta[0][i][j]->Draw();
       signal_dEta[1][i][j]->Draw("same");
       signal_dEta[2][i][j]->Draw("same");
-      signal_dEta[3][i][j]->Draw("same");
-
+      /*
+      spill_over_dEta[0][i][j]->Draw("same");
+      spill_over_dEta[1][i][j]->Draw("same");
+      spill_over_dEta[2][i][j]->Draw("same");
+      //   signal_dEta[3][i][j]->Draw("same");
+      */
       TLine *zero2 = new TLine(-2.5,0.,2.5,0.);
       zero2->SetLineStyle(2);
       zero2->Draw("same");
@@ -277,7 +359,7 @@ Int_t spill_jet_studies(){
 	l->AddEntry(signal_dEta[0][i][j],"Nominal");
 	l->AddEntry(signal_dEta[1][i][j],"Spilled In");
 	l->AddEntry(signal_dEta[2][i][j],"Spilled Out");
-	l->AddEntry(signal_dEta[3][i][j],"Spilled Out |#eta_{jet}|<0.5");
+	//	l->AddEntry(signal_dEta[3][i][j],"Spilled Out |#eta_{jet}|<0.5");
 	l->SetLineColor(kWhite);
 	l->SetTextSize(0.08);
 	l->Draw();
@@ -305,8 +387,13 @@ Int_t spill_jet_studies(){
       }
     }
   }
-  c_yields_eta->SaveAs("Spill_Over_Overlay_dEta.png");
-  c_yields_phi->SaveAs("Spill_Over_Overlay_dPhi.png");
-  
+
+  if(do_corr){
+    c_yields_eta->SaveAs("Spill_Over_Overlay_dEta_Corrected.png");
+    c_yields_phi->SaveAs("Spill_Over_Overlay_dPhi_Corrected.png");
+  }else{
+    c_yields_eta->SaveAs("Spill_Over_Overlay_dEta.png");
+    c_yields_phi->SaveAs("Spill_Over_Overlay_dPhi.png");
+  }
   return 0;
 }

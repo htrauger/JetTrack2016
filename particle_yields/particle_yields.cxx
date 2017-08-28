@@ -164,8 +164,11 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 
   double bin_width_phi, bin_width_eta, diff_max, diff_min, signal_min, signal_max, stacked_max, stacked_max_diff, stacked_min_diff, stacked_min, bc, err;
 
-  float rel_err_pbpb =TMath::Sqrt(0.05*0.05+0.01*0.01+0.04*0.04);
+  float rel_err_pbpb =TMath::Sqrt(0.05*0.05+0.01*0.01+0.04*0.04);  //these are the tracking and jet errors that are relative to yield
   float rel_err_pp =TMath::Sqrt(0.05*0.05+0.04*0.04+0.03*0.03);
+
+  float spill_err = 0.18; //spill over error as % of spill over
+  float jff_err = 0.15; //jff error as % of jff correction 
 
   TF1 *fit_line_left = new TF1("fit_line_left","[0]");
   TF1 *fit_line_right = new TF1("fit_line_right","[0]");
@@ -521,9 +524,9 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 
 	bc =  signal_dPhi_syst[0][i][j]->GetBinContent(k);
 
-	if(i<4) err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dPhi[0][i][j]->GetBinContent(k)*jff_residual_dPhi[0][i][j]->GetBinContent(k)/4.+spill_over_dPhi2[0][i][j]->GetBinContent(k)*spill_over_dPhi2[0][i][j]->GetBinContent(k)*.18*.18+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
+	if(i<4) err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dPhi[0][i][j]->GetBinContent(k)*jff_residual_dPhi[0][i][j]->GetBinContent(k)+spill_over_dPhi2[0][i][j]->GetBinContent(k)*spill_over_dPhi2[0][i][j]->GetBinContent(k)*spill_err*spill_err+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
 
-	else   err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dPhi[0][i][j]->GetBinContent(k)*jff_residual_dPhi[0][i][j]->GetBinContent(k)/4.+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
+	else   err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dPhi[0][i][j]->GetBinContent(k)*jff_residual_dPhi[0][i][j]->GetBinContent(k)+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
 
 	signal_dPhi_syst[0][i][j]->SetBinError(k,err);
 
@@ -531,7 +534,7 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 	  
 	bc =  signal_dPhi_syst[1][i][0]->GetBinContent(k);
 
-	err =TMath::Sqrt(rel_err_pp*bc*rel_err_pp*bc+jff_residual_dPhi[1][i][0]->GetBinError(1)*jff_residual_dPhi[1][i][0]->GetBinError(1)/4.+me_err[1][i][0]*me_err[1][i][0]+bg_err[1][i][0]*bg_err[1][i][0]);
+	err =TMath::Sqrt(rel_err_pp*bc*rel_err_pp*bc+jff_residual_dPhi[1][i][0]->GetBinContent(k)*jff_residual_dPhi[1][i][0]->GetBinContent(k)+me_err[1][i][0]*me_err[1][i][0]+bg_err[1][i][0]*bg_err[1][i][0]);
 
 	signal_dPhi_syst[1][i][0]->SetBinError(k,err);
 
@@ -542,15 +545,15 @@ Int_t particle_yields(bool is_number = kTRUE, bool do_ref=kFALSE){
 
 	bc =  signal_dEta_syst[0][i][j]->GetBinContent(k);
 	  
-	if(i<4)	  err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dEta[0][i][j]->GetBinError(1)*jff_residual_dEta[0][i][j]->GetBinError(1)/4.+spill_over_dEta[0][i][j]->GetBinContent(k)*spill_over_dEta[0][i][j]->GetBinContent(k)*.18*.18+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
-	else  err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dEta[0][i][j]->GetBinError(1)*jff_residual_dEta[0][i][j]->GetBinError(1)/4.+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
+	if(i<4)	  err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dEta[0][i][j]->GetBinContent(k)*jff_residual_dEta[0][i][j]->GetBinContent(k)*jff_err+spill_over_dEta[0][i][j]->GetBinContent(k)*spill_over_dEta[0][i][j]->GetBinContent(k)*spill_err*spill_err+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
+	else  err = TMath::Sqrt(bc*rel_err_pbpb*bc*rel_err_pbpb+jff_residual_dEta[0][i][j]->GetBinContent(k)*jff_residual_dEta[0][i][j]->GetBinContent(k)*jff_err+me_err[0][i][j]*me_err[0][i][j]+bg_err[0][i][j]*bg_err[0][i][j]);
 
 	signal_dEta_syst[0][i][j]->SetBinError(k,err);
 
 
 	bc =  signal_dEta_syst[1][i][0]->GetBinContent(k);
 
-	err =TMath::Sqrt(rel_err_pp*bc*rel_err_pp*bc+jff_residual_dEta[1][i][0]->GetBinError(1)*jff_residual_dEta[1][i][0]->GetBinError(1)+me_err[1][i][0]*me_err[1][i][0]+bg_err[1][i][0]*bg_err[1][i][0]);
+	err =TMath::Sqrt(rel_err_pp*bc*rel_err_pp*bc+jff_residual_dEta[1][i][0]->GetBinContent(k)*jff_residual_dEta[1][i][0]->GetBinContent(k)+me_err[1][i][0]*me_err[1][i][0]+bg_err[1][i][0]*bg_err[1][i][0]);
 
 	signal_dEta_syst[1][i][0]->SetBinError(k,err);
 

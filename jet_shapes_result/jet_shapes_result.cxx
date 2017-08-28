@@ -171,8 +171,12 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
   double integral_err[12][nCBins][nTrkPtBins];
   double integral_syst_err[12][nCBins][nTrkPtBins];
 
-  float rel_err_pbpb =TMath::Sqrt(0.05*0.05+0.01*0.01+0.04*0.04);
+  float rel_err_pbpb =TMath::Sqrt(0.05*0.05+0.01*0.01+0.04*0.04);   //these are the tracking and jet errors that are relative to yield
   float rel_err_pp =TMath::Sqrt(0.05*0.05+0.04*0.04+0.03*0.03);
+
+  float spill_err = 0.18; //spill over error as % of spill over
+  float jff_err = 0.15; //jff error as % of jff correction 
+
 
   TPaveText *labels;
 
@@ -579,8 +583,8 @@ Int_t jet_shapes_result(bool is_number=0, bool use_highpT_bin = kTRUE, bool do_r
 	    
 	    bc =JetShape_syst[g][ibin][ibin3]->GetBinContent(k);
 
-	    if(g==0)  mc_error = TMath::Sqrt((JetShapeMC[g][ibin][ibin3]->GetBinContent(k)*JetShapeMC[g][ibin][ibin3]->GetBinContent(k)*.18*.18)+(JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)*JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)*.5*.5));	 
-	    else   mc_error = JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)*.5;
+	    if(g==0)  mc_error = TMath::Sqrt((JetShapeMC[g][ibin][ibin3]->GetBinContent(k)*JetShapeMC[g][ibin][ibin3]->GetBinContent(k)*spill_err*spill_err)+(JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)*JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)*jff_err*jff_err));	 
+	    else   mc_error = JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)*jff_err;
 
 	    cout<<"MC ERRORS: "<<g<<" "<<ibin<<" "<<ibin3<<" "<<k<<" "<<JetShapeMC[g][ibin][ibin3]->GetBinContent(k)<<" "<<JetShapeMC_reco[g][ibin][ibin3]->GetBinContent(k)<<" "<<mc_error<<endl;
    

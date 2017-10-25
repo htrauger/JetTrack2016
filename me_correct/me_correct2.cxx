@@ -62,15 +62,15 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
     
     
       //  fin = new TFile("../data_raw_correlations/PbPb_5TeVData_fineBinTrkCorrs_withMix_finalJFFs.root","READ");
-  fin = new TFile("../data_raw_correlations/PbPb_5TeVData_fineBinTrkCorrs_withMix_finalJFFs.root","READ");
+      fin = new TFile("../data_raw_correlations/PbPb_5TeVData_fixMix_fineBinTrkCorrs_withTrkCorrEtaSymmV2_finalJFFs.root","READ");
       //fin = new TFile(" ../data_raw_correlations/PbPbData_noMix_inclJetBinning_finalJFFs_officialTrkCorrs.root","READ");
-      fin2 = new TFile(" ../data_raw_correlations/PbPb_5TeVData_fineBinTrkCorrs_withTrkCorrEtaSymmV2_finalJFF_noMix.root","READ");
+      fin2 = new TFile(" ../data_raw_correlations/PbPb_5TeVData_fixMix_fineBinTrkCorrs_withTrkCorrEtaSymmV2_finalJFFs.root","READ");
       //fin_me = new TFile(" ../data_raw_correlations/PbPbData_noMix_inclJetBinning_finalJFFs_officialTrkCorrs.root","READ");
       //fin2 = new TFile(" ../data_raw_correlations/PbPb_5TeVData_fineBinTrkCorrs_withTrkCorrSymm_finalJFF_noMix.root","READ");
       // fin3 = new TFile(" ../data_raw_correlations/pp_Data_withMix_inclJetBinning_finalJFFs_60vzMixBins.root","READ");
       //  fin_me = new TFile("../data_raw_correlations/PbPbData_noMix_inclJetBinning_finalJFFs_spillOutJets_eta0p5.root","READ");
       // fin_me = new TFile("../data_raw_correlations/PbPbData_noMix_inclJetBinning_finalJFFs_spillOutJets.root","READ");
-      fin_me = new TFile("../data_raw_correlations/PbPb_5TeVData_fineBinTrkCorrs_withMix_finalJFFs.root","READ");
+      fin_me = new TFile("../data_raw_correlations/PbPb_5TeVData_fixMix_fineBinTrkCorrs_withTrkCorrEtaSymmV2_finalJFFs.root","READ");
       //     fin_me = new TFile("../data_raw_correlations/PbPb_Data_withMix_CymbalTune_fullCymbalCorrs_inclJetBinning_withPtWeightME.root","READ");
       fout_inc = new TFile("PbPb_Inclusive_Correlations.root","RECREATE");
     }
@@ -121,7 +121,7 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
       case 11: 
 	//fin = new TFile("../mc_raw_correlations/PbPb_5TeVMC_RecoGen_sube0_GluonOnly_noMix_finalJFFs.root","READ");
 
-	fin = new TFile("../mc_raw_correlations/PbPb_5TeVMC_withMix_RecoGen_sube0_CymbalTune_fullCymbalCorrs_inclJetBinning.root","READ");
+	fin = new TFile("../mc_raw_correlations/PbPb_5TeVMC_RecoGenSube0_fineBinTrkCorrs_withTrkCorrEtaSymmV2_finalJFF_noMix.root","READ");
 	//	fin_me = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_RecoGenReduced_Merged_refpt_newJetTrackCorrections_fineBin.root","READ");
 	fin_me = new TFile("../mc_raw_correlations/PbPb_5TeVMC_withMix_RecoGen_sube0_CymbalTune_fullCymbalCorrs_inclJetBinning.root","READ");
 	break;
@@ -136,7 +136,7 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
 
       case 13: 
 	//fin = new TFile("../mc_raw_correlations/PbPb_5TeVMC_fineBinTrkCorrs_GenGenSube0_QuarkJets_noJFF_noMix.root","READ");
-	fin = new TFile("../mc_raw_correlations/PbPb_5TeVMC_GenGenSube0_QuarkJets_fixMatch_fineBinTrkCorrs_withTrkCorrEtaSymmV2_finalJFF_noMix.root","READ");
+	fin = new TFile("../mc_raw_correlations/PbPb_5TeVMC_GenGenSube0_fineBinTrkCorrs_withTrkCorrEtaSymmV2_noJFF_noMix.root","READ");
 	//	fin_me = new TFile("../mc_raw_correlations/PbPb_5TeV_MC_PythiaHydjet_MixHistos_Merged_GenGenReduced_fineBin.root","READ");
 	fin_me = new TFile("../mc_raw_correlations/PbPb_5TeVMC_withMix_GenGen_sube0_CymbalTune_fullCymbalCorrs_inclJetBinning.root","READ");
 	break;
@@ -152,7 +152,7 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
 	return -1;
       }
 
-      fout_inc = new TFile((TString)("Hydjet_"+data_mc_type_strs[data_mc_type_code]+"_Inclusive_Correlations_QuarkOnly.root"),"RECREATE");      
+      fout_inc = new TFile((TString)("Hydjet_"+data_mc_type_strs[data_mc_type_code]+"_Inclusive_Correlations.root"),"RECREATE");      
        }
     }
     //----------------------------------------------------
@@ -327,7 +327,7 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
 	  }
 	}else{ //this is Reco
 	  cout<<"1"<<endl;
-	  if(data_mc_type_code==0&&!is_pp&&ibin3<3){
+	  if(data_mc_type_code==0&&!is_pp&&ibin3<3&&ibin<2){
 
 	    hJetTrackSignalBackground[ibin][ibin2][ibin3] = (TH2D*) fin2->Get((TString)(desc + "_hJetTrackSignalBackground"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+ "_" + TrkPtBin_strs2[ibin3] + "_" + TrkPtBin_strs2[ibin3+1]))->Clone((TString) ("Raw_Yield_"+ CBin_strs[ibin] + "_" + CBin_strs[ibin+1] + "_" + PtBin_strs[ibin2] + "_" + PtBin_strs[ibin2+1]+"_"+TrkPtBin_strs[ibin3]+"_" +TrkPtBin_strs[ibin3+1]));
 
@@ -429,7 +429,7 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
 	width_temp_x = 1.;
 	width_temp_y = 1.;
 	
-	 if(data_mc_type_code==0&&!is_pp&&ibin3<3)  norm_temp = all_jets_corrpT2[ibin][ibin2]->Integral();
+	 if(data_mc_type_code==0&&!is_pp&&ibin3<3&&ibin<2)  norm_temp = all_jets_corrpT2[ibin][ibin2]->Integral();
 	 else norm_temp = all_jets_corrpT[ibin][ibin2]->Integral();
 	hJetTrackSignalBackground[ibin][ibin2][ibin3]->Scale(1/norm_temp/width_temp_x/width_temp_y);
 	hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Scale(1/norm_temp/width_temp_x/width_temp_y);
@@ -459,7 +459,9 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
 
 
 	//	if(data_mc_type_code==0&&!is_pp&&ibin3<3&&ibin<2){
-	if((data_mc_type_code==0&&!is_pp&&ibin3<3)||signal_only_me){
+
+
+	if((data_mc_type_code==0&&!is_pp&&ibin3<3&&ibin<2)||signal_only_me){
 	  lbin = 82;
 	  if(data_mc_type_code!=12) rbin = 130;
 	}
@@ -837,8 +839,8 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
 	llimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(bg_inner+0.0001);
 	rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(bg_outer-0.0001);
 
-
-	if(!is_pp&&ibin==0&&ibin3==1){
+	/*
+	if(!is_pp&&((ibin==0&&ibin3==1)||(ibin==3&&ibin3==0))){
 
 	  bg_outer = 3.0;
 
@@ -846,7 +848,7 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
 	  rlimiteta = yield_inc[ibin][ibin2][ibin3]->GetXaxis()->FindBin(-bg_inner-0.0001);
 
 	}
-
+	*/
 
 	background_proj[ibin][ibin2][ibin3] = (TH1D*)yield_inc[ibin][ibin2][ibin3]->ProjectionY(Form("ProjectedBackground%d%d%d",ibin,ibin2,ibin3),llimiteta,rlimiteta);
 
@@ -871,7 +873,7 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
 
 	for(int k = 1;  k<yield_inc[ibin][ibin2][ibin3]->GetNbinsY(); k++){
 	  temp1 = background_proj[ibin][ibin2][ibin3]->GetBinContent(k);
-	  err1 = background_proj[ibin][ibin2][ibin3]->GetBinError(k);
+	  err1 = background_proj[ibin][ibin2][ibin3]->GetBinError(k)*TMath::Sqrt(2*(rlimiteta-llimiteta+1));
 	    
 	  for(int m = 1;  m<yield_inc[ibin][ibin2][ibin3]->GetNbinsX(); m++){
 	    background[ibin][ibin2][ibin3]->SetBinContent(m,k,temp1);
@@ -915,7 +917,7 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
 
 	for(int k = 1;  k<yield_inc[ibin][ibin2][ibin3]->GetNbinsY(); k++){
 	  temp1 = background_proj2[ibin][ibin2][ibin3]->GetBinContent(k);
-	  err1 = background_proj2[ibin][ibin2][ibin3]->GetBinError(k);
+	  err1 = background_proj2[ibin][ibin2][ibin3]->GetBinError(k)*TMath::Sqrt(rlimiteta-llimiteta+1)*2;
 	    
 	  for(int m = 1;  m<yield_inc[ibin][ibin2][ibin3]->GetNbinsX(); m++){
 	    background_pTweighted[ibin][ibin2][ibin3]->SetBinContent(m,k,temp1);
@@ -930,9 +932,9 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
 
 
 	yield_bgsub_pTweighted[ibin][ibin2][ibin3]->Add(background_pTweighted[ibin][ibin2][ibin3],-1.);
-	/*
 	
-	  if(data_mc_type_code!=0){
+	
+	//	if(data_mc_type_code!=0){
 	  
 	  //	  cout<<"symmetrizing X"<<endl;
 	
@@ -1012,11 +1014,93 @@ Int_t me_correct2(int data_mc_type_code=0, bool is_pp=kFALSE, bool do_residual =
 	    }
 	    
 	  }
+
+	  //SYMMETRIZE RAW FOR JFF
+
+	  
+	  //	  cout<<"symmetrizing X"<<endl;
+	
+	  nbins = hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetNbinsX();
+	  
+	  for(int m = 1; m< hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetNbinsY()+1; m++){
+	    for(int k = 1; k<nbins/2+1; k ++){
+	      bc = (hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinContent(k,m)+hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinContent(nbins+1-k,m))/2.;
+	      err = TMath::Sqrt(hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinError(k,m)*hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinError(k,m)+hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinError(nbins+1-k,m)*hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinError(nbins+1-k,m))/2.;
+	      
+	      hJetTrackSignalBackground[ibin][ibin2][ibin3]->SetBinContent(k,m,bc);
+	      hJetTrackSignalBackground[ibin][ibin2][ibin3]->SetBinError(k,m,err);
+	      
+	      hJetTrackSignalBackground[ibin][ibin2][ibin3]->SetBinContent(nbins+1-k,m,bc);
+	      hJetTrackSignalBackground[ibin][ibin2][ibin3]->SetBinError(nbins+1-k,m,err);
+	      //	      cout<<k<<" "<<nbins+1-k<<" "<<bc<<endl;
+	    }
+	    
+	  }
+
+	  //	  cout<<"symmetrizing Y"<<endl;
+	  nbins = hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetNbinsY()/2;
+	  
+	  for(int m = 1; m< hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetNbinsX()+1; m++){
+	    for(int k = 1; k<nbins/2+1; k ++){
+	      
+	      bc = (hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinContent(m,k)+hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinContent(m,nbins+1-k))/2.;
+	      err = TMath::Sqrt(hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinError(m,k)*hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinError(m,k)+hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinError(m,nbins+1-k)*hJetTrackSignalBackground[ibin][ibin2][ibin3]->GetBinError(m,nbins+1-k))/2.;
+	      
+	      hJetTrackSignalBackground[ibin][ibin2][ibin3]->SetBinContent(m,k,bc);
+	      hJetTrackSignalBackground[ibin][ibin2][ibin3]->SetBinError(m,k,err);
+	      
+	      hJetTrackSignalBackground[ibin][ibin2][ibin3]->SetBinContent(m,nbins+1-k,bc);
+	      hJetTrackSignalBackground[ibin][ibin2][ibin3]->SetBinError(m,nbins+1-k,err);
+
+	      //     cout<<k<<" "<<nbins+1-k<<" "<<bc<<endl;
+	      
+	    }
+	    
+	  }
+
+	  nbins = hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetNbinsX();
+
+	  for(int m = 1; m< hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetNbinsY()+1; m++){
+	    for(int k = 1; k<nbins/2+1; k ++){
+	      bc = (hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinContent(k,m)+hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinContent(nbins+1-k,m))/2.;
+	      err = TMath::Sqrt(hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinError(k,m)*hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinError(k,m)+hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinError(nbins+1-k,m)*hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinError(nbins+1-k,m))/2.;
+	      
+	      hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->SetBinContent(k,m,bc);
+	      hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->SetBinError(k,m,err);
+	      
+	      hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->SetBinContent(nbins+1-k,m,bc);
+	      hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->SetBinError(nbins+1-k,m,err);
+	      //	      cout<<k<<" "<<nbins+1-k<<" "<<bc<<endl;
+	    }
+	    
+	  }
+
+	  //	  cout<<"symmetrizing Y"<<endl;
+	  nbins = hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetNbinsY()/2;
+	  
+	  for(int m = 1; m< hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetNbinsX()+1; m++){
+	    for(int k = 1; k<nbins/2+1; k ++){
+	      
+	      bc = (hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinContent(m,k)+hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinContent(m,nbins+1-k))/2.;
+	      err = TMath::Sqrt(hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinError(m,k)*hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinError(m,k)+hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinError(m,nbins+1-k)*hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->GetBinError(m,nbins+1-k))/2.;
+	      
+	      hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->SetBinContent(m,k,bc);
+	      hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->SetBinError(m,k,err);
+	      
+	      hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->SetBinContent(m,nbins+1-k,bc);
+	      hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->SetBinError(m,nbins+1-k,err);
+
+	      //     cout<<k<<" "<<nbins+1-k<<" "<<bc<<endl;
+	      
+	    }
+	    
+	  }
+
+
 	
       
-	  }
+	  //	}
 	
-	  */
 	hJetTrackSignalBackground[ibin][ibin2][ibin3]->Write();
 	hJetTrackSignalBackground_pTweighted[ibin][ibin2][ibin3]->Write();
 	yield_inc[ibin][ibin2][ibin3]->Write();
